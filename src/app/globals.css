@@ -34,7 +34,7 @@
   --color-sun: var(--sun); --color-sun-bg: var(--sun-bg); --color-pink: var(--pink); --color-pink-bg: var(--pink-bg);
   --color-assist-a: var(--assist-a); --color-assist-b: var(--assist-b); --color-assist-soft: var(--assist-soft);
   --shadow-glass: var(--shadow); --shadow-glass-2: var(--shadow-2);
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius-card: 22px; --radius-sm: 14px;
 }
 

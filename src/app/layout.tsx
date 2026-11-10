@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "600", "700", "800"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: { default: "Кабінет", template: "%s · Кабінет" },
@@ -12,12 +15,7 @@ export const viewport: Viewport = { themeColor: "#eef2fa", viewportFit: "cover",
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="uk">
-      <head>
-        {/* eslint-disable-next-line @next/next/no-page-custom-font -- root layout, loads once */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
-      </head>
+    <html lang="uk" className={inter.variable}>
       <body>
         <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
           <div className="absolute rounded-full blur-[90px] opacity-90 w-[520px] h-[520px] -top-40 -left-36" style={{ background: "var(--blob-1)" }} />
