@@ -31,11 +31,12 @@ export function TopNav() {
   );
 }
 
-export function BottomNav() {
+function Item({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   const path = usePathname();
-  const Item = ({ href, label, children }: { href: string; label: string; children: React.ReactNode }) => (
-    <Link href={href} aria-label={label} className={clsx("w-12 h-12 rounded-full flex items-center justify-center", active(path, href) ? "bg-fg text-bg" : "text-muted")}>{children}</Link>
-  );
+  return <Link href={href} aria-label={label} className={clsx("w-12 h-12 rounded-full flex items-center justify-center", active(path, href) ? "bg-fg text-bg" : "text-muted")}>{children}</Link>;
+}
+
+export function BottomNav() {
   return (
     <div className="md:hidden fixed left-0 right-0 bottom-0 z-30 flex justify-center pointer-events-none" style={{ padding: "0 max(12px, env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right))" }}>
       <nav aria-label="Нижня навігація" className="glass pointer-events-auto flex justify-around items-center w-full max-w-[440px] px-1.5 py-2 rounded-full" style={{ background: "var(--glass-2)", boxShadow: "var(--shadow-2)" }}>

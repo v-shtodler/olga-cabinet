@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addDays, format, parseISO, isWeekend, subMonths, startOfMonth } from "date-fns";
+import { addDays, format, isWeekend, subMonths, startOfMonth } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getClients, getClientPrefs, getSettings, getDismissed, getBlockedDays, getTaxQuarters, getTaxPaid, getIncomeMonthly } from "@/lib/data";
 import { buildInsights, taxTimeline, groupByDay, deadlinesByDay, freeDays, todayISO, iso, money, moneyK, plural, relDays, daysBetween, fmtShort, TYPE_TONE, quarterOf } from "@/lib/domain";
