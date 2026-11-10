@@ -2,7 +2,7 @@ import Link from "next/link";
 import { addDays, format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getIncomeMonthly, getPresets } from "@/lib/data";
-import { iso, todayISO, money, moneyK, plural, TYPE_TONE, type ShootType } from "@/lib/domain";
+import { nowKyiv, iso, todayISO, money, moneyK, plural, TYPE_TONE, type ShootType } from "@/lib/domain";
 import { Kpi } from "@/components/ui";
 import { TONE_FG } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
@@ -12,7 +12,7 @@ export const metadata = { title: "Аналітика" };
 
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   const { p = "year" } = await searchParams; const period = ["quarter", "year", "all"].includes(p) ? p : "year";
-  const now = new Date(); const today = todayISO(); const y = now.getFullYear();
+  const now = nowKyiv(); const today = todayISO(); const y = now.getFullYear();
   const [shoots, monthly, presets] = await Promise.all([getShoots(), getIncomeMonthly(), getPresets()]);
   const labelOf = (t: ShootType) => presets.find((x) => x.type === t)?.label ?? t;
   let from: string, to: string, prevFrom: string | null = null, prevTo = "", label: string;

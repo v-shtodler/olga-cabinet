@@ -2,12 +2,12 @@ import Link from "next/link";
 import { addDays, format, isWeekend, subMonths, startOfMonth } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getClients, getClientPrefs, getSettings, getDismissed, getBlockedDays, getTaxQuarters, getTaxPaid, getIncomeMonthly } from "@/lib/data";
-import { buildInsights, taxTimeline, groupByDay, deadlinesByDay, freeDays, todayISO, iso, money, moneyK, plural, relDays, daysBetween, fmtShort, TYPE_TONE, quarterOf } from "@/lib/domain";
+import { nowKyiv, buildInsights, taxTimeline, groupByDay, deadlinesByDay, freeDays, todayISO, iso, money, moneyK, plural, relDays, daysBetween, fmtShort, TYPE_TONE, quarterOf } from "@/lib/domain";
 import { Assistant } from "@/components/assistant";
 import { Kpi, ShootRow, TONE_BG, TONE_FG } from "@/components/ui";
 
 export default async function HomePage() {
-  const today = todayISO(); const now = new Date();
+  const today = todayISO(); const now = nowKyiv();
   const [shoots, clients, prefs, settings, dismissed, blocked, quarters, taxPaid, monthly] = await Promise.all([
     getShoots({ from: iso(subMonths(now, 13)) }), getClients(), getClientPrefs(), getSettings(), getDismissed(), getBlockedDays(), getTaxQuarters(), getTaxPaid(), getIncomeMonthly(),
   ]);

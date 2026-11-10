@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSettings, getTaxQuarters, getTaxPaid, getDismissed, getIncomeMonthly, getClients } from "@/lib/data";
-import { taxTimeline, buildInsights, money, fmtDate, fmtShort, relDays, daysBetween, todayISO } from "@/lib/domain";
+import { nowKyiv, taxTimeline, buildInsights, money, fmtDate, fmtShort, relDays, daysBetween, todayISO } from "@/lib/domain";
 import { Chip } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { markTaxPaid } from "@/app/actions";
@@ -10,7 +10,7 @@ import { format } from "date-fns";
 export const metadata = { title: "Податки" };
 
 export default async function TaxesPage({ searchParams }: { searchParams: Promise<{ y?: string }> }) {
-  const { y } = await searchParams; const today = todayISO(); const curY = new Date().getFullYear();
+  const { y } = await searchParams; const today = todayISO(); const curY = nowKyiv().getFullYear();
   const year = y && /^\d{4}$/.test(y) ? Number(y) : curY;
   const [settings, quarters, paid, dismissed, monthly, clients] = await Promise.all([getSettings(), getTaxQuarters(), getTaxPaid(), getDismissed(), getIncomeMonthly(), getClients()]);
   const tl = taxTimeline(quarters, paid, settings);

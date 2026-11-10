@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { STATUSES, type ShootStatus, todayISO } from "@/lib/domain";
+import { nowKyiv, STATUSES, type ShootStatus, todayISO } from "@/lib/domain";
 import { addDays, format } from "date-fns";
 
 async function db() { const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser(); if (!user) redirect("/login"); return { supabase, uid: user.id }; }
@@ -12,7 +12,7 @@ function all() { revalidatePath("/", "layout"); }
 /* ---------- assistant ---------- */
 export async function dismissInsight(key: string) {
   const { supabase } = await db();
-  await supabase.from("dismissed_insights").upsert({ key, until: format(addDays(new Date(), 7), "yyyy-MM-dd") });
+  await supabase.from("dismissed_insights").upsert({ key, until: format(addDays(nowKyiv(), 7), "yyyy-MM-dd") });
   all();
 }
 export async function markTaxPaid(periodKey: string) {

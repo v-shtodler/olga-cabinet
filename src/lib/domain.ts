@@ -29,7 +29,14 @@ export interface ChecklistItem { id: string; shoot_id: string; text: string; don
 export interface TaxQuarter { year: number; quarter: number; income: number; ep: number; vz: number; esv: number; quarter_end: string; declaration_due: string; payment_due: string; }
 
 /* ---------- formatting ---------- */
-export const todayISO = () => format(new Date(), "yyyy-MM-dd");
+/** "Now" in Kyiv, regardless of server timezone (Vercel runs in UTC). */
+export const TZ = "Europe/Kyiv";
+export function nowKyiv(): Date {
+  const p = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
+  const g = (t: string) => Number(p.find((x) => x.type === t)?.value ?? 0);
+  return new Date(g("year"), g("month") - 1, g("day"), g("hour") === 24 ? 0 : g("hour"), g("minute"));
+}
+export const todayISO = () => format(nowKyiv(), "yyyy-MM-dd");
 export const iso = (d: Date) => format(d, "yyyy-MM-dd");
 export const money = (n: number) => Math.round(n).toLocaleString("uk-UA").replace(/,/g, " ") + " ₴";
 export const moneyK = (n: number) => Math.round(n / 1000) + "k";
@@ -91,15 +98,15 @@ export function buildInsights(inp: InsightInput): Insight[] {
   }
 
   if (inp.scope.type === "home") {
-    const free = freeDays(groupByDay(inp.shoots), inp.blocked, new Date(), 14);
-    const nm = new Date(); nm.setMonth(nm.getMonth() + 1, 1); const nmKey = format(nm, "yyyy-MM");
+    const free = freeDays(groupByDay(inp.shoots), inp.blocked, nowKyiv(), 14);
+    const nm = nowKyiv(); nm.setMonth(nm.getMonth() + 1, 1); const nmKey = format(nm, "yyyy-MM");
     const nmCount = inp.shoots.filter((s) => s.status !== "cancelled" && s.date.startsWith(nmKey)).length;
     const pct = Math.min(100, Math.round(nmCount / inp.settings.month_capacity * 100));
     if (free.length) push({ key: `free-${today}`, kind: "load", sev: "low", tag: "Вільні вікна · 14 днів", text: `Вільні робочі дні: ${free.slice(0, 5).map(fmtShort).join(", ")}${free.length > 5 ? ` і ще ${free.length - 5}` : ""}. ${format(nm, "LLLL", { locale: uk })} заповнений на ${pct}% (${nmCount} із ~${inp.settings.month_capacity}).`, action: { label: "Календар", href: "/calendar" } });
     if (inp.taxNext) { const d = daysBetween(today, inp.taxNext.due); if (d <= 14) push({ key: `tax-${inp.taxNext.key}`, kind: "tax", sev: d < 0 ? "high" : d <= 3 ? "high" : "mid", tag: `Податки · ${relDays(d)}`, text: `${inp.taxNext.label}: ${money(inp.taxNext.amount)} до ${fmtDate(inp.taxNext.due)}.`, action: { label: "Податковий модуль", href: "/taxes" } }); }
   }
   if (inp.scope.type === "taxes") {
-    const pct = inp.scope.yearIncome / inp.settings.income_limit; const y = new Date().getFullYear();
+    const pct = inp.scope.yearIncome / inp.settings.income_limit; const y = nowKyiv().getFullYear();
     const dayOfYear = daysBetween(`${y}-01-01`, today) + 1; const pace = inp.scope.yearIncome / dayOfYear * 365;
     push({ key: `limit-${y}`, kind: "tax", sev: pct > 0.7 ? "high" : "low", tag: `Ліміт 3 групи · ${Math.round(pct * 100)}%`, text: `Отримано ${money(inp.scope.yearIncome)} з ${money(inp.settings.income_limit)}. За поточним темпом рік закриється на ~${money(Math.round(pace / 10000) * 10000)}${pct > 0.7 ? " — ризик перевищення, порадьтесь із бухгалтером." : " — запас великий."}` });
   }
