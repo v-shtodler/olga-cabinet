@@ -2,7 +2,7 @@
    - static assets (/_next/static, icons, fonts): cache-first
    - pages (HTML) and Next's RSC payloads: network-first with a short timeout, fallback to the cached copy, then /offline
    - everything else (POST, API, auth): straight to the network, never cached */
-const V = "v1";
+const V = "v2";
 const STATIC = `static-${V}`, PAGES = `pages-${V}`, RSC = `rsc-${V}`;
 const OFFLINE_URL = "/offline";
 const NET_TIMEOUT = 6000;
@@ -31,7 +31,7 @@ self.addEventListener("fetch", (e) => {
   }
 
   const isRsc = req.headers.get("RSC") === "1";
-  const isNav = req.mode === "navigate" || req.destination === "document";
+  const isNav = req.mode === "navigate" || req.destination === "document" || req.headers.get("x-warm") === "1";
   if (!isRsc && !isNav) return;
 
   const cacheName = isRsc ? RSC : PAGES;

@@ -19,7 +19,10 @@ export function OfflineLayer() {
   const [, start] = useTransition();
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") navigator.serviceWorker.register("/sw.js").catch(() => {});
+    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") navigator.serviceWorker.register("/sw.js").then(() => navigator.serviceWorker.ready).then(() => {
+      // warm the offline cache with the home screen and the current screen (a first visit happens before the SW controls the page)
+      for (const p of new Set(["/", location.pathname])) fetch(p, { headers: { "x-warm": "1" }, credentials: "same-origin" }).catch(() => {});
+    }).catch(() => {});
 
     const sync = async () => {
       if (!navigator.onLine || list().length === 0) return;
