@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Кабінет" },
 };
-export const viewport: Viewport = { themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f2f3f5" }, { media: "(prefers-color-scheme: dark)", color: "#0b0b0c" }], viewportFit: "cover", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f3f3f8" }, { media: "(prefers-color-scheme: dark)", color: "#191a21" }], viewportFit: "cover", width: "device-width", initialScale: 1 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const raw = (await cookies()).get("theme")?.value;
