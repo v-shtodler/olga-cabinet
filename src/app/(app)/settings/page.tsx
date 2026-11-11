@@ -3,6 +3,9 @@ import { PageHead, Chip } from "@/components/ui";
 import { AssistantInline } from "@/components/assistant";
 import { saveSettings, savePreset } from "@/app/actions";
 import { TYPE_TONE } from "@/lib/domain";
+import { cookies } from "next/headers";
+import { ThemeToggle } from "./theme-toggle";
+import { THEMES, type Theme } from "@/app/layout";
 
 export const metadata = { title: "Налаштування" };
 
@@ -11,7 +14,8 @@ function F({ id, label, name, type = "text", value, step, min, max }: { id: stri
 }
 
 export default async function SettingsPage() {
-  const [s, presets, { user }] = await Promise.all([getSettings(), getPresets(), getSession()]);
+  const [s, presets, { user }, jar] = await Promise.all([getSettings(), getPresets(), getSession(), cookies()]);
+  const raw = jar.get("theme")?.value; const theme: Theme = THEMES.includes(raw as Theme) ? (raw as Theme) : "light";
   return (
     <>
       <PageHead eyebrow="Кабінет" title="Налаштування" />
@@ -51,6 +55,7 @@ export default async function SettingsPage() {
         </div>
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
           <section className="card"><h2 className="text-lg font-bold mb-2">Акаунт</h2><p className="text-[13px] text-muted mb-3">Ви увійшли як <b className="text-fg select-all">{user?.email}</b>. Реєстрація нових користувачів вимкнена — кабінет приватний.</p><form action="/auth/signout" method="post"><button className="btn">Вийти</button></form></section>
+          <section className="card"><h2 className="text-lg font-bold mb-1">Тема</h2><p className="text-[13px] text-muted mb-3">Запам’ятовується на цьому пристрої. «Як у системі» перемикається разом із телефоном чи Mac.</p><ThemeToggle initial={theme} /></section>
           <AssistantInline>Щоб додати кабінет на екран телефону: у Safari «Поділитися → На Початковий екран». Він відкриватиметься як застосунок, без адресного рядка.</AssistantInline>
           <AssistantInline>Податки рахуються за датами <b>отримання</b> платежів, а не за датами зйомок. Якщо гроші прийшли в іншому кварталі — поправте дату платежу в картці зйомки.</AssistantInline>
         </aside>

@@ -4,29 +4,20 @@
    Token names are kept from the Glass version so every screen restyles without markup changes:
    --glass = card surface, --glass-2 = nested plate, --line = card border (none), --hair = subtle divider. */
 :root {
-  --bg: #f2f3f5; --fg: #111113; --muted: #6b6b72; --muted-2: #9a9aa3;
-  --glass: #ffffff; --glass-2: #f3f4f6; --line: transparent; --hair: rgba(17,17,19,0.08);
-  --accent: #111113; --accent-2: #2a2a2e; --accent-fg: #ffffff;
+  /* light by default; data-theme="dark" forces dark, data-theme="system" follows the OS */
+  color-scheme: light;
+  --bg: light-dark(#f2f3f5, #0b0b0c); --fg: light-dark(#111113, #f4f4f5); --muted: light-dark(#6b6b72, #a1a1aa); --muted-2: light-dark(#9a9aa3, #71717a);
+  --glass: light-dark(#ffffff, #161618); --glass-2: light-dark(#f3f4f6, #222225); --line: transparent; --hair: light-dark(rgba(17,17,19,0.08), rgba(255,255,255,0.10));
+  --accent: light-dark(#111113, #f4f4f5); --accent-2: light-dark(#2a2a2e, #d4d4d8); --accent-fg: light-dark(#ffffff, #0b0b0c);
   --lime: #a3e635; --lime-2: #4ade80;
-  --good: #3f8f1e; --good-bg: #e9f9d3; --warn: #c2410c; --warn-bg: #ffe8dc; --info: #2f5fd6; --info-bg: #e4ecff;
-  --purple: #6d28d9; --purple-bg: #ede9fe; --sun: #8a5a00; --sun-bg: #fff1c2; --pink: #be185d; --pink-bg: #fce7f3;
-  --assist-a: #111113; --assist-b: #1c1c1f; --assist-soft: #f3f4f6; --assist-fg: #ffffff;
-  --shadow: 0 1px 2px rgba(17,17,19,0.04); --shadow-2: 0 12px 32px rgba(17,17,19,0.14);
-  --bar-dim: rgba(17,17,19,0.12); --bar-mid: rgba(17,17,19,0.28); --ring: rgba(17,17,19,0.16); --on-dark-soft: rgba(255,255,255,0.12);
+  --good: light-dark(#3f8f1e, #a3e635); --good-bg: light-dark(#e9f9d3, rgba(163,230,53,0.16)); --warn: light-dark(#c2410c, #fb923c); --warn-bg: light-dark(#ffe8dc, rgba(251,146,60,0.16)); --info: light-dark(#2f5fd6, #93b4ff); --info-bg: light-dark(#e4ecff, rgba(93,156,255,0.16));
+  --purple: light-dark(#6d28d9, #c4b5fd); --purple-bg: light-dark(#ede9fe, rgba(167,139,250,0.18)); --sun: light-dark(#8a5a00, #fcd34d); --sun-bg: light-dark(#fff1c2, rgba(252,211,77,0.14)); --pink: light-dark(#be185d, #f9a8d4); --pink-bg: light-dark(#fce7f3, rgba(244,114,182,0.16));
+  --assist-a: light-dark(#111113, #f4f4f5); --assist-b: light-dark(#1c1c1f, #e4e4e7); --assist-soft: light-dark(#f3f4f6, #222225); --assist-fg: light-dark(#ffffff, #0b0b0c);
+  --shadow-c: light-dark(rgba(17,17,19,0.04), rgba(0,0,0,0.3)); --shadow-c2: light-dark(rgba(17,17,19,0.14), rgba(0,0,0,0.5)); --shadow: 0 1px 2px var(--shadow-c); --shadow-2: 0 12px 32px var(--shadow-c2);
+  --bar-dim: light-dark(rgba(17,17,19,0.12), rgba(255,255,255,0.14)); --bar-mid: light-dark(rgba(17,17,19,0.28), rgba(255,255,255,0.32)); --ring: light-dark(rgba(17,17,19,0.16), rgba(255,255,255,0.22));
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0b0b0c; --fg: #f4f4f5; --muted: #a1a1aa; --muted-2: #71717a;
-    --glass: #161618; --glass-2: #222225; --line: transparent; --hair: rgba(255,255,255,0.10);
-    --accent: #f4f4f5; --accent-2: #d4d4d8; --accent-fg: #0b0b0c;
-    --good: #a3e635; --good-bg: rgba(163,230,53,0.16); --warn: #fb923c; --warn-bg: rgba(251,146,60,0.16); --info: #93b4ff; --info-bg: rgba(93,156,255,0.16);
-    --purple: #c4b5fd; --purple-bg: rgba(167,139,250,0.18); --sun: #fcd34d; --sun-bg: rgba(252,211,77,0.14); --pink: #f9a8d4; --pink-bg: rgba(244,114,182,0.16);
-    --assist-a: #f4f4f5; --assist-b: #e4e4e7; --assist-soft: #222225; --assist-fg: #0b0b0c;
-    --shadow: 0 1px 2px rgba(0,0,0,0.3); --shadow-2: 0 12px 32px rgba(0,0,0,0.5);
-    --bar-dim: rgba(255,255,255,0.14); --bar-mid: rgba(255,255,255,0.32); --ring: rgba(255,255,255,0.22); --on-dark-soft: rgba(0,0,0,0.10);
-    color-scheme: dark;
-  }
-}
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="system"] { color-scheme: light dark; }
 
 @theme inline {
   --color-bg: var(--bg); --color-fg: var(--fg); --color-muted: var(--muted); --color-muted-2: var(--muted-2);
