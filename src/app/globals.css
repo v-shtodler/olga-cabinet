@@ -16,6 +16,9 @@
   --purple: light-dark(#6d28d9, #c4b5fd); --purple-bg: light-dark(#ede9fe, rgba(167,139,250,0.18)); --sun: light-dark(#8a5a00, #fcd34d); --sun-bg: light-dark(#fff1c2, rgba(252,211,77,0.14)); --pink: light-dark(#be185d, #f9a8d4); --pink-bg: light-dark(#fce7f3, rgba(244,114,182,0.16));
   --assist-a: light-dark(#111113, #f1f1f4); --assist-b: light-dark(#1c1c1f, #e4e4e7); --assist-soft: light-dark(#f3f4f6, #2d2e38); --assist-fg: light-dark(#ffffff, #15161c);
   --shadow-c: light-dark(rgba(60,50,90,0.05), rgba(0,0,0,0.28)); --shadow-c2: light-dark(rgba(60,50,90,0.14), rgba(0,0,0,0.5)); --shadow: 0 1px 2px var(--shadow-c); --shadow-2: 0 12px 32px var(--shadow-c2);
+  /* pastel plates for the "voice" cards: a = assistant (lavender→sky), b = money/taxes (mint→lime), c = people/deadlines (peach→rose) */
+  --pa-1: light-dark(#ebe6ff, #2c2846); --pa-2: light-dark(#dbeeff, #1f2e44); --pb-1: light-dark(#dff8e8, #1f3630); --pb-2: light-dark(#eefcd0, #2c3822); --pc-1: light-dark(#ffe7d9, #3e2c27); --pc-2: light-dark(#fde2ef, #3c2738);
+  --on-pastel: light-dark(rgba(255,255,255,0.62), rgba(255,255,255,0.07)); --on-pastel-2: light-dark(rgba(255,255,255,0.9), rgba(255,255,255,0.13));
   --bar-dim: light-dark(rgba(17,17,19,0.12), rgba(255,255,255,0.14)); --bar-mid: light-dark(rgba(17,17,19,0.28), rgba(255,255,255,0.32)); --ring: light-dark(rgba(17,17,19,0.16), rgba(255,255,255,0.22));
 }
 :root[data-theme="dark"] { color-scheme: dark; }
@@ -62,6 +65,10 @@ h1, h2, h3 { letter-spacing: -0.02em; text-wrap: balance; }
   .srow { @apply flex items-center gap-3 px-3.5 py-3 rounded-[18px] bg-glass-2 cursor-pointer transition-colors hover:bg-hair; }
   .bar { @apply h-2.5 rounded-[5px] bg-hair overflow-hidden; }
   .bar > i { @apply block h-full rounded-[5px]; }
+  .pastel-a { background: linear-gradient(135deg, var(--pa-1), var(--pa-2)); color: var(--fg); }
+  .pastel-b { background: linear-gradient(135deg, var(--pb-1), var(--pb-2)); color: var(--fg); }
+  .pastel-c { background: linear-gradient(135deg, var(--pc-1), var(--pc-2)); color: var(--fg); }
+  .plate { background: var(--on-pastel); }
   .empty { @apply p-5 rounded-2xl bg-glass-2 text-center text-muted font-medium; }
 }
 

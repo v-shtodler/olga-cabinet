@@ -99,9 +99,9 @@ export default async function HomePage() {
               <h2 className="text-lg font-bold mb-3.5">В роботі зараз</h2>
               <div className="flex flex-col gap-2">{inWork.length ? inWork.map((s) => <ShootRow key={s.id} s={s} />) : <div className="empty">Нічого не висить — усе віддано ✨</div>}</div>
             </section>
-            <section className="rounded-[24px] p-5 flex flex-wrap gap-4 items-center justify-between" style={{ background: "var(--accent)", color: "var(--accent-fg)" }}>
-              <div className="flex-1 min-w-[200px]"><div className="text-xs font-semibold opacity-85">ФОП 3 група · поточний квартал</div><div className="text-2xl font-extrabold tracking-tight num">{money(qTax)}</div><div className="text-xs opacity-90">ЄП {settings.ep_rate}% + ВЗ {settings.vz_rate}% з отриманих {money(qInc)}</div></div>
-              <Link href="/taxes" className="btn btn-good border-0">Податковий модуль</Link>
+            <section className="rounded-[24px] p-5 flex flex-wrap gap-4 items-center justify-between pastel-b">
+              <div className="flex-1 min-w-[200px]"><div className="text-xs font-semibold text-muted">ФОП 3 група · поточний квартал</div><div className="text-2xl font-extrabold tracking-tight num">{money(qTax)}</div><div className="text-xs text-muted">ЄП {settings.ep_rate}% + ВЗ {settings.vz_rate}% з отриманих {money(qInc)}</div></div>
+              <Link href="/taxes" className="btn btn-primary">Податковий модуль</Link>
             </section>
           </div>
         </div>
