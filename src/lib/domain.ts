@@ -93,6 +93,8 @@ export function buildInsights(inp: InsightInput): Insight[] {
     }
     if (s.status === "confirmed" && inp.scope.type !== "client") {
       const d = daysBetween(today, s.date);
+      // the shoot date has passed but the status is still "confirmed": deadlines and payments depend on marking it as shot
+      if (d < 0) push({ key: `past-${s.id}`, kind: "deadline", sev: d <= -3 ? "high" : "mid", tag: `Зйомка минула · ${relDays(d)}`, text: `«${s.title}» для ${cname} була ${fmtShort(s.date)}, але ще не позначена як відзнята — дедлайн віддачі не рахується.`, action: { href: `/shoots/${s.id}`, label: "Позначити відзнятою" } });
       if (d >= 0 && d <= 1) { const p = prefsOf(s.client_id).slice(0, 2).join("; "); push({ key: `prep-${s.id}`, kind: "prep", sev: "low", tag: `${relDays(d)} · підготовка`, text: `Зйомка «${s.title}» для ${cname}.${p ? ` Що важливо для цього клієнта: ${p}.` : ""}`, action: { label: "Картка зйомки", href: `/shoots/${s.id}` } }); }
     }
   }
