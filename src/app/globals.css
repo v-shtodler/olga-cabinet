@@ -1,29 +1,24 @@
 @import "tailwindcss";
 
-/* Design tokens — Glass direction chosen in the prototype */
+/* Design tokens — Glass direction chosen in the prototype.
+   Light is the default; data-theme="dark" forces the night theme, data-theme="system" follows the OS. */
 :root {
-  --bg: #eef2fa; --fg: #1c1c1e; --muted: #5b5b66; --muted-2: #8a8a95;
-  --glass: rgba(255,255,255,0.62); --glass-2: rgba(255,255,255,0.78); --line: rgba(255,255,255,0.85); --hair: rgba(60,80,140,0.10);
-  --accent: #1d6ff2; --accent-2: #4f9bff;
-  --good: #15803d; --good-bg: #dcfce7; --warn: #c2410c; --warn-bg: #ffe4d6; --info: #1d4ed8; --info-bg: #dcebff;
-  --purple: #6d28d9; --purple-bg: #ede9fe; --sun: #7a5a00; --sun-bg: #ffe9a8; --pink: #be185d; --pink-bg: #fce7f3;
-  --assist-a: #312e81; --assist-b: #4f46e5; --assist-soft: rgba(79,70,229,0.12);
-  --blob-1: #ffc7b3; --blob-2: #bfd0ff; --blob-3: #b9f0d6; --blob-4: #ffe9a8;
-  --shadow: 0 10px 30px rgba(60,80,140,0.08); --shadow-2: 0 14px 36px rgba(60,80,140,0.14);
+  color-scheme: light;
+  --bg: light-dark(#eef1fa, #111527); --fg: light-dark(#1c1c1e, #f2f3f7); --muted: light-dark(#5b5b66, #a8abba); --muted-2: light-dark(#8a8a95, #7c7f8e);
+  /* page gradient: soft pastel lavender → sky → peach; night: deep navy with a violet corner */
+  --bg-a: light-dark(#f1ecff, #141833); --bg-b: light-dark(#e9f1fd, #10142a); --bg-c: light-dark(#fff0ea, #1a1430);
+  --glass: light-dark(rgba(255,255,255,0.62), rgba(255,255,255,0.07)); --glass-2: light-dark(rgba(255,255,255,0.78), rgba(255,255,255,0.11)); --line: light-dark(rgba(255,255,255,0.85), rgba(255,255,255,0.12)); --hair: light-dark(rgba(60,80,140,0.10), rgba(255,255,255,0.10));
+  --accent: light-dark(#1d6ff2, #5b9cff); --accent-2: light-dark(#4f9bff, #8dbbff);
+  --good: light-dark(#15803d, #4ade80); --good-bg: light-dark(#dcfce7, rgba(74,222,128,0.16)); --warn: light-dark(#c2410c, #fb923c); --warn-bg: light-dark(#ffe4d6, rgba(251,146,60,0.18)); --info: light-dark(#1d4ed8, #93b4ff); --info-bg: light-dark(#dcebff, rgba(93,156,255,0.18));
+  --purple: light-dark(#6d28d9, #c4b5fd); --purple-bg: light-dark(#ede9fe, rgba(167,139,250,0.2)); --sun: light-dark(#7a5a00, #fcd34d); --sun-bg: light-dark(#ffe9a8, rgba(252,211,77,0.16)); --pink: light-dark(#be185d, #f9a8d4); --pink-bg: light-dark(#fce7f3, rgba(244,114,182,0.18));
+  --assist-a: light-dark(#312e81, #4338ca); --assist-b: light-dark(#4f46e5, #6366f1); --assist-soft: light-dark(rgba(79,70,229,0.12), rgba(99,102,241,0.2));
+  --blob-1: light-dark(#ffc7b3, #6b3328); --blob-2: light-dark(#bfd0ff, #27356e); --blob-3: light-dark(#b9f0d6, #1c523e); --blob-4: light-dark(#ffe9a8, #5e4f18);
+  --blob-opacity: light-dark(0.9, 0.55);
+  --shadow-c: light-dark(rgba(60,80,140,0.08), rgba(0,0,0,0.35)); --shadow-c2: light-dark(rgba(60,80,140,0.14), rgba(0,0,0,0.5));
+  --shadow: 0 10px 30px var(--shadow-c); --shadow-2: 0 14px 36px var(--shadow-c2);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e1120; --fg: #f2f3f7; --muted: #a8abba; --muted-2: #7c7f8e;
-    --glass: rgba(255,255,255,0.07); --glass-2: rgba(255,255,255,0.11); --line: rgba(255,255,255,0.12); --hair: rgba(255,255,255,0.10);
-    --accent: #5b9cff; --accent-2: #8dbbff;
-    --good: #4ade80; --good-bg: rgba(74,222,128,0.16); --warn: #fb923c; --warn-bg: rgba(251,146,60,0.18); --info: #93b4ff; --info-bg: rgba(93,156,255,0.18);
-    --purple: #c4b5fd; --purple-bg: rgba(167,139,250,0.2); --sun: #fcd34d; --sun-bg: rgba(252,211,77,0.16); --pink: #f9a8d4; --pink-bg: rgba(244,114,182,0.18);
-    --assist-a: #4338ca; --assist-b: #6366f1; --assist-soft: rgba(99,102,241,0.2);
-    --blob-1: #7a3a2c; --blob-2: #2b3c7a; --blob-3: #1f5c44; --blob-4: #6b5a1a;
-    --shadow: 0 10px 30px rgba(0,0,0,0.35); --shadow-2: 0 14px 36px rgba(0,0,0,0.5);
-    color-scheme: dark;
-  }
-}
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="system"] { color-scheme: light dark; }
 
 @theme inline {
   --color-bg: var(--bg); --color-fg: var(--fg); --color-muted: var(--muted); --color-muted-2: var(--muted-2);
@@ -38,8 +33,8 @@
   --radius-card: 22px; --radius-sm: 14px;
 }
 
-html, body { height: 100%; }
-body { background: var(--bg); color: var(--fg); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+html { min-height: 100%; background: linear-gradient(135deg, var(--bg-a) 0%, var(--bg-b) 48%, var(--bg-c) 100%) fixed var(--bg); }
+body { min-height: 100%; background: transparent; color: var(--fg); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 h1, h2, h3 { letter-spacing: -0.025em; text-wrap: balance; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .num { font-variant-numeric: tabular-nums; }
