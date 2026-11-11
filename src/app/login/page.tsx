@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="min-h-dvh flex items-center justify-center px-4 py-10">
       <div className="card w-full max-w-sm p-7">
         <div className="flex items-center gap-3 mb-6">
-          <span aria-hidden="true" className="w-8 h-8 rounded-[10px]" style={{ background: "linear-gradient(135deg,#ff7a59,#ffb36b)", boxShadow: "0 4px 12px rgba(255,122,89,.4)" }} />
+          <span aria-hidden="true" className="w-8 h-8 rounded-[10px]" style={{ background: "var(--accent)" }} />
           <div>
             <div className="font-bold tracking-tight">Olga Voychik</div>
             <div className="text-xs text-muted">Приватний кабінет</div>

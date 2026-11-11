@@ -71,8 +71,8 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             <h2 className="text-lg font-bold mb-3">Таймінг · ≈ {s.total_hours} год</h2>
             <div className="flex h-9 gap-1">
               <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.prep_hours} 1 0`, background: "var(--sun-bg)", color: "var(--sun)" }}>Підготовка · {s.prep_hours}</div>
-              <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold text-white whitespace-nowrap overflow-hidden" style={{ flex: `${s.shoot_hours} 1 0`, background: "linear-gradient(135deg,#1d6ff2,#4f9bff)" }}>Зйомка · {s.shoot_hours} год</div>
-              <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold text-white whitespace-nowrap overflow-hidden" style={{ flex: `${s.retouch_hours} 1 0`, background: "linear-gradient(135deg,#8b5cf6,#b388ff)" }}>Відбір і ретуш · ~{s.retouch_hours} год</div>
+              <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.shoot_hours} 1 0`, background: "var(--accent)", color: "var(--accent-fg)" }}>Зйомка · {s.shoot_hours} год</div>
+              <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.retouch_hours} 1 0`, background: "linear-gradient(135deg,var(--lime),var(--lime-2))", color: "#111113" }}>Відбір і ретуш · ~{s.retouch_hours} год</div>
             </div>
             <p className="text-xs text-muted mt-2.5">Ефективна ставка <b style={{ color: rateAvg && (s.hourly_rate ?? 0) < rateAvg ? "var(--warn)" : "var(--good)" }}>{s.hourly_rate ?? 0} ₴/год</b>{rateAvg ? <>; середня по «{typeLabel}» — {rateAvg} ₴/год.</> : "."}</p>
           </section>
@@ -85,7 +85,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
 
           <section className="card">
             <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Чек-лист</h2><span className="text-xs font-bold" style={{ color: "var(--good)" }}>{done} з {checklist.length}</span></div>
-            {checklist.length > 0 && <div className="mb-3"><Bar pct={done / checklist.length * 100} color="linear-gradient(90deg,#35c777,#15a05a)" /></div>}
+            {checklist.length > 0 && <div className="mb-3"><Bar pct={done / checklist.length * 100} /></div>}
             <div className="flex flex-col gap-1.5">{checklist.map((ci) => <ChecklistToggle key={ci.id} id={ci.id} text={ci.text} done={ci.done} action={toggleChecklist} />)}</div>
             <div className="flex gap-2 flex-wrap mt-3">
               <form action={addChecklistItem.bind(null, s.id)} className="flex gap-2 flex-1 min-w-[220px]"><input name="text" placeholder="Новий пункт" required maxLength={200} className="flex-1 px-3 py-2 rounded-xl border border-line bg-glass-2" aria-label="Новий пункт" /><button className="btn btn-sm">Додати</button></form>
@@ -95,10 +95,10 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
         </div>
 
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
-          <section className="rounded-[22px] p-5 text-white" style={{ background: "linear-gradient(160deg,rgba(139,92,246,.92),rgba(236,106,163,.88))", boxShadow: "0 16px 40px rgba(139,92,246,.28)" }}>
-            <div className="flex justify-between items-center mb-3"><span className="text-xs font-semibold opacity-90">Замовник</span><Link href={`/clients/${c.id}`} className="chip text-white" style={{ background: "rgba(255,255,255,.2)" }}>Картка →</Link></div>
+          <section className="rounded-[24px] p-5" style={{ background: "var(--accent)", color: "var(--accent-fg)" }}>
+            <div className="flex justify-between items-center mb-3"><span className="text-xs font-semibold opacity-70">Замовник</span><Link href={`/clients/${c.id}`} className="chip" style={{ background: "linear-gradient(135deg,var(--lime),var(--lime-2))", color: "#111113" }}>Картка →</Link></div>
             <div className="flex items-center gap-3"><Avatar name={c.name} hue={c.avatar_hue} size={44} /><div><div className="text-[19px] font-extrabold tracking-tight">{c.name}</div><div className="text-xs opacity-90">{c.kind ?? ""}{c.kind ? " · " : ""}з {fmtShort(c.since)} {c.since.slice(0, 4)}</div></div></div>
-            <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)], ["Платять", c.default_deposit_pct === 100 ? "наперед ✓" : st?.avg_pay_delay_days != null ? `~${Math.round(st.avg_pay_delay_days)} дн` : "—"], ["Середній чек", money(st?.avg_check ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,.18)" }}><div className="text-xs opacity-85">{k}</div><div className="font-extrabold num">{v}</div></div>)}</div>
+            <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)], ["Платять", c.default_deposit_pct === 100 ? "наперед ✓" : st?.avg_pay_delay_days != null ? `~${Math.round(st.avg_pay_delay_days)} дн` : "—"], ["Середній чек", money(st?.avg_check ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-xl" style={{ background: "rgba(127,127,127,.18)" }}><div className="text-xs opacity-70">{k}</div><div className="font-extrabold num">{v}</div></div>)}</div>
             {prefs.length > 0 && <div className="mt-3.5"><div className="text-xs font-semibold opacity-85 mb-1.5">Що важливо для цього клієнта</div><ul className="m-0 pl-[18px] text-[13px] leading-relaxed">{prefs.map((p) => <li key={p.id}>{p.text}</li>)}</ul></div>}
           </section>
           <section className="card"><h2 className="text-lg font-bold mb-3">Історія з {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{h.title}</b><br /><span className="text-muted text-xs">{fmtDate(h.date)} · {h.photos} фото</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>

@@ -22,7 +22,7 @@ export function ChecklistToggle({ id, text, done, action }: { id: string; text: 
   const [pending, start] = useTransition();
   return (
     <label className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer font-medium ${done ? "line-through border-transparent" : "bg-glass-2 border-line"}`} style={done ? { background: "var(--good-bg)", color: "var(--good)" } : undefined}>
-      <input type="checkbox" checked={done} disabled={pending} onChange={(e) => start(() => action(id, e.target.checked))} className="w-[18px] h-[18px]" style={{ accentColor: "#15a05a" }} /> {text}
+      <input type="checkbox" checked={done} disabled={pending} onChange={(e) => start(() => action(id, e.target.checked))} className="w-[18px] h-[18px]" style={{ accentColor: "var(--fg)" }} /> {text}
     </label>
   );
 }

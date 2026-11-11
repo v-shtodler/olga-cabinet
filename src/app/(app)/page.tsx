@@ -53,7 +53,7 @@ export default async function HomePage() {
               const d = addDays(now, i); const k = iso(d); const we = isWeekend(d); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
               const isFree = !we && ev.length === 0 && !blocked.has(k);
               return (
-                <Link key={k} href={`/calendar?d=${k}`} className="rounded-[10px] sm:rounded-[14px] p-1.5 sm:p-2 min-h-[74px] sm:min-h-[86px] flex flex-col gap-1 border text-left" style={{ background: isFree ? "var(--good-bg)" : blocked.has(k) ? "var(--hair)" : "var(--glass-2)", borderColor: i === 0 ? "var(--accent)" : isFree ? "transparent" : "var(--line)", boxShadow: i === 0 ? "0 0 0 2px rgba(29,111,242,.2)" : undefined, opacity: we && !ev.length ? 0.8 : 1 }}>
+                <Link key={k} href={`/calendar?d=${k}`} className="rounded-[10px] sm:rounded-[14px] p-1.5 sm:p-2 min-h-[74px] sm:min-h-[86px] flex flex-col gap-1 border text-left" style={{ background: isFree ? "var(--good-bg)" : blocked.has(k) ? "var(--hair)" : "var(--glass-2)", borderColor: i === 0 ? "var(--accent)" : isFree ? "transparent" : "var(--line)", boxShadow: i === 0 ? "0 0 0 2px var(--ring)" : undefined, opacity: we && !ev.length ? 0.8 : 1 }}>
                   <div className="flex justify-between items-baseline text-xs font-bold"><span>{d.getDate()}</span><small className="font-medium text-muted text-[10px] uppercase">{format(d, "EEEEEE", { locale: uk })}</small></div>
                   {ev.map((s) => <span key={s.id} className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-[7px] truncate" style={{ background: TONE_BG[TYPE_TONE[s.type]], color: TONE_FG[TYPE_TONE[s.type]] }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}
                   {dl.map((s) => <span key={"dl" + s.id} className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-[7px] truncate bg-fg text-bg">⏱ {s.client_name}</span>)}
@@ -88,7 +88,7 @@ export default async function HomePage() {
             <section className="card">
               <div className="flex justify-between items-baseline mb-3.5"><h2 className="text-lg font-bold">Отримано за 12 місяців</h2><Link href="/analytics" className="text-[13px] font-semibold text-accent">Аналітика →</Link></div>
               <div className="flex items-end gap-2 h-[180px]">
-                {m12.map((m, i) => <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5"><div className="text-[10px] text-muted font-semibold num whitespace-nowrap">{m.income ? moneyK(m.income) : ""}</div><i className="block w-full rounded-t-lg rounded-b" style={{ height: Math.max(4, Math.round(m.income / max12 * 140)), background: i === 11 ? "linear-gradient(180deg,var(--accent-2),var(--accent))" : "linear-gradient(180deg,rgba(79,155,255,.5),rgba(29,111,242,.35))", boxShadow: i === 11 ? "0 6px 16px rgba(29,111,242,.3)" : undefined }} /></div>)}
+                {m12.map((m, i) => <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5"><div className="text-[10px] text-muted font-semibold num whitespace-nowrap">{m.income ? moneyK(m.income) : ""}</div><i className="block w-full rounded-t-lg rounded-b" style={{ height: Math.max(4, Math.round(m.income / max12 * 140)), background: i === 11 ? "var(--accent)" : "var(--bar-dim)" }} /></div>)}
               </div>
               <div className="flex gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] font-semibold text-muted min-w-0">{m.label}</span>)}</div>
               <p className="text-xs text-muted mt-3">{format(cur.d, "LLLL", { locale: uk })}: <b className="num text-fg">{money(cur.income)}</b>{delta != null && <> <span className="font-bold" style={{ color: delta >= 0 ? "var(--good)" : "var(--warn)" }}>{delta >= 0 ? "↑ +" : "↓ "}{delta}%</span> до {format(prev.d, "LLLL", { locale: uk }).toLowerCase()}</>}</p>
@@ -99,9 +99,9 @@ export default async function HomePage() {
               <h2 className="text-lg font-bold mb-3.5">В роботі зараз</h2>
               <div className="flex flex-col gap-2">{inWork.length ? inWork.map((s) => <ShootRow key={s.id} s={s} />) : <div className="empty">Нічого не висить — усе віддано ✨</div>}</div>
             </section>
-            <section className="rounded-[22px] p-5 text-white flex flex-wrap gap-4 items-center justify-between" style={{ background: "linear-gradient(135deg,#1d6ff2,#4f9bff)", boxShadow: "0 14px 36px rgba(29,111,242,.3)" }}>
+            <section className="rounded-[24px] p-5 flex flex-wrap gap-4 items-center justify-between" style={{ background: "var(--accent)", color: "var(--accent-fg)" }}>
               <div className="flex-1 min-w-[200px]"><div className="text-xs font-semibold opacity-85">ФОП 3 група · поточний квартал</div><div className="text-2xl font-extrabold tracking-tight num">{money(qTax)}</div><div className="text-xs opacity-90">ЄП {settings.ep_rate}% + ВЗ {settings.vz_rate}% з отриманих {money(qInc)}</div></div>
-              <Link href="/taxes" className="btn bg-white border-0" style={{ color: "#1d4ed8" }}>Податковий модуль</Link>
+              <Link href="/taxes" className="btn btn-good border-0">Податковий модуль</Link>
             </section>
           </div>
         </div>

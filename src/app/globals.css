@@ -1,26 +1,29 @@
 @import "tailwindcss";
 
-/* Design tokens — Glass direction chosen in the prototype */
+/* Design tokens — "Bento": white cards on light grey, nested grey plates, black primary, lime for "good".
+   Token names are kept from the Glass version so every screen restyles without markup changes:
+   --glass = card surface, --glass-2 = nested plate, --line = card border (none), --hair = subtle divider. */
 :root {
-  --bg: #eef2fa; --fg: #1c1c1e; --muted: #5b5b66; --muted-2: #8a8a95;
-  --glass: rgba(255,255,255,0.62); --glass-2: rgba(255,255,255,0.78); --line: rgba(255,255,255,0.85); --hair: rgba(60,80,140,0.10);
-  --accent: #1d6ff2; --accent-2: #4f9bff;
-  --good: #15803d; --good-bg: #dcfce7; --warn: #c2410c; --warn-bg: #ffe4d6; --info: #1d4ed8; --info-bg: #dcebff;
-  --purple: #6d28d9; --purple-bg: #ede9fe; --sun: #7a5a00; --sun-bg: #ffe9a8; --pink: #be185d; --pink-bg: #fce7f3;
-  --assist-a: #312e81; --assist-b: #4f46e5; --assist-soft: rgba(79,70,229,0.12);
-  --blob-1: #ffc7b3; --blob-2: #bfd0ff; --blob-3: #b9f0d6; --blob-4: #ffe9a8;
-  --shadow: 0 10px 30px rgba(60,80,140,0.08); --shadow-2: 0 14px 36px rgba(60,80,140,0.14);
+  --bg: #f2f3f5; --fg: #111113; --muted: #6b6b72; --muted-2: #9a9aa3;
+  --glass: #ffffff; --glass-2: #f3f4f6; --line: transparent; --hair: rgba(17,17,19,0.08);
+  --accent: #111113; --accent-2: #2a2a2e; --accent-fg: #ffffff;
+  --lime: #a3e635; --lime-2: #4ade80;
+  --good: #3f8f1e; --good-bg: #e9f9d3; --warn: #c2410c; --warn-bg: #ffe8dc; --info: #2f5fd6; --info-bg: #e4ecff;
+  --purple: #6d28d9; --purple-bg: #ede9fe; --sun: #8a5a00; --sun-bg: #fff1c2; --pink: #be185d; --pink-bg: #fce7f3;
+  --assist-a: #111113; --assist-b: #1c1c1f; --assist-soft: #f3f4f6; --assist-fg: #ffffff;
+  --shadow: 0 1px 2px rgba(17,17,19,0.04); --shadow-2: 0 12px 32px rgba(17,17,19,0.14);
+  --bar-dim: rgba(17,17,19,0.12); --bar-mid: rgba(17,17,19,0.28); --ring: rgba(17,17,19,0.16); --on-dark-soft: rgba(255,255,255,0.12);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1120; --fg: #f2f3f7; --muted: #a8abba; --muted-2: #7c7f8e;
-    --glass: rgba(255,255,255,0.07); --glass-2: rgba(255,255,255,0.11); --line: rgba(255,255,255,0.12); --hair: rgba(255,255,255,0.10);
-    --accent: #5b9cff; --accent-2: #8dbbff;
-    --good: #4ade80; --good-bg: rgba(74,222,128,0.16); --warn: #fb923c; --warn-bg: rgba(251,146,60,0.18); --info: #93b4ff; --info-bg: rgba(93,156,255,0.18);
-    --purple: #c4b5fd; --purple-bg: rgba(167,139,250,0.2); --sun: #fcd34d; --sun-bg: rgba(252,211,77,0.16); --pink: #f9a8d4; --pink-bg: rgba(244,114,182,0.18);
-    --assist-a: #4338ca; --assist-b: #6366f1; --assist-soft: rgba(99,102,241,0.2);
-    --blob-1: #7a3a2c; --blob-2: #2b3c7a; --blob-3: #1f5c44; --blob-4: #6b5a1a;
-    --shadow: 0 10px 30px rgba(0,0,0,0.35); --shadow-2: 0 14px 36px rgba(0,0,0,0.5);
+    --bg: #0b0b0c; --fg: #f4f4f5; --muted: #a1a1aa; --muted-2: #71717a;
+    --glass: #161618; --glass-2: #222225; --line: transparent; --hair: rgba(255,255,255,0.10);
+    --accent: #f4f4f5; --accent-2: #d4d4d8; --accent-fg: #0b0b0c;
+    --good: #a3e635; --good-bg: rgba(163,230,53,0.16); --warn: #fb923c; --warn-bg: rgba(251,146,60,0.16); --info: #93b4ff; --info-bg: rgba(93,156,255,0.16);
+    --purple: #c4b5fd; --purple-bg: rgba(167,139,250,0.18); --sun: #fcd34d; --sun-bg: rgba(252,211,77,0.14); --pink: #f9a8d4; --pink-bg: rgba(244,114,182,0.16);
+    --assist-a: #f4f4f5; --assist-b: #e4e4e7; --assist-soft: #222225; --assist-fg: #0b0b0c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3); --shadow-2: 0 12px 32px rgba(0,0,0,0.5);
+    --bar-dim: rgba(255,255,255,0.14); --bar-mid: rgba(255,255,255,0.32); --ring: rgba(255,255,255,0.22); --on-dark-soft: rgba(0,0,0,0.10);
     color-scheme: dark;
   }
 }
@@ -28,43 +31,45 @@
 @theme inline {
   --color-bg: var(--bg); --color-fg: var(--fg); --color-muted: var(--muted); --color-muted-2: var(--muted-2);
   --color-glass: var(--glass); --color-glass-2: var(--glass-2); --color-line: var(--line); --color-hair: var(--hair);
-  --color-accent: var(--accent); --color-accent-2: var(--accent-2);
+  --color-accent: var(--accent); --color-accent-2: var(--accent-2); --color-accent-fg: var(--accent-fg); --color-lime: var(--lime);
   --color-good: var(--good); --color-good-bg: var(--good-bg); --color-warn: var(--warn); --color-warn-bg: var(--warn-bg);
   --color-info: var(--info); --color-info-bg: var(--info-bg); --color-purple: var(--purple); --color-purple-bg: var(--purple-bg);
   --color-sun: var(--sun); --color-sun-bg: var(--sun-bg); --color-pink: var(--pink); --color-pink-bg: var(--pink-bg);
   --color-assist-a: var(--assist-a); --color-assist-b: var(--assist-b); --color-assist-soft: var(--assist-soft);
   --shadow-glass: var(--shadow); --shadow-glass-2: var(--shadow-2);
   --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --radius-card: 22px; --radius-sm: 14px;
+  --radius-card: 24px; --radius-sm: 16px;
 }
 
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--fg); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-h1, h2, h3 { letter-spacing: -0.025em; text-wrap: balance; }
+h1, h2, h3 { letter-spacing: -0.02em; text-wrap: balance; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .num { font-variant-numeric: tabular-nums; }
 
-@utility glass { background: var(--glass); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid var(--line); box-shadow: var(--shadow); }
+/* "glass" kept as the card surface utility; no blur in the bento look */
+@utility glass { background: var(--glass); border: 1px solid var(--line); box-shadow: var(--shadow); }
 
 @layer components {
-  .card { @apply glass rounded-[22px] p-5 min-w-0; }
-  .chip { @apply inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap; }
-  .btn { @apply inline-flex items-center justify-center gap-1.5 px-4 min-h-10 rounded-full border border-line bg-glass-2 font-semibold text-[13px] whitespace-nowrap cursor-pointer transition-shadow hover:shadow-glass disabled:opacity-50 disabled:cursor-default; }
-  .btn-primary { @apply border-0 text-white; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 18px rgba(29,111,242,0.35); }
-  .btn-good { @apply border-0 text-white; background: linear-gradient(135deg, #15a05a, #35c777); box-shadow: 0 6px 18px rgba(21,160,90,0.35); }
-  .btn-ghost { @apply bg-transparent border-transparent text-muted; }
+  .card { @apply glass rounded-[24px] p-5 min-w-0; }
+  .chip { @apply inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap; }
+  .btn { @apply inline-flex items-center justify-center gap-1.5 px-4 min-h-10 rounded-full bg-glass-2 font-semibold text-[13px] whitespace-nowrap cursor-pointer transition-colors hover:bg-hair disabled:opacity-50 disabled:cursor-default; border: 1px solid transparent; }
+  .btn-primary { @apply text-accent-fg hover:opacity-90; background: var(--accent); }
+  .btn-good { @apply text-fg; background: linear-gradient(135deg, var(--lime), var(--lime-2)); color: #111113; }
+  .btn-ghost { @apply bg-transparent text-muted; }
   .btn-sm { @apply px-3 min-h-8 text-xs; }
-  .icon-btn { @apply w-[38px] h-[38px] rounded-full inline-flex items-center justify-center border border-line bg-glass-2 cursor-pointer; }
-  .seg { @apply inline-flex gap-[3px] p-[3px] rounded-full glass max-w-full overflow-x-auto; }
+  .icon-btn { @apply w-[38px] h-[38px] rounded-full inline-flex items-center justify-center bg-glass-2 cursor-pointer hover:bg-hair; }
+  .seg { @apply inline-flex gap-[3px] p-[3px] rounded-full bg-glass-2 max-w-full overflow-x-auto; }
   .seg > * { @apply border-0 bg-transparent text-muted font-medium text-[13px] px-3.5 py-[7px] rounded-full whitespace-nowrap cursor-pointer; }
-  .seg > .on { @apply bg-glass-2 text-fg font-bold; box-shadow: 0 2px 8px rgba(60,80,140,0.14); }
+  .seg > .on { @apply text-fg font-semibold; background: var(--glass); box-shadow: var(--shadow); }
   .field label { @apply text-xs font-semibold text-muted; }
-  .field :is(input, select, textarea) { @apply w-full px-3 py-2.5 rounded-xl border border-line bg-glass-2 text-fg min-h-[42px]; }
-  .kv { @apply flex justify-between gap-3 px-3 py-2.5 rounded-xl bg-glass-2 text-[13px]; }
-  .srow { @apply flex items-center gap-3 px-3.5 py-3 rounded-2xl bg-glass-2 border border-line cursor-pointer transition-shadow hover:shadow-glass; }
+  .field :is(input, select, textarea) { @apply w-full px-3.5 py-2.5 rounded-2xl bg-glass-2 text-fg min-h-[44px]; border: 1px solid transparent; }
+  .field :is(input, select, textarea):focus { border-color: var(--hair); outline: none; background: var(--glass); box-shadow: 0 0 0 3px var(--hair); }
+  .kv { @apply flex justify-between gap-3 px-3.5 py-2.5 rounded-2xl bg-glass-2 text-[13px]; }
+  .srow { @apply flex items-center gap-3 px-3.5 py-3 rounded-[18px] bg-glass-2 cursor-pointer transition-colors hover:bg-hair; }
   .bar { @apply h-2.5 rounded-[5px] bg-hair overflow-hidden; }
   .bar > i { @apply block h-full rounded-[5px]; }
-  .empty { @apply p-5 border border-dashed border-hair rounded-2xl text-center text-muted font-medium; }
+  .empty { @apply p-5 rounded-2xl bg-glass-2 text-center text-muted font-medium; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

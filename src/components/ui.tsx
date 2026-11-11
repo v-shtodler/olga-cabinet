@@ -6,7 +6,7 @@ import { uk } from "date-fns/locale";
 
 export const TONE_BG: Record<Tone, string> = { good: "var(--good-bg)", warn: "var(--warn-bg)", info: "var(--info-bg)", purple: "var(--purple-bg)", sun: "var(--sun-bg)", pink: "var(--pink-bg)", neutral: "var(--glass-2)", dark: "var(--fg)" };
 export const TONE_FG: Record<Tone, string> = { good: "var(--good)", warn: "var(--warn)", info: "var(--info)", purple: "var(--purple)", sun: "var(--sun)", pink: "var(--pink)", neutral: "var(--muted)", dark: "var(--bg)" };
-export const GRADS = ["linear-gradient(135deg,#ff7a59,#ffb36b)", "linear-gradient(135deg,#8b5cf6,#b388ff)", "linear-gradient(135deg,#1d6ff2,#4f9bff)", "linear-gradient(135deg,#15a05a,#35c777)", "linear-gradient(135deg,#ec6aa3,#ff9bc2)", "linear-gradient(135deg,#f59e0b,#fbbf24)", "linear-gradient(135deg,#0ea5a0,#5eead4)", "linear-gradient(135deg,#6366f1,#a5b4fc)"];
+export const GRADS = ["#ec4899", "#84cc16", "#f97316", "#111113", "#3b82f6", "#a855f7", "#14b8a6", "#ef4444"];
 
 export function Chip({ tone, children, className }: { tone: Tone; children: React.ReactNode; className?: string }) {
   return <span className={clsx("chip", className)} style={{ background: TONE_BG[tone], color: TONE_FG[tone] }}>{children}</span>;
@@ -63,6 +63,6 @@ export function PageHead({ eyebrow, title, sub, actions }: { eyebrow?: string; t
   );
 }
 export function Bar({ pct, color }: { pct: number; color?: string }) {
-  return <div className="bar"><i style={{ width: `${Math.max(0, Math.min(100, pct))}%`, background: color ?? "linear-gradient(90deg,var(--accent-2),var(--accent))" }} /></div>;
+  return <div className="bar"><i style={{ width: `${Math.max(0, Math.min(100, pct))}%`, background: color ?? "linear-gradient(90deg,var(--lime),var(--lime-2))" }} /></div>;
 }
 export { fmtShort };
