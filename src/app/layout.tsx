@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Кабінет" },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
 export const viewport: Viewport = { themeColor: [{ media: "(prefers-color-scheme: light)", color: "#eef1fa" }, { media: "(prefers-color-scheme: dark)", color: "#111527" }], viewportFit: "cover", width: "device-width", initialScale: 1 };
 

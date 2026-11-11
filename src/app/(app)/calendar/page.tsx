@@ -72,7 +72,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               {selDl.map((s) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow bg-fg text-bg"><div className="w-12 h-12 shrink-0 rounded-[14px] flex items-center justify-center" style={{ background: "rgba(255,255,255,.15)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати: {s.title}</div><div className="text-xs opacity-80 truncate">{s.client_name} · {s.photos} фото{s.extra_photos ? ` + ${s.extra_photos}` : ""}</div></div></Link>)}
               {!selShoots.length && !selDl.length && <div className="empty">{selBlocked ? "День закритий для зйомок." : "Нічого не заплановано."}</div>}
             </div>
-            {sel >= today && <form action={toggleBlockedDay.bind(null, sel)} className="mt-3"><button className="btn btn-sm">{selBlocked ? "Відкрити день" : "Закрити день (особисте)"}</button></form>}
+            {sel >= today && <form action={toggleBlockedDay.bind(null, sel)} data-op="toggleBlockedDay" data-args={JSON.stringify([sel])} data-label={sel} className="mt-3"><button className="btn btn-sm">{selBlocked ? "Відкрити день" : "Закрити день (особисте)"}</button></form>}
           </section>
           <section className="card">
             <h2 className="text-lg font-bold mb-3">{format(monthStart, "LLLL", { locale: uk })[0].toUpperCase() + format(monthStart, "LLLL", { locale: uk }).slice(1)} у цифрах</h2>

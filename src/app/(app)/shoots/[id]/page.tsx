@@ -4,7 +4,7 @@ import { getShoot, getShoots, getClients, getClientPrefs, getSettings, getDismis
 import { STATUSES, STATUS_UA, NEXT_STEP, TYPE_TONE, STATUS_TONE, buildInsights, money, fmtDate, fmtShort, fmtWeekday, relDays, daysBetween, todayISO, statusIdx } from "@/lib/domain";
 import { Chip, Avatar, Kpi, Bar } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
-import { advanceShoot, cancelShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, toggleChecklist, deletePayment } from "@/app/actions";
+import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment } from "@/app/actions";
 import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle } from "./client-bits";
 import * as I from "@/components/icons";
 
@@ -34,9 +34,9 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             <p className="text-muted mt-2">📅 {fmtWeekday(s.date)}, {fmtDate(s.date, true)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}–${s.end_time?.slice(0, 5)}` : ""} &nbsp; 📍 {s.location ?? "—"} &nbsp; 👤 <Link href={`/clients/${c.id}`} className="text-accent font-semibold">{c.name}</Link>{c.contact_name ? ` · ${c.contact_name}` : ""}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)}><button className={`btn ${s.status === "delivered" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
+            {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)} data-op="advanceShoot" data-args={JSON.stringify([s.id])} data-label={NEXT_STEP[s.status] ?? ""}><button className={`btn ${s.status === "delivered" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
             <Link href={`/shoots/new?dup=${s.id}`} className="btn">Дублювати</Link>
-            {s.status !== "paid" && s.status !== "cancelled" && <CancelButton action={cancelShoot.bind(null, s.id)} />}
+            {s.status !== "paid" && s.status !== "cancelled" && <CancelButton id={s.id} />}
           </div>
         </div>
         {s.status !== "cancelled" && <div className="flex gap-1.5 overflow-x-auto mt-4 pb-0.5">{STATUSES.map((k, i) => <div key={k} className="flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border" style={{ background: i === idx ? "var(--info-bg)" : "var(--glass-2)", borderColor: i === idx ? "var(--accent)" : "var(--line)", color: i < idx ? "var(--good)" : i === idx ? "var(--fg)" : "var(--muted)" }}><span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[11px]" style={{ background: i < idx ? "var(--good-bg)" : i === idx ? "var(--accent)" : "var(--hair)", color: i === idx ? "#fff" : "inherit" }}>{i < idx ? "✓" : i + 1}</span>{STATUS_UA[k]}</div>)}</div>}
@@ -56,12 +56,12 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           <section className="card">
             <div className="flex justify-between items-baseline mb-3"><h2 className="text-lg font-bold">Фінанси</h2></div>
             <div className="flex flex-col gap-1.5">
-              {payments.map((p) => <div key={p.id} className="kv items-center"><span>{{ deposit: "Передоплата", balance: "Залишок", extra: "Доплата", refund: "Повернення" }[p.kind]} · {{ invoice: "Рахунок ФОП", card: "Картка", cash: "Готівка", other: "Інше" }[p.method]} · {fmtDate(p.paid_on)}</span><span className="flex items-center gap-3"><b className="num" style={{ color: "var(--good)" }}>+ {money(Number(p.amount))}</b><form action={deletePayment.bind(null, p.id)}><button className="text-muted text-xs" aria-label="Видалити платіж" title="Видалити">×</button></form></span></div>)}
+              {payments.map((p) => <div key={p.id} className="kv items-center"><span>{{ deposit: "Передоплата", balance: "Залишок", extra: "Доплата", refund: "Повернення" }[p.kind]} · {{ invoice: "Рахунок ФОП", card: "Картка", cash: "Готівка", other: "Інше" }[p.method]} · {fmtDate(p.paid_on)}</span><span className="flex items-center gap-3"><b className="num" style={{ color: "var(--good)" }}>+ {money(Number(p.amount))}</b><form action={deletePayment.bind(null, p.id)} data-op="deletePayment" data-args={JSON.stringify([p.id])}><button className="text-muted text-xs" aria-label="Видалити платіж" title="Видалити">×</button></form></span></div>)}
               {s.balance > 0 && <div className="kv" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><span>Залишок{s.invoice_sent_on ? ` · рахунок виставлено ${relDays(-(s.invoice_age_days ?? 0))}` : s.status === "request" ? ` · очікую передоплату ${money(Math.round(s.price * s.deposit_pct / 100))}` : " · після віддачі"}</span><b className="num">{money(s.balance)}</b></div>}
             </div>
             <div className="flex gap-2 flex-wrap mt-3">
               <PaymentForm shootId={s.id} suggested={s.balance > 0 ? s.balance : 0} hasDeposit={payments.length > 0} />
-              {!s.invoice_sent_on && s.status === "delivered" && s.balance > 0 && <form action={markInvoiceSent.bind(null, s.id)}><button className="btn btn-sm">Рахунок виставлено сьогодні</button></form>}
+              {!s.invoice_sent_on && s.status === "delivered" && s.balance > 0 && <form action={markInvoiceSent.bind(null, s.id)} data-op="markInvoiceSent" data-args={JSON.stringify([s.id])}><button className="btn btn-sm">Рахунок виставлено сьогодні</button></form>}
             </div>
           </section>
 
@@ -80,16 +80,16 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           <section className="card">
             <h2 className="text-lg font-bold mb-3">Замітки</h2>
             <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 border border-line text-[13px] leading-relaxed"><div className="text-[11px] text-muted font-semibold mb-1">{fmtDate(n.created_at.slice(0, 10))}</div>{n.text}</div>) : <div className="empty">Поки без заміток.</div>}</div>
-            <form action={addNote.bind(null, s.id)} className="field flex flex-col gap-1.5 mt-3"><label htmlFor="note">Додати замітку</label><textarea id="note" name="text" placeholder="Що важливо не забути…" maxLength={2000} required /><div><button className="btn btn-sm btn-primary mt-2">Зберегти</button></div></form>
+            <form action={addNote.bind(null, s.id)} data-op="addNote" data-args={JSON.stringify([s.id])} className="field flex flex-col gap-1.5 mt-3"><label htmlFor="note">Додати замітку</label><textarea id="note" name="text" placeholder="Що важливо не забути…" maxLength={2000} required /><div><button className="btn btn-sm btn-primary mt-2">Зберегти</button></div></form>
           </section>
 
           <section className="card">
             <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Чек-лист</h2><span className="text-xs font-bold" style={{ color: "var(--good)" }}>{done} з {checklist.length}</span></div>
             {checklist.length > 0 && <div className="mb-3"><Bar pct={done / checklist.length * 100} color="linear-gradient(90deg,#35c777,#15a05a)" /></div>}
-            <div className="flex flex-col gap-1.5">{checklist.map((ci) => <ChecklistToggle key={ci.id} id={ci.id} text={ci.text} done={ci.done} action={toggleChecklist} />)}</div>
+            <div className="flex flex-col gap-1.5">{checklist.map((ci) => <ChecklistToggle key={ci.id} id={ci.id} text={ci.text} done={ci.done} />)}</div>
             <div className="flex gap-2 flex-wrap mt-3">
-              <form action={addChecklistItem.bind(null, s.id)} className="flex gap-2 flex-1 min-w-[220px]"><input name="text" placeholder="Новий пункт" required maxLength={200} className="flex-1 px-3 py-2 rounded-xl border border-line bg-glass-2" aria-label="Новий пункт" /><button className="btn btn-sm">Додати</button></form>
-              {checklist.length === 0 && <form action={addDefaultChecklist.bind(null, s.id)}><button className="btn btn-sm btn-ghost">Стандартний чек-лист</button></form>}
+              <form action={addChecklistItem.bind(null, s.id)} data-op="addChecklistItem" data-args={JSON.stringify([s.id])} className="flex gap-2 flex-1 min-w-[220px]"><input name="text" placeholder="Новий пункт" required maxLength={200} className="flex-1 px-3 py-2 rounded-xl border border-line bg-glass-2" aria-label="Новий пункт" /><button className="btn btn-sm">Додати</button></form>
+              {checklist.length === 0 && <form action={addDefaultChecklist.bind(null, s.id)} data-op="addDefaultChecklist" data-args={JSON.stringify([s.id])}><button className="btn btn-sm btn-ghost">Стандартний чек-лист</button></form>}
             </div>
           </section>
         </div>

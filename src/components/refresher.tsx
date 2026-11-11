@@ -18,7 +18,7 @@ export function Refresher() {
 
   useEffect(() => {
     const refresh = () => {
-      if (document.visibilityState !== "visible") return;
+      if (document.visibilityState !== "visible" || !navigator.onLine) return;
       const now = Date.now();
       if (now - last.current < MIN_GAP_MS) return;
       last.current = now;

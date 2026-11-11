@@ -25,8 +25,8 @@ export function Assistant({ items, title = "Помічник", empty = "Усе �
                 <div className="text-sm font-medium leading-snug">{i.text}</div>
                 <div className="flex gap-2 mt-1 flex-wrap">
                   {i.action?.href && <Link href={i.action.href} className="rounded-full px-3 py-1.5 text-xs font-bold bg-white" style={{ color: "var(--assist-b)" }}>{i.action.label}</Link>}
-                  {i.action?.taxKey && <form action={markTaxPaid.bind(null, i.action.taxKey)}><button className="rounded-full px-3 py-1.5 text-xs font-bold bg-white" style={{ color: "var(--assist-b)" }}>{i.action.label}</button></form>}
-                  <form action={dismissInsight.bind(null, i.key)}><button className="rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ background: "rgba(255,255,255,.15)" }}>Приховати на тиждень</button></form>
+                  {i.action?.taxKey && <form action={markTaxPaid.bind(null, i.action.taxKey)} data-op="markTaxPaid" data-args={JSON.stringify([i.action.taxKey])}><button className="rounded-full px-3 py-1.5 text-xs font-bold bg-white" style={{ color: "var(--assist-b)" }}>{i.action.label}</button></form>}
+                  <form action={dismissInsight.bind(null, i.key)} data-op="dismissInsight" data-args={JSON.stringify([i.key])}><button className="rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ background: "rgba(255,255,255,.15)" }}>Приховати на тиждень</button></form>
                 </div>
               </div>
             </div>

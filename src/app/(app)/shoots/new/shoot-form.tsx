@@ -3,6 +3,8 @@ import { useState, useTransition } from "react";
 import { addDays, format } from "date-fns";
 import type { Client, Preset, Shoot, ShootType } from "@/lib/domain";
 import { createShoot } from "@/app/actions";
+import { callOrQueue } from "@/lib/outbox";
+import { useRouter } from "next/navigation";
 
 export function ShootForm({ clients, presets, initial }: { clients: Client[]; presets: Preset[]; initial: { date?: string; clientId?: string; source?: Shoot | null } }) {
   const src = initial.source;
@@ -22,6 +24,7 @@ export function ShootForm({ clients, presets, initial }: { clients: Client[]; pr
   const [end, setEnd] = useState(src?.end_time?.slice(0, 5) ?? "15:00");
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const router = useRouter();
 
   function applyType(t: ShootType) {
     const p = presets.find((x) => x.type === t); if (!p) return;
@@ -35,7 +38,7 @@ export function ShootForm({ clients, presets, initial }: { clients: Client[]; pr
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setErr(null);
     const fd = new FormData(e.currentTarget);
-    startTransition(async () => { try { await createShoot(fd); } catch (x) { setErr(x instanceof Error ? x.message : "Не вдалося зберегти"); } });
+    startTransition(async () => { try { const r = await callOrQueue("createShoot", [], fd, `Нова зйомка: ${fd.get("title")} · ${fd.get("date")}`, () => createShoot(fd)); if (r.queued) router.push("/shoots"); } catch (x) { setErr(x instanceof Error ? x.message : "Не вдалося зберегти"); } });
   }
 
   const TYPE_LABEL: Record<ShootType, string> = Object.fromEntries(presets.map((p) => [p.type, p.label])) as Record<ShootType, string>;

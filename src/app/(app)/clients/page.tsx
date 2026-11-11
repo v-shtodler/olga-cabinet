@@ -28,7 +28,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       {isNew && (
         <section className="card mb-3.5">
           <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Новий замовник</h2><Link href="/clients" className="icon-btn" aria-label="Закрити"><I.X /></Link></div>
-          <form action={createClient_} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <form action={createClient_} data-op="createClient_" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="c-name">Назва</label><input id="c-name" name="name" required maxLength={120} placeholder="Modna Kasha" /></div>
             <div className="field flex flex-col gap-1.5"><label htmlFor="c-kind">Хто це</label><input id="c-kind" name="kind" maxLength={80} placeholder="Бренд одягу" /></div>
             <div className="field flex flex-col gap-1.5"><label htmlFor="c-contact">Контактна особа</label><input id="c-contact" name="contact_name" maxLength={120} /></div>
