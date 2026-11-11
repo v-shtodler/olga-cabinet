@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Client router cache: visited screens are reused instantly for up to 3 min; <Refresher /> refreshes them silently.
+  experimental: { staleTimes: { dynamic: 180, static: 300 } },
   async headers() {
     return [
       {
