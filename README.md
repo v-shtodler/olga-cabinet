@@ -45,3 +45,12 @@ scripts/seed.ts        демо-дані
 - `proxy.ts` редіректить неавторизованих на `/login`.
 - `X-Robots-Tag: noindex`, `robots.txt: Disallow /`.
 - Рекомендовано: Cloudflare Zero Trust → Access на субдомен (другий замок, безкоштовно).
+
+## Офлайн-режим
+
+- `public/sw.js` — service worker: статика cache-first; HTML та RSC-відповіді екранів network-first з таймаутом 6 с і падінням на кеш; без кешу — `/offline`. `V` у файлі — версія кешу (підняти при зміні логіки).
+- `src/lib/outbox.ts` — черга змін у `localStorage` (`outbox.v1`): `enqueue / list / remove / flush / callOrQueue`.
+- `src/components/offline.tsx` — реєструє SW, перехоплює `submit` у формах із `data-op` / `data-args` коли `navigator.onLine === false`, показує смугу «Офлайн» / «N змін очікують», тости, відправляє чергу при `online`, завантаженні та поверненні у вкладку.
+- `src/app/api/sync/route.ts` — повторює дію на сервері: викликає ту саму Server Action з `actions.ts` за назвою (allow-list `OPS`).
+- Нову серверну дію, яка має працювати офлайн: додати у `OPS`, у `OP_LABEL`, і на `<form>` поставити `data-op="name" data-args={JSON.stringify([...])}`; у клієнтському коді — обгорнути в `callOrQueue`.
+- Обмеження: файли (фото) офлайн не ставляться в чергу; черга видно лише у списку, у календар до синхронізації не потрапляє; порядок відправки — як додавали; при 4xx помилка зберігається біля пункту, пункт можна видалити.
