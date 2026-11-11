@@ -22,8 +22,12 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
-  const isPublic = path.startsWith("/login") || path.startsWith("/auth") || path === "/offline";
+  const isPublic = path.startsWith("/login") || path.startsWith("/auth") || path === "/offline" || path === "/api/ping";
 
+  if (!user && path.startsWith("/api/") && !isPublic) {
+    // API callers (the offline outbox) must see a real 401, not a redirect to the login page
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

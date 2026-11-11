@@ -44,18 +44,23 @@ export function clear() { save([]); }
 
 let flushing = false;
 /** Replays queued jobs in order. Stops at the first network failure or 401 (login needed); a 4xx leaves the job marked with its error and continues. */
-export async function flush(): Promise<{ sent: number; failed: number; stopped: boolean }> {
-  if (flushing || !isOnline()) return { sent: 0, failed: 0, stopped: true };
+export async function flush(): Promise<{ sent: number; failed: number; stopped: false | "network" | "auth" | "busy" }> {
+  if (flushing || !isOnline()) return { sent: 0, failed: 0, stopped: "busy" };
   flushing = true;
-  let sent = 0, failed = 0, stopped = false;
+  let sent = 0, failed = 0, stopped: false | "network" | "auth" = false;
   try {
     for (const job of list()) {
       let res: Response;
       try {
         res = await fetch("/api/sync", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op: job.op, args: job.args, form: job.form }), credentials: "same-origin" });
-      } catch { stopped = true; break; }
-      if (res.ok) { remove(job.id); sent++; continue; }
-      if (res.status === 401) { stopped = true; break; }
+      } catch { stopped = "network"; break; }
+      if (res.status === 401) { stopped = "auth"; break; }
+      const ct = res.headers.get("content-type") ?? "";
+      if (res.ok && ct.includes("application/json")) {
+        const j = await res.json().catch(() => null) as { ok?: boolean } | null;
+        if (j?.ok === true) { remove(job.id); sent++; continue; }
+      }
+      if (!ct.includes("application/json")) { stopped = "network"; break; } // unexpected answer (e.g. a login page) — keep the job, try later
       const msg = (await res.json().catch(() => ({ error: res.statusText }))).error ?? "Помилка";
       save(list().map((j) => (j.id === job.id ? { ...j, error: String(msg) } : j)));
       failed++;
@@ -71,6 +76,16 @@ export async function callOrQueue<T>(op: string, args: unknown[], form: FormData
     if (isNetworkError(e)) { enqueue(op, args, form, label); toast("Немає зв’язку — зміну поставлено в чергу"); return { queued: true }; }
     throw e;
   }
+}
+
+/** Explicit sign-out: send what is pending, then drop the queue and every cached screen on this device. */
+export async function cleanupForSignOut() {
+  if (isOnline() && list().length) await flush();
+  clear();
+  await clearCaches();
+}
+export async function clearCaches() {
+  try { if ("caches" in window) for (const k of await caches.keys()) await caches.delete(k); } catch { /* ignore */ }
 }
 
 export function toast(text: string) { window.dispatchEvent(new CustomEvent("toast", { detail: text })); }

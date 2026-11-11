@@ -29,6 +29,7 @@ export function OfflineLayer() {
       const r = await flush();
       if (r.sent) { toast(`Відправлено ${r.sent} ${r.sent === 1 ? "зміну" : r.sent < 5 ? "зміни" : "змін"}`); start(() => router.refresh()); }
       if (r.failed) toast("Частину змін не вдалося застосувати — дивіться список");
+      if (r.stopped === "auth") toast("Сесія закінчилась — увійдіть знову, черга відправиться після входу");
     };
     const onOnline = () => { sync(); };
     const onVis = () => { if (document.visibilityState === "visible") sync(); };

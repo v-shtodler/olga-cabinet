@@ -2,7 +2,8 @@
    - static assets (/_next/static, icons, fonts): cache-first
    - pages (HTML) and Next's RSC payloads: network-first with a short timeout, fallback to the cached copy, then /offline
    - everything else (POST, API, auth): straight to the network, never cached */
-const V = "v2";
+const V = "v3";
+const STATIC_MAX = 160;
 const STATIC = `static-${V}`, PAGES = `pages-${V}`, RSC = `rsc-${V}`;
 const OFFLINE_URL = "/offline";
 const NET_TIMEOUT = 6000;
@@ -26,7 +27,10 @@ self.addEventListener("fetch", (e) => {
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) return;
 
   if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || /\.(?:png|svg|ico|woff2?|webmanifest)$/.test(url.pathname)) {
-    e.respondWith(caches.open(STATIC).then(async (c) => (await c.match(req)) || fetch(req).then((r) => { if (r.ok) c.put(req, r.clone()); return r; })));
+    e.respondWith(caches.open(STATIC).then(async (c) => (await c.match(req)) || fetch(req).then(async (r) => {
+      if (r.ok) { await c.put(req, r.clone()); const ks = await c.keys(); if (ks.length > STATIC_MAX) await Promise.all(ks.slice(0, ks.length - STATIC_MAX).map((k) => c.delete(k))); }
+      return r;
+    })));
     return;
   }
 
@@ -40,7 +44,8 @@ self.addEventListener("fetch", (e) => {
     const c = await caches.open(cacheName);
     try {
       const r = await withTimeout(fetch(req), NET_TIMEOUT);
-      if (r.ok && r.status === 200 && !url.pathname.startsWith("/login")) c.put(key, r.clone());
+      const landed = r.url ? new URL(r.url).pathname : url.pathname;
+      if (r.ok && r.status === 200 && !r.redirected && !landed.startsWith("/login") && !url.pathname.startsWith("/login")) c.put(key, r.clone());
       return r;
     } catch {
       const hit = await c.match(key);

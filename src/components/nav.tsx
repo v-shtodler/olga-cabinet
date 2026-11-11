@@ -3,6 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import * as I from "./icons";
+import { cleanupForSignOut } from "@/lib/outbox";
+
+async function onSignOut(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault(); const form = e.currentTarget;
+  await cleanupForSignOut();
+  form.submit();
+}
 
 const ITEMS = [["/", "Огляд"], ["/calendar", "Календар"], ["/shoots", "Зйомки"], ["/clients", "Замовники"], ["/analytics", "Аналітика"], ["/taxes", "Податки"]] as const;
 
@@ -25,7 +32,7 @@ export function TopNav() {
       <div className="flex items-center gap-2">
         <Link href="/shoots/new" prefetch={true} className="btn btn-primary hidden md:inline-flex">+ Нова зйомка</Link>
         <Link href="/settings" className="icon-btn" aria-label="Налаштування"><I.Gear /></Link>
-        <form action="/auth/signout" method="post"><button className="w-[34px] h-[34px] rounded-full text-white text-[11px] font-bold" style={{ background: "linear-gradient(135deg,#8b5cf6,#ec6aa3)" }} title="Вийти" aria-label="Вийти">OV</button></form>
+        <form action="/auth/signout" method="post" onSubmit={onSignOut}><button className="w-[34px] h-[34px] rounded-full text-white text-[11px] font-bold" style={{ background: "linear-gradient(135deg,#8b5cf6,#ec6aa3)" }} title="Вийти" aria-label="Вийти">OV</button></form>
       </div>
     </header>
   );
