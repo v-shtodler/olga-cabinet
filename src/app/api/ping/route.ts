@@ -10,5 +10,5 @@ export async function GET(req: Request) {
   if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const supabase = await createClient();
   const { error, status } = await supabase.from("settings").select("id").limit(1); // RLS: anonymous sees 0 rows, but the query runs
-  return NextResponse.json({ ok: !error, status, at: new Date().toISOString() });
+  return NextResponse.json({ ok: !error, status, error: error?.message ?? null, at: new Date().toISOString() });
 }
