@@ -29,7 +29,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
     <>
       <Link href="/clients" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent mb-3"><I.Back /> Усі замовники</Link>
       <div className="flex justify-between items-end gap-4 flex-wrap mb-4 px-1">
-        <div className="flex items-center gap-3.5"><Avatar name={c.name} hue={c.avatar_hue} size={56} /><div><h1 className="text-[clamp(26px,4vw,38px)] font-extrabold tracking-tighter leading-[1.08]">{c.name}</h1><p className="text-muted mt-1">{[c.kind, c.contact_name, `з ${fmtDate(c.since, true)}`].filter(Boolean).join(" · ")}</p></div></div>
+        <div className="flex items-center gap-3.5"><Avatar name={c.name} hue={c.avatar_hue} size={56} /><div><h1 className="text-[clamp(26px,4vw,38px)] font-bold tracking-[-0.01em] leading-[1.08]">{c.name}</h1><p className="text-muted mt-1">{[c.kind, c.contact_name, `з ${fmtDate(c.since, true)}`].filter(Boolean).join(" · ")}</p></div></div>
         <Link href={`/shoots/new?client=${c.id}`} className="btn btn-primary">+ Зйомка для {c.name}</Link>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
@@ -42,17 +42,17 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
         <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5">
           {insights.length > 0 && <Assistant items={insights} title={`Помічник про ${c.name}`} />}
           <section className="card">
-            <div className="flex justify-between items-baseline mb-3"><h2 className="text-lg font-bold">Як змінювалась ціна</h2><span className="text-xs text-muted">останні оплачені зйомки</span></div>
+            <div className="flex justify-between items-baseline mb-3"><h2 className="text-[17px] font-semibold">Як змінювалась ціна</h2><span className="text-[13px] text-muted">останні оплачені зйомки</span></div>
             {paidList.length ? <><div className="flex items-end gap-2 h-[120px]">{paidList.map((s, i) => <div key={s.id} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5"><span className="text-[10px] text-muted font-semibold num">{moneyK(s.price)}</span><i className="block w-full rounded-t-lg rounded-b" style={{ height: Math.round(s.price / maxP * 90), background: i === paidList.length - 1 ? "var(--accent)" : "var(--fill)" }} /></div>)}</div><div className="flex gap-2 mt-1.5">{paidList.map((s) => <span key={s.id} className="flex-1 text-center text-[10px] font-semibold text-muted min-w-0">{fmtShort(s.date)}</span>)}</div></> : <div className="empty">Ще нема оплачених зйомок.</div>}
           </section>
-          <section className="card"><h2 className="text-lg font-bold mb-3">Усі зйомки</h2><div className="flex flex-col gap-2">{list.length ? list.map((s) => <ShootRow key={s.id} s={s} />) : <div className="empty">Ще не було зйомок.</div>}</div></section>
+          <section className="card"><h2 className="text-[17px] font-semibold mb-3">Усі зйомки</h2><div className="flex flex-col gap-2">{list.length ? list.map((s) => <ShootRow key={s.id} s={s} />) : <div className="empty">Ще не було зйомок.</div>}</div></section>
         </div>
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
           <section className="card">
-            <h2 className="text-lg font-bold mb-3">Що важливо</h2>
+            <h2 className="text-[17px] font-semibold mb-3">Що важливо</h2>
             <div className="flex flex-col gap-1.5">{prefs.map((p) => <div key={p.id} className="kv items-center"><span>{p.text}</span><form action={deleteClientPref.bind(null, p.id)} data-op="deleteClientPref" data-args={JSON.stringify([p.id])}><button className="text-muted" aria-label="Видалити">×</button></form></div>)}{!prefs.length && <div className="empty">Поки нічого.</div>}</div>
             <form action={addClientPref.bind(null, c.id)} data-op="addClientPref" data-args={JSON.stringify([c.id])} className="flex gap-2 mt-3"><input name="text" placeholder="Напр.: не любить теплий баланс" required maxLength={300} className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-line bg-glass-2" aria-label="Нова вимога" /><button className="btn btn-sm">Додати</button></form>
-            <p className="text-xs text-muted mt-2.5">Ці пункти помічник підказує за день до кожної зйомки з цим клієнтом.</p>
+            <p className="text-[13px] text-muted mt-2.5">Ці пункти помічник підказує за день до кожної зйомки з цим клієнтом.</p>
           </section>
           <ContactCard c={c} presets={presets} labelOf={Object.fromEntries(presets.map((p) => [p.type, p.label]))} />
           {shoots.length === 0 && <div className="px-1"><DangerButton label="Видалити замовника" confirm="Так, видалити" op="deleteClient" id={c.id} /></div>}

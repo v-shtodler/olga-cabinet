@@ -46,7 +46,7 @@ export default async function HomePage() {
       <div className="flex flex-col gap-4">
         {/* 14-day strip */}
         <section className="card">
-          <div className="flex justify-between items-baseline gap-3 mb-3.5 flex-wrap"><h2 className="text-lg font-bold">Найближчі 14 днів</h2><Link href="/calendar" className="text-[13px] font-semibold text-accent">Повний календар →</Link></div>
+          <div className="flex justify-between items-baseline gap-3 mb-3.5 flex-wrap"><h2 className="text-[17px] font-semibold">Найближчі 14 днів</h2><Link href="/calendar" className="text-[13px] font-semibold text-accent">Повний календар →</Link></div>
           <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {Array.from({ length: 14 }, (_, i) => {
               const d = addDays(now, i); const k = iso(d); const we = isWeekend(d); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
@@ -81,25 +81,25 @@ export default async function HomePage() {
         <div className="flex flex-wrap gap-3.5">
           <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5">
             <section className="card">
-              <div className="flex justify-between items-baseline mb-3.5"><h2 className="text-lg font-bold">Найближчі зйомки</h2><Link href="/shoots" className="text-[13px] font-semibold text-accent">Усі зйомки →</Link></div>
+              <div className="flex justify-between items-baseline mb-3.5"><h2 className="text-[17px] font-semibold">Найближчі зйомки</h2><Link href="/shoots" className="text-[13px] font-semibold text-accent">Усі зйомки →</Link></div>
               <div className="flex flex-col gap-2">{upcoming.length ? upcoming.slice(0, 5).map((s) => <ShootRow key={s.id} s={s} rel />) : <div className="empty">Запланованих зйомок нема — час писати клієнтам 🙂</div>}</div>
             </section>
             <section className="card">
-              <div className="flex justify-between items-baseline mb-3.5"><h2 className="text-lg font-bold">Отримано за 12 місяців</h2><Link href="/analytics" className="text-[13px] font-semibold text-accent">Аналітика →</Link></div>
+              <div className="flex justify-between items-baseline mb-3.5"><h2 className="text-[17px] font-semibold">Отримано за 12 місяців</h2><Link href="/analytics" className="text-[13px] font-semibold text-accent">Аналітика →</Link></div>
               <div className="flex items-end gap-2 h-[180px]">
                 {m12.map((m, i) => <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5"><div className="text-[10px] text-muted font-semibold num whitespace-nowrap">{m.income ? moneyK(m.income) : ""}</div><i className="block w-full rounded-t-lg rounded-b" style={{ height: Math.max(4, Math.round(m.income / max12 * 140)), background: i === 11 ? "var(--accent)" : "var(--fill)" }} /></div>)}
               </div>
               <div className="flex gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] font-semibold text-muted min-w-0">{m.label}</span>)}</div>
-              <p className="text-xs text-muted mt-3">{format(cur.d, "LLLL", { locale: uk })}: <b className="num text-fg">{money(cur.income)}</b>{delta != null && <> <span className="font-bold" style={{ color: delta >= 0 ? "var(--good)" : "var(--warn)" }}>{delta >= 0 ? "↑ +" : "↓ "}{delta}%</span> до {format(prev.d, "LLLL", { locale: uk }).toLowerCase()}</>}</p>
+              <p className="text-[13px] text-muted mt-3">{format(cur.d, "LLLL", { locale: uk })}: <b className="num text-fg">{money(cur.income)}</b>{delta != null && <> <span className="font-bold" style={{ color: delta >= 0 ? "var(--good)" : "var(--warn)" }}>{delta >= 0 ? "↑ +" : "↓ "}{delta}%</span> до {format(prev.d, "LLLL", { locale: uk }).toLowerCase()}</>}</p>
             </section>
           </div>
           <div className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
             <section className="card">
-              <h2 className="text-lg font-bold mb-3.5">В роботі зараз</h2>
+              <h2 className="text-[17px] font-semibold mb-3.5">В роботі зараз</h2>
               <div className="flex flex-col gap-2">{inWork.length ? inWork.map((s) => <ShootRow key={s.id} s={s} />) : <div className="empty">Нічого не висить — усе віддано ✨</div>}</div>
             </section>
             <section className="card flex flex-wrap gap-4 items-center justify-between" style={{ background: "var(--accent-tint)" }}>
-              <div className="flex-1 min-w-[200px]"><div className="text-[13px] font-semibold text-muted">ФОП 3 група · поточний квартал</div><div className="text-2xl font-extrabold tracking-tight num">{money(qTax)}</div><div className="text-[13px] text-muted">ЄП {settings.ep_rate}% + ВЗ {settings.vz_rate}% з отриманих {money(qInc)}</div></div>
+              <div className="flex-1 min-w-[200px]"><div className="text-[13px] font-semibold text-muted">ФОП 3 група · поточний квартал</div><div className="text-2xl font-bold tracking-[-0.01em] num">{money(qTax)}</div><div className="text-[13px] text-muted">ЄП {settings.ep_rate}% + ВЗ {settings.vz_rate}% з отриманих {money(qInc)}</div></div>
               <Link href="/taxes" className="btn btn-primary">Податковий модуль</Link>
             </section>
           </div>

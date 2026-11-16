@@ -23,7 +23,7 @@ export default async function SettingsPage() {
       <div className="flex flex-wrap gap-3.5">
         <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5">
           <section className="card">
-            <h2 className="text-lg font-bold mb-3">Профіль і податкові ставки</h2>
+            <h2 className="text-[17px] font-semibold mb-3">Профіль і податкові ставки</h2>
             <form action={saveSettings} data-op="saveSettings" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <F id="display_name" label="Як до вас звертатись" name="display_name" value={s.display_name} />
               <F id="rates_from" label="Ставки діють з" name="rates_from" type="date" value={s.rates_from} />
@@ -33,11 +33,11 @@ export default async function SettingsPage() {
               <F id="income_limit" label="Річний ліміт групи, ₴" name="income_limit" type="number" min={0} value={s.income_limit} />
               <F id="remind_days" label="Нагадувати про дедлайни за, днів" name="remind_days" type="number" min={1} max={14} value={s.remind_days} />
               <F id="month_capacity" label="Зйомок на місяць = 100% завантаженості" name="month_capacity" type="number" min={1} max={60} value={s.month_capacity} />
-              <div className="sm:col-span-2 flex items-center justify-between gap-3 flex-wrap"><span className="text-xs text-muted">Ставки та мінімалка змінюються щороку — перевіряйте в січні.</span><button className="btn btn-primary">Зберегти</button></div>
+              <div className="sm:col-span-2 flex items-center justify-between gap-3 flex-wrap"><span className="text-[13px] text-muted">Ставки та мінімалка змінюються щороку — перевіряйте в січні.</span><button className="btn btn-primary">Зберегти</button></div>
             </form>
           </section>
           <section className="card">
-            <div className="flex justify-between items-baseline mb-1 flex-wrap gap-2"><h2 className="text-lg font-bold">Реквізити для рахунків</h2><span className="text-xs text-muted">друкуються на рахунку ФОП</span></div>
+            <div className="flex justify-between items-baseline mb-1 flex-wrap gap-2"><h2 className="text-[17px] font-semibold">Реквізити для рахунків</h2><span className="text-[13px] text-muted">друкуються на рахунку ФОП</span></div>
             <p className="text-[13px] text-muted mb-3">Порожні поля на рахунку не показуються. Рахунок відкривається з картки зйомки → «Рахунок».</p>
             <form action={saveSettings} data-op="saveSettings" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* the same action needs the base fields too — pass them along hidden so one form saves everything */}
@@ -52,7 +52,7 @@ export default async function SettingsPage() {
             </form>
           </section>
           <section className="card">
-            <div className="flex justify-between items-baseline mb-3 flex-wrap gap-2"><h2 className="text-lg font-bold">Пресети типів зйомок</h2><span className="text-xs text-muted">що підставляється в нову зйомку</span></div>
+            <div className="flex justify-between items-baseline mb-3 flex-wrap gap-2"><h2 className="text-[17px] font-semibold">Пресети типів зйомок</h2><span className="text-[13px] text-muted">що підставляється в нову зйомку</span></div>
             <div className="flex flex-col gap-2">
               {presets.map((p) => (
                 <form key={p.type} action={savePreset} data-op="savePreset" data-label={p.label} className="grid grid-cols-3 sm:grid-cols-7 gap-2 items-end p-3 rounded-2xl bg-glass-2 border border-line">
@@ -70,9 +70,9 @@ export default async function SettingsPage() {
           </section>
         </div>
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
-          <section className="card"><h2 className="text-lg font-bold mb-2">Акаунт</h2><p className="text-[13px] text-muted mb-3">Ви увійшли як <b className="text-fg select-all">{user?.email}</b>. Реєстрація нових користувачів вимкнена — кабінет приватний.</p><div className="flex gap-2 flex-wrap"><a href="/api/export" className="btn" download>Резервна копія (JSON)</a><form action="/auth/signout" method="post"><button className="btn btn-ghost">Вийти</button></form></div><p className="text-xs text-muted mt-2.5">Копія містить усі ваші дані (зйомки, платежі, замовники, налаштування). Зберігайте її час від часу.</p></section>
+          <section className="card"><h2 className="text-[17px] font-semibold mb-2">Акаунт</h2><p className="text-[13px] text-muted mb-3">Ви увійшли як <b className="text-fg select-all">{user?.email}</b>. Реєстрація нових користувачів вимкнена — кабінет приватний.</p><div className="flex gap-2 flex-wrap"><a href="/api/export" className="btn" download>Резервна копія (JSON)</a><form action="/auth/signout" method="post"><button className="btn btn-ghost">Вийти</button></form></div><p className="text-[13px] text-muted mt-2.5">Копія містить усі ваші дані (зйомки, платежі, замовники, налаштування). Зберігайте її час від часу.</p></section>
           <IcalCard token={s.ical_token ?? null} />
-          <section className="card"><h2 className="text-lg font-bold mb-1">Тема</h2><p className="text-[13px] text-muted mb-3">Світла вдень, темна «нічна» — для очей увечері. Запам’ятовується на цьому пристрої; «Як у системі» перемикається разом із телефоном чи Mac.</p><ThemeToggle initial={theme} /></section>
+          <section className="card"><h2 className="text-[17px] font-semibold mb-1">Тема</h2><p className="text-[13px] text-muted mb-3">Світла вдень, темна «нічна» — для очей увечері. Запам’ятовується на цьому пристрої; «Як у системі» перемикається разом із телефоном чи Mac.</p><ThemeToggle initial={theme} /></section>
           <AssistantInline>Щоб додати кабінет на екран телефону: у Safari «Поділитися → На Початковий екран». Він відкриватиметься як застосунок, без адресного рядка.</AssistantInline>
           <AssistantInline>Податки рахуються за датами <b>отримання</b> платежів, а не за датами зйомок. Якщо гроші прийшли в іншому кварталі — поправте дату платежу в картці зйомки.</AssistantInline>
         </aside>

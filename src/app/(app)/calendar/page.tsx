@@ -36,7 +36,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       <div className="flex justify-between items-center gap-4 flex-wrap mb-4 px-1">
         <div className="flex items-center gap-3">
           <Link href={`/calendar?m=${prev}&d=${sel}`} className="icon-btn" aria-label="Попередній місяць"><I.Back size={14} /></Link>
-          <h1 className="text-[clamp(26px,4vw,38px)] font-extrabold tracking-tighter">{format(monthStart, "LLLL", { locale: uk })[0].toUpperCase() + format(monthStart, "LLLL", { locale: uk }).slice(1)} <span className="text-muted font-semibold">{format(monthStart, "yyyy")}</span></h1>
+          <h1 className="text-[clamp(26px,4vw,38px)] font-bold tracking-[-0.01em]">{format(monthStart, "LLLL", { locale: uk })[0].toUpperCase() + format(monthStart, "LLLL", { locale: uk }).slice(1)} <span className="text-muted font-semibold">{format(monthStart, "yyyy")}</span></h1>
           <Link href={`/calendar?m=${next}&d=${sel}`} className="icon-btn" aria-label="Наступний місяць"><I.Right /></Link>
         </div>
         <div className="flex gap-2 flex-wrap"><Link href={`/calendar?d=${today}`} className="btn">Сьогодні</Link><Link href={`/shoots/new?date=${sel}`} className="btn btn-primary">+ Зйомка на {format(selD, "d MMM", { locale: uk }).replace(".", "")}</Link></div>
@@ -66,7 +66,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
           <section className="card">
-            <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-lg font-bold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selWe ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selWe ? "вихідний" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
+            <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-[17px] font-semibold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selWe ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selWe ? "вихідний" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
             <div className="flex flex-col gap-2">
               {selShoots.map((s) => <ShootRow key={s.id} s={s} />)}
               {selDl.map((s) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow" style={{ background: "var(--sun-bg)" }}><div className="w-12 h-12 shrink-0 rounded-[12px] flex items-center justify-center" style={{ background: "var(--glass)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати: {s.title}</div><div className="text-[13px] text-muted truncate">{s.client_name} · {s.photos} фото{s.extra_photos ? ` + ${s.extra_photos}` : ""}</div></div></Link>)}
@@ -75,9 +75,9 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             {sel >= today && <form action={toggleBlockedDay.bind(null, sel)} data-op="toggleBlockedDay" data-args={JSON.stringify([sel])} data-label={sel} className="mt-3"><button className="btn btn-sm">{selBlocked ? "Відкрити день" : "Закрити день (особисте)"}</button></form>}
           </section>
           <section className="card">
-            <h2 className="text-lg font-bold mb-3">{format(monthStart, "LLLL", { locale: uk })[0].toUpperCase() + format(monthStart, "LLLL", { locale: uk }).slice(1)} у цифрах</h2>
-            <div className="grid grid-cols-2 gap-3">{[["Зйомок", inMonth.length], ["Годин роботи", `~${Math.round(hours)}`], ["Заплановано", money(planned)], ["Вільних днів", freeM.length]].map(([k, v]) => <div key={String(k)}><div className="text-xs text-muted font-semibold">{k}</div><div className="text-2xl font-extrabold tracking-tight num">{v}</div></div>)}</div>
-            <div className="mt-3.5"><div className="flex justify-between text-xs font-bold"><span className="text-muted">Завантаженість</span><span style={{ color: pct >= 90 ? "var(--warn)" : "var(--fg)" }}>{pct}%</span></div><div className="mt-1.5"><Bar pct={pct} color={pct >= 90 ? "var(--warn)" : undefined} /></div><p className="text-xs text-muted mt-2">100% ≈ {settings.month_capacity} зйомок на місяць (налаштовується). Вище 90% — ретуш починає зʼїдати вихідні.</p></div>
+            <h2 className="text-[17px] font-semibold mb-3">{format(monthStart, "LLLL", { locale: uk })[0].toUpperCase() + format(monthStart, "LLLL", { locale: uk }).slice(1)} у цифрах</h2>
+            <div className="grid grid-cols-2 gap-3">{[["Зйомок", inMonth.length], ["Годин роботи", `~${Math.round(hours)}`], ["Заплановано", money(planned)], ["Вільних днів", freeM.length]].map(([k, v]) => <div key={String(k)}><div className="text-[13px] text-muted font-semibold">{k}</div><div className="text-2xl font-bold tracking-[-0.01em] num">{v}</div></div>)}</div>
+            <div className="mt-3.5"><div className="flex justify-between text-xs font-bold"><span className="text-muted">Завантаженість</span><span style={{ color: pct >= 90 ? "var(--warn)" : "var(--fg)" }}>{pct}%</span></div><div className="mt-1.5"><Bar pct={pct} color={pct >= 90 ? "var(--warn)" : undefined} /></div><p className="text-[13px] text-muted mt-2">100% ≈ {settings.month_capacity} зйомок на місяць (налаштовується). Вище 90% — ретуш починає зʼїдати вихідні.</p></div>
           </section>
           <AssistantInline>Клацніть день — побачите, що там, і зможете додати зйомку на цю дату. «Закрити день» прибирає його з вільних вікон, які пропонує помічник.</AssistantInline>
         </aside>

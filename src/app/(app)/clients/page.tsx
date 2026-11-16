@@ -27,7 +27,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
 
       {isNew && (
         <section className="card mb-3.5">
-          <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Новий замовник</h2><Link href="/clients" className="icon-btn" aria-label="Закрити"><I.X /></Link></div>
+          <div className="flex justify-between items-center mb-3"><h2 className="text-[17px] font-semibold">Новий замовник</h2><Link href="/clients" className="icon-btn" aria-label="Закрити"><I.X /></Link></div>
           <form action={createClient_} data-op="createClient_" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="c-name">Назва</label><input id="c-name" name="name" required maxLength={120} placeholder="Modna Kasha" /></div>
             <div className="field flex flex-col gap-1.5"><label htmlFor="c-kind">Хто це</label><input id="c-kind" name="kind" maxLength={80} placeholder="Бренд одягу" /></div>
@@ -50,7 +50,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       <section className="card">
         {rows.length === 0 ? <div className="empty">Поки без замовників — додайте першого.</div> : (
           <div className="overflow-x-auto"><table className="w-full text-[13px]" style={{ borderCollapse: "separate", borderSpacing: "0 6px" }}>
-            <thead><tr className="text-xs text-muted">{["Замовник", "Типи", "Зйомок", "Дохід", "Середній чек", "Оплата", "Остання"].map((h, i) => <th key={h} className={`font-semibold px-2.5 py-0.5 text-left ${i >= 2 && i <= 4 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
+            <thead><tr className="text-[13px] text-muted">{["Замовник", "Типи", "Зйомок", "Дохід", "Середній чек", "Оплата", "Остання"].map((h, i) => <th key={h} className={`font-semibold px-2.5 py-0.5 text-left ${i >= 2 && i <= 4 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
             <tbody>{rows.map(({ c, st }) => (
               <tr key={c.id}>
                 <td className="px-2.5 py-2.5 bg-glass-2 rounded-l-xl"><Link href={`/clients/${c.id}`} className="flex items-center gap-2.5"><Avatar name={c.name} hue={c.avatar_hue} size={34} /><span><b>{c.name}</b><span className="block text-xs text-muted">{c.kind ?? ""}</span></span></Link></td>

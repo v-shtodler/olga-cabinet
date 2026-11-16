@@ -19,10 +19,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <span aria-hidden="true" className="w-8 h-8 rounded-[10px]" style={{ background: "linear-gradient(135deg,#0a84ff,#5e5ce6)" }} />
           <div>
             <div className="font-bold tracking-tight">Olga Voychik</div>
-            <div className="text-xs text-muted">Приватний кабінет</div>
+            <div className="text-[13px] text-muted">Приватний кабінет</div>
           </div>
         </div>
-        <h1 className="text-2xl font-extrabold tracking-tighter mb-1">Вхід</h1>
+        <h1 className="text-2xl font-bold tracking-[-0.01em] mb-1">Вхід</h1>
         <p className="text-muted text-[13px] mb-5">Тільки для власниці кабінету. Сторонніх акаунтів тут немає.</p>
         {error === "link" && <p className="text-warn text-[13px] mb-3">Посилання застаріло або вже використане. Запитайте нове.</p>}
         <LoginForm next={next ?? "/"} />

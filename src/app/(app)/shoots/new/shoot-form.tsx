@@ -76,7 +76,7 @@ export function ShootForm({ clients, presets, initial, editId }: { clients: Clie
       {!edit && <label className="sm:col-span-2 flex items-center gap-3 px-3 py-2.5 rounded-xl bg-glass-2 border border-line cursor-pointer font-medium"><input type="checkbox" name="deposit_received" checked={depositNow} onChange={(e) => setDepositNow(e.target.checked)} className="switch" /> Передоплату вже отримано — статус «Підтверджено»</label>}
       {!edit && depositNow && Number(deposit) > 0 && <div className="field flex flex-col gap-1.5"><label htmlFor="deposit_on">Дата передоплати <span className="font-normal">(визначає податковий квартал)</span></label><input id="deposit_on" name="deposit_on" type="date" defaultValue={format(new Date(), "yyyy-MM-dd")} /></div>}
       <div className="sm:col-span-2 flex items-center justify-between gap-3 flex-wrap">
-        <span className="text-xs text-muted">Пресет «{TYPE_LABEL[type]}» · ≈ {effHours} год разом · {rate} ₴/год</span>
+        <span className="text-[13px] text-muted">Пресет «{TYPE_LABEL[type]}» · ≈ {effHours} год разом · {rate} ₴/год</span>
         <button className="btn btn-primary" type="submit" disabled={pending}>{pending ? "Зберігаю…" : edit ? "Зберегти зміни" : "Створити зйомку"}</button>
       </div>
       {err && <p className="sm:col-span-2 text-warn text-[13px]">{err}</p>}

@@ -29,7 +29,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
       <section className="card mb-3.5">
         <div className="flex justify-between items-start gap-4 flex-wrap">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-2"><Chip tone={TYPE_TONE[s.type]}>{typeLabel}</Chip><Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip><span className="text-xs text-muted">№ {s.no}</span></div>
+            <div className="flex items-center gap-2 flex-wrap mb-2"><Chip tone={TYPE_TONE[s.type]}>{typeLabel}</Chip><Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip><span className="text-[13px] text-muted">№ {s.no}</span></div>
             <InlineTitle id={s.id} title={s.title} />
             <p className="text-muted mt-2">📅 {fmtWeekday(s.date)}, {fmtDate(s.date, true)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}–${s.end_time?.slice(0, 5)}` : ""} &nbsp; 📍 {s.location ?? "—"} &nbsp; 👤 <Link href={`/clients/${c.id}`} className="text-accent font-semibold">{c.name}</Link>{c.contact_name ? ` · ${c.contact_name}` : ""}</p>
           </div>
@@ -56,7 +56,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           {insights.length > 0 && <Assistant items={insights} title="Помічник про цю зйомку" />}
 
           <section className="card">
-            <div className="flex justify-between items-baseline mb-3 gap-2 flex-wrap"><h2 className="text-lg font-bold">Фінанси</h2>{s.status !== "cancelled" && <Link href={`/shoots/${s.id}/invoice`} className="btn btn-sm">Рахунок →</Link>}</div>
+            <div className="flex justify-between items-baseline mb-3 gap-2 flex-wrap"><h2 className="text-[17px] font-semibold">Фінанси</h2>{s.status !== "cancelled" && <Link href={`/shoots/${s.id}/invoice`} className="btn btn-sm">Рахунок →</Link>}</div>
             <div className="flex flex-col gap-1.5">
               {payments.map((p) => <div key={p.id} className="kv items-center"><span>{{ deposit: "Передоплата", balance: "Залишок", extra: "Доплата", refund: "Повернення" }[p.kind]} · {{ invoice: "Рахунок ФОП", card: "Картка", cash: "Готівка", other: "Інше" }[p.method]} · {fmtDate(p.paid_on)}</span><span className="flex items-center gap-3"><b className="num" style={{ color: "var(--good)" }}>+ {money(Number(p.amount))}</b><form action={deletePayment.bind(null, p.id)} data-op="deletePayment" data-args={JSON.stringify([p.id])}><button className="text-muted text-xs" aria-label="Видалити платіж" title="Видалити">×</button></form></span></div>)}
               {s.balance > 0 && <div className="kv" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><span>Залишок{s.invoice_sent_on ? ` · рахунок виставлено ${relDays(-(s.invoice_age_days ?? 0))}` : s.status === "request" ? ` · очікую передоплату ${money(Math.round(s.price * s.deposit_pct / 100))}` : " · після віддачі"}</span><b className="num">{money(s.balance)}</b></div>}
@@ -67,26 +67,26 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-          <section className="card"><h2 className="text-lg font-bold mb-3">Умови замовника</h2><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{terms.map(([k, v]) => <div key={k} className="kv"><span className="text-muted">{k}</span><b>{v}</b></div>)}<div className="kv items-center"><span className="text-muted">Віддано фото</span><PhotosDelivered id={s.id} value={s.photos_delivered} planned={s.photos} /></div></div></section>
+          <section className="card"><h2 className="text-[17px] font-semibold mb-3">Умови замовника</h2><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{terms.map(([k, v]) => <div key={k} className="kv"><span className="text-muted">{k}</span><b>{v}</b></div>)}<div className="kv items-center"><span className="text-muted">Віддано фото</span><PhotosDelivered id={s.id} value={s.photos_delivered} planned={s.photos} /></div></div></section>
 
           <section className="card">
-            <h2 className="text-lg font-bold mb-3">Таймінг · ≈ {s.total_hours} год</h2>
+            <h2 className="text-[17px] font-semibold mb-3">Таймінг · ≈ {s.total_hours} год</h2>
             <div className="flex h-9 gap-1">
               <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.prep_hours} 1 0`, background: "var(--sun-bg)", color: "var(--sun)" }}>Підготовка · {s.prep_hours}</div>
               <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.shoot_hours} 1 0`, background: "var(--accent)", color: "#fff" }}>Зйомка · {s.shoot_hours} год</div>
               <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.retouch_hours} 1 0`, background: "var(--purple)", color: "#fff" }}>Відбір і ретуш · ~{s.retouch_hours} год</div>
             </div>
-            <p className="text-xs text-muted mt-2.5">Ефективна ставка <b style={{ color: rateAvg && (s.hourly_rate ?? 0) < rateAvg ? "var(--warn)" : "var(--good)" }}>{s.hourly_rate ?? 0} ₴/год</b>{rateAvg ? <>; середня по «{typeLabel}» — {rateAvg} ₴/год.</> : "."}</p>
+            <p className="text-[13px] text-muted mt-2.5">Ефективна ставка <b style={{ color: rateAvg && (s.hourly_rate ?? 0) < rateAvg ? "var(--warn)" : "var(--good)" }}>{s.hourly_rate ?? 0} ₴/год</b>{rateAvg ? <>; середня по «{typeLabel}» — {rateAvg} ₴/год.</> : "."}</p>
           </section>
 
           <section className="card">
-            <h2 className="text-lg font-bold mb-3">Замітки</h2>
+            <h2 className="text-[17px] font-semibold mb-3">Замітки</h2>
             <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 border border-line text-[13px] leading-relaxed"><div className="flex justify-between items-center mb-1"><span className="text-[11px] text-muted font-semibold">{fmtDate(n.created_at.slice(0, 10))}</span><form action={deleteNote.bind(null, n.id)} data-op="deleteNote" data-args={JSON.stringify([n.id])}><button className="text-muted text-xs" aria-label="Видалити замітку" title="Видалити">×</button></form></div><div className="whitespace-pre-wrap">{n.text}</div></div>) : <div className="empty">Поки без заміток.</div>}</div>
             <form action={addNote.bind(null, s.id)} data-op="addNote" data-args={JSON.stringify([s.id])} className="field flex flex-col gap-1.5 mt-3"><label htmlFor="note">Додати замітку</label><textarea id="note" name="text" placeholder="Що важливо не забути…" maxLength={2000} required /><div><button className="btn btn-sm btn-primary mt-2">Зберегти</button></div></form>
           </section>
 
           <section className="card">
-            <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Чек-лист</h2><span className="text-xs font-bold" style={{ color: "var(--good)" }}>{done} з {checklist.length}</span></div>
+            <div className="flex justify-between items-center mb-3"><h2 className="text-[17px] font-semibold">Чек-лист</h2><span className="text-xs font-bold" style={{ color: "var(--good)" }}>{done} з {checklist.length}</span></div>
             {checklist.length > 0 && <div className="mb-3"><Bar pct={done / checklist.length * 100} color="var(--good)" /></div>}
             <div className="flex flex-col gap-1.5">{checklist.map((ci) => <ChecklistToggle key={ci.id} id={ci.id} text={ci.text} done={ci.done} />)}</div>
             <div className="flex gap-2 flex-wrap mt-3">
@@ -99,11 +99,11 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
           <section className="card">
             <div className="flex justify-between items-center mb-3"><span className="text-[13px] font-medium text-muted">Замовник</span><Link href={`/clients/${c.id}`} className="chip" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>Картка →</Link></div>
-            <div className="flex items-center gap-3"><Avatar name={c.name} hue={c.avatar_hue} size={44} /><div><div className="text-[19px] font-extrabold tracking-tight">{c.name}</div><div className="text-[13px] text-muted">{c.kind ?? ""}{c.kind ? " · " : ""}з {fmtShort(c.since)} {c.since.slice(0, 4)}</div></div></div>
-            <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)], ["Платять", c.default_deposit_pct === 100 ? "наперед ✓" : st?.avg_pay_delay_days != null ? `~${Math.round(st.avg_pay_delay_days)} дн` : "—"], ["Середній чек", money(st?.avg_check ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-[10px]" style={{ background: "var(--glass-2)" }}><div className="text-[12px] text-muted">{k}</div><div className="font-extrabold num">{v}</div></div>)}</div>
+            <div className="flex items-center gap-3"><Avatar name={c.name} hue={c.avatar_hue} size={44} /><div><div className="text-[19px] font-bold tracking-[-0.01em]">{c.name}</div><div className="text-[13px] text-muted">{c.kind ?? ""}{c.kind ? " · " : ""}з {fmtShort(c.since)} {c.since.slice(0, 4)}</div></div></div>
+            <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)], ["Платять", c.default_deposit_pct === 100 ? "наперед ✓" : st?.avg_pay_delay_days != null ? `~${Math.round(st.avg_pay_delay_days)} дн` : "—"], ["Середній чек", money(st?.avg_check ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-[10px]" style={{ background: "var(--glass-2)" }}><div className="text-[12px] text-muted">{k}</div><div className="font-semibold num">{v}</div></div>)}</div>
             {prefs.length > 0 && <div className="mt-3.5"><div className="text-[13px] font-semibold text-muted mb-1.5">Що важливо для цього клієнта</div><ul className="m-0 pl-[18px] text-[13px] leading-relaxed">{prefs.map((p) => <li key={p.id}>{p.text}</li>)}</ul></div>}
           </section>
-          <section className="card"><h2 className="text-lg font-bold mb-3">Історія · {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{h.title}</b><br /><span className="text-muted text-xs">{fmtDate(h.date)} · {h.photos} фото</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>
+          <section className="card"><h2 className="text-[17px] font-semibold mb-3">Історія · {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{h.title}</b><br /><span className="text-muted text-xs">{fmtDate(h.date)} · {h.photos} фото</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>
         </aside>
       </div>
     </>

@@ -9,7 +9,7 @@ export function ContactCard({ c, presets, labelOf }: { c: Client; presets: Prese
   const action = updateClient.bind(null, c.id);
   return (
     <section className="card">
-      <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Контакт і умови</h2><button type="button" className="btn btn-sm" onClick={() => setEdit((v) => !v)}>{edit ? "Скасувати" : "Редагувати"}</button></div>
+      <div className="flex justify-between items-center mb-3"><h2 className="text-[17px] font-semibold">Контакт і умови</h2><button type="button" className="btn btn-sm" onClick={() => setEdit((v) => !v)}>{edit ? "Скасувати" : "Редагувати"}</button></div>
       {!edit ? (
         <div className="flex flex-col gap-1.5">
           {c.kind && <div className="kv"><span className="text-muted">Хто це</span><b>{c.kind}</b></div>}

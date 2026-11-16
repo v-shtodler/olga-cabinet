@@ -36,7 +36,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
         <header className="flex justify-between gap-6 flex-wrap mb-8">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-muted font-bold">Рахунок-фактура</div>
-            <h1 className="text-2xl font-extrabold tracking-tight">№ {no}</h1>
+            <h1 className="text-2xl font-bold tracking-[-0.01em]">№ {no}</h1>
             <div className="text-[13px] text-muted">від {fmtDate(today, true)}</div>
           </div>
           <div className="text-right text-[13px]">
