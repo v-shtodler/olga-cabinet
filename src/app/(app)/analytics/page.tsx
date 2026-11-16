@@ -2,7 +2,7 @@ import Link from "next/link";
 import { format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getIncomeMonthly, getSavings, getSettings, getTaxQuarters, getTaxPaid } from "@/lib/data";
-import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor, taxTimeline, fmtDate, fx, CURRENCIES } from "@/lib/domain";
+import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor, brandText, taxTimeline, fmtDate, fx, CURRENCIES, CUR_COLOR } from "@/lib/domain";
 import { Kpi } from "@/components/ui";
 import { CsvButton } from "./csv-button";
 
@@ -158,7 +158,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
               <div className="flex gap-2 flex-wrap mb-3">
                 {CURRENCIES.map((c) => {
                   const v = savedIn.filter((r) => r.currency === c).reduce((a, r) => a + Number(r.amount), 0);
-                  return v > 0 ? <span key={c} className="chip" style={{ background: "var(--good-bg)", color: "var(--good)" }}>{fx(v, c)}</span> : null;
+                  return v > 0 ? <span key={c} className="chip" style={{ background: CUR_COLOR[c], color: brandText(CUR_COLOR[c]) }}>{fx(v, c)}</span> : null;
                 })}
               </div>
               <div className="flex flex-col gap-1.5">
