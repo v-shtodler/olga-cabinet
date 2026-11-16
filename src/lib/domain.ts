@@ -11,6 +11,12 @@ export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Пі�
 
 /** Eight system colours, one per brand (clients.avatar_hue). iOS Calendar reads this way: colour = whose event. */
 export const BRAND = ["#ff9500", "#af52de", "#007aff", "#34c759", "#ff2d55", "#ffcc00", "#5ac8fa", "#5856d6"] as const;
+/** Text colour that stays readable on a chip filled with a brand colour. */
+export function brandText(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.42 ? "#1c1c1e" : "#ffffff";
+}
 export const brandColor = (hue: number) => BRAND[((hue % BRAND.length) + BRAND.length) % BRAND.length];
 
 export type Tone = "good" | "warn" | "info" | "purple" | "sun" | "pink" | "neutral" | "dark";

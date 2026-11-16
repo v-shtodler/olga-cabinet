@@ -2,7 +2,7 @@ import Link from "next/link";
 import { addDays, addMonths, addYears, format, startOfMonth, endOfMonth, parseISO, isValid } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getBlockedDays, getSettings } from "@/lib/data";
-import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, type ShootView } from "@/lib/domain";
+import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, brandText, type ShootView } from "@/lib/domain";
 import { ShootRow, Chip, Bar } from "@/components/ui";
 import { MonthGrid } from "@/components/month-grid";
 import { AssistantInline } from "@/components/assistant";
@@ -88,7 +88,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       </div>
 
       <div className="flex flex-wrap gap-3.5">
-        <section className="card flex-[999_1_640px] min-w-0">
+        <div className="flex-[999_1_640px] min-w-0 flex flex-col gap-3.5">
+          <section className="card">
           {/* ---------- MONTH: iOS Calendar — a clean grid, each event a brand-coloured pill ---------- */}
           {view === "month" && (
             <MonthGrid cells={cells} month={monthStart.getMonth()} byDay={byDay} dlByDay={dlByDay} blocked={blocked} sel={sel} today={today} dayLink={dayLink} />
@@ -108,12 +109,12 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                       {ev.map((s) => (
-                        <span key={s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] leading-tight" style={{ background: `color-mix(in srgb, ${brandColor(s.client_hue)} 16%, transparent)`, color: brandColor(s.client_hue) }}>
+                        <span key={s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] leading-tight" style={{ background: brandColor(s.client_hue), color: brandText(brandColor(s.client_hue)) }}>
                           {s.start_time && <b className="block num">{s.start_time.slice(0, 5)}</b>}
                           <span className="block font-semibold truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
                         </span>
                       ))}
-                      {dl.map((s) => <span key={"d" + s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] font-semibold truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ Віддати · {s.client_name}</span>)}
+                      {dl.map((s) => <span key={"d" + s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] font-semibold truncate" style={{ background: "var(--sun)", color: "#1c1c1e" }}>⏱ Віддати · {s.client_name}</span>)}
                       {!ev.length && !dl.length && <span className="text-[11px] text-muted">{blocked.has(k) ? "закрито" : isFree ? "вільно" : "—"}</span>}
                     </div>
                   </Link>
@@ -141,8 +142,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                       {mDays.map((d) => {
                         const k = iso(d); const out = d.getMonth() !== m; const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
                         const isToday = k === today;
-                        const bg = out ? "transparent" : ev.length ? `color-mix(in srgb, ${brandColor(ev[0].client_hue)} 18%, transparent)` : dl.length ? "var(--sun-bg)" : blocked.has(k) ? "var(--fill-2)" : "transparent";
-                        const fg = out ? "var(--muted-2)" : ev.length ? brandColor(ev[0].client_hue) : dl.length ? "var(--sun)" : "var(--fg)";
+                        const bg = out ? "transparent" : ev.length ? brandColor(ev[0].client_hue) : dl.length ? "var(--sun)" : blocked.has(k) ? "var(--fill-2)" : "transparent";
+                        const fg = out ? "var(--muted-2)" : ev.length ? brandText(brandColor(ev[0].client_hue)) : dl.length ? "#1c1c1e" : "var(--fg)";
                         return (
                           <Link key={k} href={dayLink(d)} aria-label={k} className="aspect-square rounded-[5px] flex items-center justify-center text-[10px] font-medium" style={isToday ? { background: "var(--accent)", color: "#fff", fontWeight: 600 } : { background: bg, color: fg, opacity: out ? 0.4 : 1 }}>{d.getDate()}</Link>
                         );
@@ -158,20 +159,21 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             <span>Колір — бренд замовника</span>
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Особистий день</span>
           </div>
-        </section>
+          </section>
+          {view !== "year" && (
+          <section className="card">
+            <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-[17px] font-semibold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
+            <div className="flex flex-col gap-2">
+              {selShoots.map((s: ShootView) => <ShootRow key={s.id} s={s} />)}
+              {selDl.map((s: ShootView) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow" style={{ background: "var(--sun-bg)" }}><div className="w-12 h-12 shrink-0 rounded-[12px] flex items-center justify-center" style={{ background: "var(--glass)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати · {s.client_name}</div><div className="text-[13px] text-muted truncate">{s.client_name}</div></div></Link>)}
+              {!selShoots.length && !selDl.length && <div className="empty">{selBlocked ? "День закритий для зйомок." : "Нічого не заплановано."}</div>}
+            </div>
+            {sel >= today && <form action={toggleBlockedDay.bind(null, sel)} data-op="toggleBlockedDay" data-args={JSON.stringify([sel])} data-label={sel} className="mt-3"><button className="btn btn-sm">{selBlocked ? "Відкрити день" : "Закрити день (особисте)"}</button></form>}
+          </section>
+        )}
+        </div>
 
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
-          {view !== "year" && (
-            <section className="card">
-              <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-[17px] font-semibold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
-              <div className="flex flex-col gap-2">
-                {selShoots.map((s: ShootView) => <ShootRow key={s.id} s={s} />)}
-                {selDl.map((s: ShootView) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow" style={{ background: "var(--sun-bg)" }}><div className="w-12 h-12 shrink-0 rounded-[12px] flex items-center justify-center" style={{ background: "var(--glass)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати · {s.client_name}</div><div className="text-[13px] text-muted truncate">{s.client_name}</div></div></Link>)}
-                {!selShoots.length && !selDl.length && <div className="empty">{selBlocked ? "День закритий для зйомок." : "Нічого не заплановано."}</div>}
-              </div>
-              {sel >= today && <form action={toggleBlockedDay.bind(null, sel)} data-op="toggleBlockedDay" data-args={JSON.stringify([sel])} data-label={sel} className="mt-3"><button className="btn btn-sm">{selBlocked ? "Відкрити день" : "Закрити день (особисте)"}</button></form>}
-            </section>
-          )}
           {view === "year" ? (
             <section className="card">
               <h2 className="text-[17px] font-semibold mb-3">{monthStart.getFullYear()} у цифрах</h2>

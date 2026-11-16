@@ -1,6 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { iso, brandColor, type ShootView } from "@/lib/domain";
+import { iso, brandColor, brandText, type ShootView } from "@/lib/domain";
 
 const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
 
@@ -30,14 +30,14 @@ export function MonthGrid({ cells, month, byDay, dlByDay, blocked, sel, today, d
               {ev.slice(0, 3).map((s, i) => {
                 const col = brandColor(s.client_hue);
                 return (
-                  <span key={s.id} className={clsx("flex items-center gap-1 px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[10px] sm:text-[11px] font-semibold sm:font-medium leading-[1.3] min-w-0", i > 1 && "hidden sm:flex")}
-                    style={{ background: `color-mix(in srgb, ${col} 16%, transparent)`, color: col }}>
-                    <i className="hidden sm:block w-[5px] h-[5px] rounded-full shrink-0" style={{ background: col }} />
-                    <span className="truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
+                  // filled with the client's own colour — whose day it is reads from across the room
+                  <span key={s.id} className={clsx("block px-[4px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[10px] sm:text-[11px] font-semibold leading-[1.3] truncate", i > 1 && "hidden sm:block")}
+                    style={{ background: col, color: brandText(col) }}>
+                    {s.status === "request" ? "? " : ""}{s.client_name}
                   </span>
                 );
               })}
-              {dl.slice(0, 1).map((s) => <span key={"d" + s.id} className={clsx("px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[10px] sm:text-[11px] font-semibold sm:font-medium truncate", ev.length > 1 && "hidden sm:block")} style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
+              {dl.slice(0, 1).map((s) => <span key={"d" + s.id} className={clsx("px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[10px] sm:text-[11px] font-semibold sm:font-medium truncate", ev.length > 1 && "hidden sm:block")} style={{ background: "var(--sun)", color: "#1c1c1e" }}>⏱ {s.client_name}</span>)}
               {ev.length > 2 && <span className="text-[10px] text-muted px-[3px] sm:hidden">ще {ev.length - 2}</span>}
               {ev.length > 3 && <span className="text-[11px] text-muted px-1.5 hidden sm:block">ще {ev.length - 3}</span>}
             </span>

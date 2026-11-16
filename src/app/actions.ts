@@ -75,9 +75,14 @@ export async function advanceShoot(id: string) {
   if (!s) return;
   const i = STATUSES.indexOf(s.status); if (i < 0 || i >= STATUSES.length - 1) return;
   const next = STATUSES[i + 1]; const patch: Record<string, unknown> = { status: next };
-  if (next === "confirmed" && Number(s.paid) === 0 && s.deposit_pct > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Math.round(Number(s.price) * s.deposit_pct / 100), paid_on: todayISO(), kind: "deposit", method: "invoice" });
-  if (next === "delivered") { patch.delivered_on = todayISO(); if (Number(s.balance) > 0) patch.invoice_sent_on = todayISO(); }
-  if (next === "paid" && Number(s.balance) > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Number(s.balance), paid_on: todayISO(), kind: "balance", method: "invoice" });
+  // A shoot entered after the fact is dated by the shoot, not by the day someone clicked the button:
+  // otherwise months of past work pile up on today and the income chart and the quarter are wrong.
+  // The date stays editable in the shoot card.
+  const today = todayISO();
+  const on = (d?: string | null) => (d && d < today ? d : today);
+  if (next === "confirmed" && Number(s.paid) === 0 && s.deposit_pct > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Math.round(Number(s.price) * s.deposit_pct / 100), paid_on: on(s.date), kind: "deposit", method: "invoice" });
+  if (next === "delivered") { patch.delivered_on = on(s.deadline ?? s.date); if (Number(s.balance) > 0) patch.invoice_sent_on = on(s.deadline ?? s.date); }
+  if (next === "paid" && Number(s.balance) > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Number(s.balance), paid_on: on(s.delivered_on ?? s.date), kind: "balance", method: "invoice" });
   await supabase.from("shoots").update(patch).eq("id", id);
   all();
 }
