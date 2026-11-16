@@ -1,5 +1,5 @@
 /* Domain types + pure helpers shared by server and client. No Supabase here. */
-import { addDays, differenceInCalendarDays, format, parseISO, startOfQuarter, endOfQuarter, isWeekend } from "date-fns";
+import { addDays, differenceInCalendarDays, format, parseISO, startOfQuarter, endOfQuarter } from "date-fns";
 import { uk } from "date-fns/locale";
 
 export type ShootStatus = "request" | "confirmed" | "shot" | "delivered" | "paid" | "cancelled";
@@ -17,7 +17,7 @@ export type Tone = "good" | "warn" | "info" | "purple" | "sun" | "pink" | "neutr
 
 export interface Settings { owner_id: string; display_name: string; ep_rate: number; vz_rate: number; esv_monthly: number; income_limit: number; rates_from: string; remind_days: number; month_capacity: number;
   fop_name?: string | null; ipn?: string | null; iban?: string | null; bank_name?: string | null; legal_address?: string | null; invoice_note?: string | null; ical_token?: string | null; avatar_url?: string | null; }
-export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; avatar_hue: number; archived: boolean; }
+export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; avatar_hue: number; avatar_url: string | null; archived: boolean; }
 export interface ClientPref { id: string; client_id: string; text: string; sort: number; }
 export interface Shoot {
   id: string; client_id: string; no: string | null; status: ShootStatus; date: string; start_time: string | null; location: string | null;
@@ -48,13 +48,12 @@ export const daysBetween = (a: string, b: string) => differenceInCalendarDays(pa
 export function relDays(n: number) { if (n === 0) return "сьогодні"; if (n === 1) return "завтра"; if (n === -1) return "вчора"; if (n < 0) return `${Math.abs(n)} дн. тому`; return `через ${n} дн.`; }
 export function plural(n: number, one: string, few: string, many: string) { const m10 = n % 10, m100 = n % 100; if (m10 === 1 && m100 !== 11) return one; if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few; return many; }
 export const statusIdx = (s: ShootStatus) => STATUSES.indexOf(s);
-export const isWeekendISO = (s: string) => isWeekend(parseISO(s));
 export const quarterOf = (d: Date) => ({ from: iso(startOfQuarter(d)), to: iso(endOfQuarter(d)) });
 
 /* ---------- derived ---------- */
 export function freeDays(shootsByDay: Map<string, ShootView[]>, blocked: Set<string>, from: Date, n: number): string[] {
   const out: string[] = [];
-  for (let i = 0; i < n; i++) { const d = addDays(from, i); const k = iso(d); if (isWeekend(d) || blocked.has(k)) continue; if (!(shootsByDay.get(k)?.length)) out.push(k); }
+  for (let i = 0; i < n; i++) { const d = addDays(from, i); const k = iso(d); if (blocked.has(k)) continue; if (!(shootsByDay.get(k)?.length)) out.push(k); }
   return out;
 }
 export function groupByDay(shoots: ShootView[]) { const m = new Map<string, ShootView[]>(); for (const s of shoots) { if (s.status === "cancelled") continue; const a = m.get(s.date) ?? []; a.push(s); m.set(s.date, a); } return m; }
@@ -105,7 +104,7 @@ export function buildInsights(inp: InsightInput): Insight[] {
     const nm = nowKyiv(); nm.setMonth(nm.getMonth() + 1, 1); const nmKey = format(nm, "yyyy-MM");
     const nmCount = inp.shoots.filter((s) => s.status !== "cancelled" && s.date.startsWith(nmKey)).length;
     const pct = Math.min(100, Math.round(nmCount / inp.settings.month_capacity * 100));
-    if (free.length) push({ key: `free-${today}`, kind: "load", sev: "low", tag: "Вільні вікна · 14 днів", text: `Вільні робочі дні: ${free.slice(0, 5).map(fmtShort).join(", ")}${free.length > 5 ? ` і ще ${free.length - 5}` : ""}. ${format(nm, "LLLL", { locale: uk })} заповнений на ${pct}% (${nmCount} із ~${inp.settings.month_capacity}).`, action: { label: "Календар", href: "/calendar" } });
+    if (free.length) push({ key: `free-${today}`, kind: "load", sev: "low", tag: "Вільні вікна · 14 днів", text: `Вільні дні: ${free.slice(0, 5).map(fmtShort).join(", ")}${free.length > 5 ? ` і ще ${free.length - 5}` : ""}. ${format(nm, "LLLL", { locale: uk })} заповнений на ${pct}% (${nmCount} із ~${inp.settings.month_capacity}).`, action: { label: "Календар", href: "/calendar" } });
     if (inp.taxNext) { const d = daysBetween(today, inp.taxNext.due); if (d <= 14) push({ key: `tax-${inp.taxNext.key}`, kind: "tax", sev: d < 0 ? "high" : d <= 3 ? "high" : "mid", tag: `Податки · ${relDays(d)}`, text: `${inp.taxNext.label}: ${money(inp.taxNext.amount)} до ${fmtDate(inp.taxNext.due)}.`, action: { label: "Податковий модуль", href: "/taxes" } }); }
   }
   if (inp.scope.type === "taxes") {

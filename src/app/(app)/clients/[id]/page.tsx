@@ -8,6 +8,7 @@ import { addClientPref, deleteClientPref } from "@/app/actions";
 import * as I from "@/components/icons";
 import { ContactCard } from "./edit-client";
 import { DeleteClient } from "./delete-client";
+import { ClientLook } from "./client-look";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,7 +31,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
     <>
       <Link href="/clients" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent mb-3"><I.Back /> Усі замовники</Link>
       <div className="flex justify-between items-end gap-4 flex-wrap mb-4 px-1">
-        <div className="flex items-center gap-3.5"><Avatar name={c.name} hue={c.avatar_hue} size={56} /><div><h1 className="text-[clamp(26px,4vw,38px)] font-bold tracking-[-0.01em] leading-[1.08]">{c.name}</h1><p className="text-muted mt-1">{[c.kind, c.contact_name, `з ${fmtDate(c.since, true)}`].filter(Boolean).join(" · ")}</p></div></div>
+        <div className="flex items-center gap-3.5"><Avatar name={c.name} hue={c.avatar_hue} src={c.avatar_url} size={56} /><div><h1 className="text-[clamp(26px,4vw,38px)] font-bold tracking-[-0.01em] leading-[1.08]">{c.name}</h1><p className="text-muted mt-1">{[c.kind, c.contact_name, `з ${fmtDate(c.since, true)}`].filter(Boolean).join(" · ")}</p></div></div>
         <Link href={`/shoots/new?client=${c.id}`} className="btn btn-primary">+ Зйомка для {c.name}</Link>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
@@ -56,6 +57,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
             <p className="text-[13px] text-muted mt-2.5">Ці пункти помічник підказує за день до кожної зйомки з цим клієнтом.</p>
           </section>
           <ContactCard c={c} />
+          <ClientLook id={c.id} name={c.name} hue={c.avatar_hue} src={c.avatar_url} />
           <DeleteClient id={c.id} name={c.name} shoots={shoots.length} payments={payCount} paid={money(paidSum)} />
         </aside>
       </div>

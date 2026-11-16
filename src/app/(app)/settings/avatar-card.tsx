@@ -3,26 +3,7 @@ import { useRef, useState, useTransition } from "react";
 import { saveAvatar } from "@/app/actions";
 import { Group } from "@/components/ui";
 import { callOrQueue } from "@/lib/outbox";
-
-const SIZE = 192; // enough for a 2× 48pt avatar; keeps the row well under 30 KB
-
-/** Reads a picked file, crops it to a square and re-encodes it small enough to live in one DB column. */
-async function toSquareDataUrl(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const side = Math.min(bitmap.width, bitmap.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = SIZE;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Браузер не дав обробити зображення.");
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, SIZE, SIZE);
-  bitmap.close();
-  for (const [type, q] of [["image/webp", 0.82], ["image/jpeg", 0.82]] as const) {
-    const url = canvas.toDataURL(type, q);
-    if (url.startsWith(`data:${type}`) && url.length <= 170_000) return url;
-  }
-  throw new Error("Не вдалося стиснути фото — спробуйте інше.");
-}
+import { toSquareDataUrl } from "@/lib/image";
 
 export function AvatarCard({ src, name }: { src: string | null; name: string }) {
   const [preview, setPreview] = useState(src);

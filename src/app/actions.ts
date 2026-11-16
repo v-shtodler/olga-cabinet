@@ -167,6 +167,28 @@ export async function createClient_(formData: FormData) {
   if (p.pref) await supabase.from("client_prefs").insert({ client_id: c.id, text: p.pref });
   all(); redirect(`/clients/${c.id}`);
 }
+/** Brand look of a client: the colour its events get in the calendar, and an optional 1:1 photo. */
+export async function saveClientLook(id: string, patch: { avatar_hue?: number; avatar_url?: string | null }) {
+  const { supabase } = await db();
+  const row: { avatar_hue?: number; avatar_url?: string | null } = {};
+  if (patch.avatar_hue !== undefined) {
+    const h = Math.trunc(Number(patch.avatar_hue));
+    if (!Number.isFinite(h) || h < 0 || h > 7) throw new Error("Невідомий колір.");
+    row.avatar_hue = h;
+  }
+  if (patch.avatar_url !== undefined) {
+    const u = patch.avatar_url;
+    if (u !== null) {
+      if (!/^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(u)) throw new Error("Непідтримуваний формат зображення.");
+      if (u.length > 180_000) throw new Error("Фото завелике — спробуйте інше.");
+    }
+    row.avatar_url = u;
+  }
+  if (!Object.keys(row).length) return;
+  const { error } = await supabase.from("clients").update(row).eq("id", id);
+  if (error) throw new Error(error.code === "42703" ? "Спочатку застосуйте міграцію 0011_client_look.sql у Supabase → SQL Editor." : error.message);
+  all();
+}
 export async function addClientPref(clientId: string, formData: FormData) {
   const text = String(formData.get("text") ?? "").trim(); if (!text) return;
   const { supabase } = await db(); await supabase.from("client_prefs").insert({ client_id: clientId, text }); all();

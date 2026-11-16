@@ -52,7 +52,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
             <thead><tr className="text-[13px] text-muted">{["Замовник", "Зйомок", "Дохід", "Середній чек", "Оплата", "Остання"].map((h, i) => <th key={h} className={`font-semibold px-2.5 py-0.5 text-left ${i >= 2 && i <= 4 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
             <tbody>{rows.map(({ c, st }) => (
               <tr key={c.id}>
-                <td className="px-2.5 py-2.5 bg-glass-2 rounded-l-xl"><Link href={`/clients/${c.id}`} className="flex items-center gap-2.5"><Avatar name={c.name} hue={c.avatar_hue} size={34} /><span><b>{c.name}</b><span className="block text-xs text-muted">{c.kind ?? ""}</span></span></Link></td>
+                <td className="px-2.5 py-2.5 bg-glass-2 rounded-l-xl"><Link href={`/clients/${c.id}`} className="flex items-center gap-2.5"><Avatar name={c.name} hue={c.avatar_hue} src={c.avatar_url} size={34} /><span><b>{c.name}</b><span className="block text-xs text-muted">{c.kind ?? ""}</span></span></Link></td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num">{st.shoots}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num font-bold whitespace-nowrap">{money(st.total)}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num whitespace-nowrap">{money(st.avg_check)}</td>

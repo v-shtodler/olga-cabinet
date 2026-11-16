@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { addDays, addMonths, addYears, format, startOfMonth, endOfMonth, parseISO, isWeekend, isValid } from "date-fns";
+import clsx from "clsx";
+import { addDays, addMonths, addYears, format, startOfMonth, endOfMonth, parseISO, isValid } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getBlockedDays, getSettings } from "@/lib/data";
 import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, type ShootView } from "@/lib/domain";
@@ -59,7 +60,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const freeFrom = new Date(Math.max(monthStart.getTime(), parseISO(today).getTime()));
   const freeM = freeFrom <= mEnd ? freeDays(byDay, blocked, freeFrom, Math.round((mEnd.getTime() - freeFrom.getTime()) / 86400000) + 1) : [];
   const selShoots = byDay.get(sel) ?? []; const selDl = dlByDay.get(sel) ?? [];
-  const selBlocked = blocked.has(sel); const selWe = isWeekend(selD);
+  const selBlocked = blocked.has(sel);
   const cells = (() => { const g = addDays(monthStart, -((monthStart.getDay() + 6) % 7)); return Array.from({ length: 42 }, (_, i) => addDays(g, i)).filter((d, i) => i < 35 || d.getMonth() === monthStart.getMonth()); })();
   const inYear = active.filter((s) => s.date.startsWith(String(monthStart.getFullYear())));
 
@@ -88,29 +89,26 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               {WEEKDAYS.map((w) => <div key={w} className="text-[12px] font-medium text-muted text-center py-1.5" style={{ background: "var(--glass)" }}>{w}</div>)}
               {cells.map((d) => {
                 const k = iso(d); const out = d.getMonth() !== monthStart.getMonth(); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
-                const isSel = k === sel; const isToday = k === today; const isFree = !out && !isWeekend(d) && ev.length === 0 && !blocked.has(k) && k >= today;
+                const isSel = k === sel; const isToday = k === today; const isFree = !out && ev.length === 0 && !blocked.has(k) && k >= today;
                 return (
-                  <Link key={k} href={dayLink(d)} className="min-h-[88px] sm:min-h-[112px] p-1 sm:p-1.5 flex flex-col gap-1 text-left transition-colors"
+                  <Link key={k} href={dayLink(d)} className="min-h-[74px] sm:min-h-[112px] p-[3px] sm:p-1.5 flex flex-col gap-1 text-left transition-colors"
                     style={{ background: isSel ? "var(--accent-tint)" : "var(--glass)", opacity: out ? 0.45 : 1 }}>
-                    <span className="self-center sm:self-start w-[26px] h-[26px] rounded-full inline-flex items-center justify-center text-[14px] font-semibold shrink-0"
+                    <span className="self-center sm:self-start w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] rounded-full inline-flex items-center justify-center text-[13px] sm:text-[14px] font-semibold shrink-0"
                       style={isToday ? { background: "var(--accent)", color: "#fff" } : blocked.has(k) ? { background: "var(--fill-2)", color: "var(--muted)" } : isFree ? { color: "var(--good)" } : undefined}>{d.getDate()}</span>
-                    <span className="hidden sm:flex flex-col gap-[3px] min-w-0">
-                      {ev.slice(0, 3).map((s) => {
+                    <span className="flex flex-col gap-[2px] sm:gap-[3px] min-w-0">
+                      {ev.slice(0, 3).map((s, i) => {
                         const col = brandColor(s.client_hue);
                         return (
-                          <span key={s.id} className="flex items-center gap-1 px-1.5 py-[2px] rounded-[5px] text-[11px] font-medium truncate"
+                          <span key={s.id} className={clsx("flex items-center gap-1 px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[9px] sm:text-[11px] font-semibold sm:font-medium leading-[1.25] min-w-0", i > 1 && "hidden sm:flex")}
                             style={{ background: `color-mix(in srgb, ${col} 16%, transparent)`, color: col }}>
-                            <i className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: col }} />
+                            <i className="hidden sm:block w-[5px] h-[5px] rounded-full shrink-0" style={{ background: col }} />
                             <span className="truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
                           </span>
                         );
                       })}
-                      {dl.slice(0, 1).map((s) => <span key={"d" + s.id} className="px-1.5 py-[2px] rounded-[5px] text-[11px] font-medium truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
-                      {ev.length > 3 && <span className="text-[11px] text-muted px-1.5">ще {ev.length - 3}</span>}
-                    </span>
-                    <span className="flex sm:hidden gap-[3px] justify-center flex-wrap">
-                      {ev.map((s) => <i key={s.id} className="w-[6px] h-[6px] rounded-full" style={{ background: brandColor(s.client_hue) }} />)}
-                      {dl.map((s) => <i key={"d" + s.id} className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--sun)" }} />)}
+                      {dl.slice(0, 1).map((s) => <span key={"d" + s.id} className={clsx("px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[9px] sm:text-[11px] font-semibold sm:font-medium truncate", ev.length > 1 && "hidden sm:block")} style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
+                      {ev.length > 2 && <span className="text-[9px] sm:text-[11px] text-muted px-[3px] sm:px-1.5 sm:hidden">ще {ev.length - 2}</span>}
+                      {ev.length > 3 && <span className="text-[11px] text-muted px-1.5 hidden sm:block">ще {ev.length - 3}</span>}
                     </span>
                   </Link>
                 );
@@ -123,7 +121,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             <div className="grid grid-cols-1 sm:grid-cols-7 gap-1.5">
               {Array.from({ length: 7 }, (_, i) => addDays(wStart, i)).map((d) => {
                 const k = iso(d); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
-                const isSel = k === sel; const isToday = k === today; const isFree = !isWeekend(d) && ev.length === 0 && !blocked.has(k) && k >= today;
+                const isSel = k === sel; const isToday = k === today; const isFree = ev.length === 0 && !blocked.has(k) && k >= today;
                 return (
                   <Link key={k} href={href({ d: k })} className="rounded-[12px] border p-2 flex sm:flex-col gap-2 sm:min-h-[260px] text-left" style={{ background: blocked.has(k) ? "var(--fill-2)" : isFree ? "var(--good-bg)" : "var(--glass-2)", borderColor: isSel ? "var(--accent)" : "var(--line)", boxShadow: isSel ? "0 0 0 2px var(--accent-tint)" : undefined }}>
                     <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-0.5 shrink-0 w-[64px] sm:w-auto">
@@ -178,7 +176,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             </div>
           )}
 
-          <div className="flex gap-3.5 flex-wrap text-[13px] text-muted font-medium mt-3">
+          <div className="flex gap-x-3.5 gap-y-1.5 flex-wrap text-[12px] sm:text-[13px] text-muted font-medium mt-3">
             <span>Колір — бренд замовника</span>
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Закрито</span>
           </div>
@@ -187,7 +185,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
           {view !== "year" && (
             <section className="card">
-              <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-[17px] font-semibold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selWe ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selWe ? "вихідний" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
+              <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-[17px] font-semibold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
               <div className="flex flex-col gap-2">
                 {selShoots.map((s: ShootView) => <ShootRow key={s.id} s={s} />)}
                 {selDl.map((s: ShootView) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow" style={{ background: "var(--sun-bg)" }}><div className="w-12 h-12 shrink-0 rounded-[12px] flex items-center justify-center" style={{ background: "var(--glass)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати · {s.client_name}</div><div className="text-[13px] text-muted truncate">{s.client_name}</div></div></Link>)}
@@ -206,7 +204,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             <section className="card">
               <h2 className="text-[17px] font-semibold mb-3">{monthName(monthStart)} у цифрах</h2>
               <div className="grid grid-cols-2 gap-3">{[["Зйомок", inMonth.length], ["Віддач у місяці", dlInMonth], ["Заплановано", money(planned)], ["Вільних днів", freeM.length]].map(([k, v]) => <div key={String(k)}><div className="text-[13px] text-muted font-semibold">{k}</div><div className="text-2xl font-bold tracking-[-0.01em] num">{v}</div></div>)}</div>
-              <div className="mt-3.5"><div className="flex justify-between text-[13px] font-semibold"><span className="text-muted">Завантаженість</span><span style={{ color: pct >= 90 ? "var(--warn)" : "var(--fg)" }}>{pct}%</span></div><div className="mt-1.5"><Bar pct={pct} color={pct >= 90 ? "var(--warn)" : undefined} /></div><p className="text-[13px] text-muted mt-2">100% ≈ {settings.month_capacity} зйомок на місяць (налаштовується). Вище 90% — ретуш починає зʼїдати вихідні.</p></div>
+              <div className="mt-3.5"><div className="flex justify-between text-[13px] font-semibold"><span className="text-muted">Завантаженість</span><span style={{ color: pct >= 90 ? "var(--warn)" : "var(--fg)" }}>{pct}%</span></div><div className="mt-1.5"><Bar pct={pct} color={pct >= 90 ? "var(--warn)" : undefined} /></div><p className="text-[13px] text-muted mt-2">100% ≈ {settings.month_capacity} зйомок на місяць (налаштовується). Вище 90% — ретуш починає зʼїдати особистий час.</p></div>
             </section>
           )}
           <AssistantInline>{view === "year" ? "Рік показує, де густо, а де вільно: кольорові дні — зйомки, жовті — дедлайни віддачі." : "Клацніть день — побачите, що там, і зможете додати зйомку на цю дату. «Закрити день» прибирає його з вільних вікон, які пропонує помічник."}</AssistantInline>

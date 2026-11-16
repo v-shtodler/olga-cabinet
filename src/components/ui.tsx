@@ -12,9 +12,13 @@ export const GRADS = ["#ff9500", "#af52de", "#007aff", "#34c759", "#ff2d55", "#f
 export function Chip({ tone, children, className }: { tone: Tone; children: React.ReactNode; className?: string }) {
   return <span className={clsx("chip", className)} style={{ background: TONE_BG[tone], color: TONE_FG[tone] }}>{children}</span>;
 }
-export function Avatar({ name, hue, size = 38 }: { name: string; hue: number; size?: number }) {
+export function Avatar({ name, hue, src, size = 38 }: { name: string; hue: number; src?: string | null; size?: number }) {
   const ini = name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-  return <span aria-hidden="true" className="inline-flex items-center justify-center text-white font-bold shrink-0" style={{ width: size, height: size, borderRadius: Math.round(size * 0.32), background: GRADS[hue % GRADS.length], fontSize: Math.round(size * 0.3) }}>{ini}</span>;
+  const box = { width: size, height: size, borderRadius: Math.round(size * 0.32) } as React.CSSProperties;
+  // a data: URL straight from the row — next/image would only wrap a loader around it
+  // eslint-disable-next-line @next/next/no-img-element
+  if (src) return <img src={src} alt="" width={size} height={size} aria-hidden="true" className="object-cover shrink-0" style={box} />;
+  return <span aria-hidden="true" className="inline-flex items-center justify-center text-white font-bold shrink-0" style={{ ...box, background: GRADS[hue % GRADS.length], fontSize: Math.round(size * 0.3) }}>{ini}</span>;
 }
 export function DateBox({ date, tone, accent }: { date: string; tone: Tone; accent?: string }) {
   const d = parseISO(date);
