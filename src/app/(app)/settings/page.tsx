@@ -27,9 +27,9 @@ export default async function SettingsPage() {
             <form action={saveSettings} data-op="saveSettings" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <F id="display_name" label="Як до вас звертатись" name="display_name" value={s.display_name} />
               <F id="rates_from" label="Ставки діють з" name="rates_from" type="date" value={s.rates_from} />
-              <F id="ep_rate" label="Єдиний податок, %" name="ep_rate" type="number" step="0.5" min={0} max={30} value={s.ep_rate} />
-              <F id="vz_rate" label="Військовий збір, %" name="vz_rate" type="number" step="0.5" min={0} max={10} value={s.vz_rate} />
-              <F id="esv_monthly" label="ЄСВ на місяць, ₴" name="esv_monthly" type="number" step="0.01" min={0} value={s.esv_monthly} />
+              <F id="ep_rate" label="Єдиний податок, %" name="ep_rate" type="number" step="any" min={0} max={30} value={s.ep_rate} />
+              <F id="vz_rate" label="Військовий збір, %" name="vz_rate" type="number" step="any" min={0} max={10} value={s.vz_rate} />
+              <F id="esv_monthly" label="ЄСВ на місяць, ₴" name="esv_monthly" type="number" step="any" min={0} value={s.esv_monthly} />
               <F id="income_limit" label="Річний ліміт групи, ₴" name="income_limit" type="number" min={0} value={s.income_limit} />
               <F id="remind_days" label="Нагадувати про дедлайни за, днів" name="remind_days" type="number" min={1} max={14} value={s.remind_days} />
               <F id="month_capacity" label="Зйомок на місяць = 100% завантаженості" name="month_capacity" type="number" min={1} max={60} value={s.month_capacity} />
@@ -56,12 +56,12 @@ export default async function SettingsPage() {
                 <form key={p.type} action={savePreset} data-op="savePreset" data-label={p.label} className="grid grid-cols-3 sm:grid-cols-7 gap-2 items-end p-3 rounded-2xl bg-glass-2">
                   <input type="hidden" name="type" value={p.type} />
                   <div className="col-span-3 sm:col-span-1 flex items-center"><Chip tone={TYPE_TONE[p.type]}>{p.label}</Chip></div>
-                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-price`} className="text-[11px]">Ціна</label><input id={`${p.type}-price`} name="price" type="number" step="500" defaultValue={p.price} className="!min-h-9 !py-1.5" /></div>
+                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-price`} className="text-[11px]">Ціна</label><input id={`${p.type}-price`} name="price" type="number" step="any" defaultValue={p.price} className="!min-h-9 !py-1.5" /></div>
                   <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-photos`} className="text-[11px]">Фото</label><input id={`${p.type}-photos`} name="photos" type="number" defaultValue={p.photos} className="!min-h-9 !py-1.5" /></div>
                   <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-extra`} className="text-[11px]">+ кольорокор.</label><input id={`${p.type}-extra`} name="extra_photos" type="number" defaultValue={p.extra_photos} className="!min-h-9 !py-1.5" /></div>
                   <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-dd`} className="text-[11px]">Віддача, дн</label><input id={`${p.type}-dd`} name="delivery_days" type="number" defaultValue={p.delivery_days} className="!min-h-9 !py-1.5" /></div>
-                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-sh`} className="text-[11px]">Зйомка, год</label><input id={`${p.type}-sh`} name="shoot_hours" type="number" step="0.5" defaultValue={p.shoot_hours} className="!min-h-9 !py-1.5" /></div>
-                  <div className="flex gap-1 items-end"><div className="field flex flex-col gap-1 flex-1"><label htmlFor={`${p.type}-rh`} className="text-[11px]">Ретуш, год</label><input id={`${p.type}-rh`} name="retouch_hours" type="number" step="0.5" defaultValue={p.retouch_hours} className="!min-h-9 !py-1.5" /></div><button className="btn btn-sm" aria-label={`Зберегти пресет ${p.label}`}>✓</button></div>
+                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-sh`} className="text-[11px]">Зйомка, год</label><input id={`${p.type}-sh`} name="shoot_hours" type="number" step="0.1" defaultValue={p.shoot_hours} className="!min-h-9 !py-1.5" /></div>
+                  <div className="flex gap-1 items-end"><div className="field flex flex-col gap-1 flex-1"><label htmlFor={`${p.type}-rh`} className="text-[11px]">Ретуш, год</label><input id={`${p.type}-rh`} name="retouch_hours" type="number" step="0.1" defaultValue={p.retouch_hours} className="!min-h-9 !py-1.5" /></div><button className="btn btn-sm" aria-label={`Зберегти пресет ${p.label}`}>✓</button></div>
                 </form>
               ))}
             </div>
