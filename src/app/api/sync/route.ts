@@ -10,7 +10,7 @@ const OPS: Record<string, Op> = {
   dismissInsight: A.dismissInsight, markTaxPaid: A.markTaxPaid, toggleBlockedDay: A.toggleBlockedDay, createShoot: A.createShoot, updateShoot: A.updateShoot, updateShootField: A.updateShootField,
   advanceShoot: A.advanceShoot, cancelShoot: A.cancelShoot, deleteShoot: A.deleteShoot, deleteClient: A.deleteClient, markInvoiceSent: A.markInvoiceSent, addPayment: A.addPayment, deletePayment: A.deletePayment,
   addNote: A.addNote, deleteNote: A.deleteNote, deleteChecklistItem: A.deleteChecklistItem, addChecklistItem: A.addChecklistItem, addDefaultChecklist: A.addDefaultChecklist, toggleChecklist: A.toggleChecklist,
-  createClient_: A.createClient_, updateClient: A.updateClient, addClientPref: A.addClientPref, deleteClientPref: A.deleteClientPref, saveSettings: A.saveSettings, savePreset: A.savePreset,
+  createClient_: A.createClient_, updateClient: A.updateClient, addClientPref: A.addClientPref, deleteClientPref: A.deleteClientPref, saveSettings: A.saveSettings, rotateIcalToken: A.rotateIcalToken, savePreset: A.savePreset,
 };
 
 function isRedirect(e: unknown) { return typeof e === "object" && e !== null && String((e as { digest?: string }).digest ?? "").startsWith("NEXT_REDIRECT"); }

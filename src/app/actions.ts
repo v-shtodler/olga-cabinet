@@ -189,6 +189,15 @@ export async function saveSettings(formData: FormData) {
   if (error) throw new Error(error.message);
   all();
 }
+/** New secret link for the phone-calendar feed (the old link stops working). */
+export async function rotateIcalToken() {
+  const { supabase, uid } = await db();
+  const bytes = new Uint8Array(24); crypto.getRandomValues(bytes);
+  const token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  const { error } = await supabase.from("settings").update({ ical_token: token }).eq("owner_id", uid);
+  if (error) throw new Error(error.code === "42703" ? "Спочатку застосуйте міграцію 0005_ical.sql у Supabase → SQL Editor." : error.message);
+  all();
+}
 export async function savePreset(formData: FormData) {
   const { supabase } = await db();
   const type = String(formData.get("type"));

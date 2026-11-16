@@ -22,7 +22,7 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
-  const isPublic = path.startsWith("/login") || path.startsWith("/auth") || path === "/offline" || path === "/api/ping";
+  const isPublic = path.startsWith("/login") || path.startsWith("/auth") || path === "/offline" || path === "/api/ping" || path.startsWith("/api/ical/");
 
   if (!user && path.startsWith("/api/") && !isPublic) {
     // API callers (the offline outbox) must see a real 401, not a redirect to the login page
