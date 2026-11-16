@@ -50,9 +50,9 @@ export function BgPicker({ initial, initialStrength }: { initial: Bg; initialStr
           </button>
         ))}
       </div>
-      <div className={clsx("flex items-center justify-between gap-3", bg === "none" && "opacity-40 pointer-events-none")}>
-        <span className="text-[13px] text-muted shrink-0">Насиченість</span>
-        <div className="seg" role="radiogroup" aria-label="Насиченість фону">
+      <div className={clsx("flex flex-col gap-1.5", bg === "none" && "opacity-40 pointer-events-none")}>
+        <span className="text-[13px] text-muted">Насиченість</span>
+        <div className="seg seg-fill" role="radiogroup" aria-label="Насиченість фону">
           {STRENGTHS.map(([v, label]) => (
             <button key={v} type="button" role="radio" aria-checked={str === v} className={clsx(str === v && "on")} onClick={() => pickStr(v)}>{label}</button>
           ))}

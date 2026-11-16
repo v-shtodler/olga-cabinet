@@ -111,6 +111,7 @@ h1 { letter-spacing: -0.015em; text-wrap: balance; } h2, h3 { letter-spacing: -0
   .seg { @apply inline-flex gap-0 p-[2px] rounded-[9px] max-w-full overflow-x-auto; background: var(--fill-3); scrollbar-width: none; }
   .seg::-webkit-scrollbar { display: none; }
   .seg > * { @apply border-0 bg-transparent font-medium text-[13px] px-3.5 py-[5px] rounded-[7px] whitespace-nowrap cursor-pointer transition-colors; color: var(--fg); }
+  .seg-fill { @apply flex w-full; } .seg-fill > * { @apply flex-1 px-2 text-center; }
   .seg > .on { @apply font-semibold; background: var(--seg-on); box-shadow: 0 3px 8px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.04); }
   /* Forms */
   .field label { @apply text-[13px] font-medium; color: var(--muted); }
