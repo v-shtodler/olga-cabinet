@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { addDays, format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
+import { format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getIncomeMonthly } from "@/lib/data";
-import { nowKyiv, iso, todayISO, money, moneyK, plural } from "@/lib/domain";
+import { nowKyiv, iso, todayISO, money, moneyK, plural, fmtShort, brandColor } from "@/lib/domain";
 import { Kpi } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { CsvButton } from "./csv-button";
@@ -26,11 +26,32 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const max12 = Math.max(...m12.map((m) => m.income), 1);
   const total12 = m12.reduce((a, m) => a + m.income, 0);
   const best12 = m12.reduce((a, m) => (m.income > a.income ? m : a), m12[0]);
-  const qs = Array.from({ length: 8 }, (_, i) => { const d = subQuarters(now, 7 - i); const a = iso(startOfQuarter(d)), b = iso(endOfQuarter(d)); const l = shoots.filter((s) => s.status === "paid" && s.date >= a && s.date <= b); return { label: `${Math.floor(d.getMonth() / 3) + 1}кв ${String(d.getFullYear()).slice(2)}`, avg: l.length ? l.reduce((x, s) => x + s.price, 0) / l.length : null }; });
-  const qv = qs.filter((q) => q.avg != null) as { label: string; avg: number }[]; const qmax = Math.max(...qv.map((q) => q.avg), 1), qmin = Math.min(...qv.map((q) => q.avg), qmax);
-  const pts = qs.map((q, i) => q.avg != null ? [20 + i * (520 / 7), 160 - (q.avg - qmin) / Math.max(1, qmax - qmin) * 120] as [number, number] : null).filter((x): x is [number, number] => !!x);
-  const poly = pts.map((pt) => pt.join(",")).join(" ");
-  const heat = Array.from({ length: 52 }, (_, i) => { const w = 51 - i; const a = iso(addDays(now, -w * 7 - 6)), b = iso(addDays(now, -w * 7)); const h = shoots.filter((s) => s.status !== "cancelled" && s.status !== "request" && s.date >= a && s.date <= b).length; return { h, label: `${a} – ${b}: ${h} ${plural(h, "зйомка", "зйомки", "зйомок")}` }; });
+  // Who the money comes from, in the chosen period (by money actually received)
+  const inPeriod = shoots.filter((s) => s.status !== "cancelled" && s.date >= from && s.date <= to);
+  const perClient = new Map<string, { name: string; hue: number; paid: number; shoots: number }>();
+  for (const sh of inPeriod) {
+    const e = perClient.get(sh.client_id) ?? { name: sh.client_name, hue: sh.client_hue, paid: 0, shoots: 0 };
+    e.paid += Number(sh.paid); e.shoots += 1; perClient.set(sh.client_id, e);
+  }
+  const byMoney = [...perClient.values()].filter((c) => c.paid > 0).sort((a, b) => b.paid - a.paid);
+  const topList = byMoney.slice(0, 6); const topMax = Math.max(...byMoney.map((c) => c.paid), 1);
+  const paidAll = byMoney.reduce((a, c) => a + c.paid, 0);
+  const top3Share = paidAll ? Math.round(byMoney.slice(0, 3).reduce((a, c) => a + c.paid, 0) / paidAll * 100) : 0;
+
+  // Money earned but not received yet, oldest invoice first
+  const owing = shoots.filter((sh) => sh.status !== "cancelled" && Number(sh.balance) > 0 && sh.date <= today)
+    .sort((a, b) => (b.invoice_age_days ?? -1) - (a.invoice_age_days ?? -1));
+  const owingTotal = owing.reduce((a, sh) => a + Number(sh.balance), 0);
+
+  // What is already booked ahead, by month
+  const ahead = new Map<string, { count: number; price: number; left: number }>();
+  for (const sh of shoots.filter((x) => x.status !== "cancelled" && x.date > today)) {
+    const k = sh.date.slice(0, 7); const e = ahead.get(k) ?? { count: 0, price: 0, left: 0 };
+    e.count += 1; e.price += Number(sh.price); e.left += Number(sh.balance); ahead.set(k, e);
+  }
+  const aheadRows = [...ahead.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(0, 4);
+  const aheadTotal = [...ahead.values()].reduce((a, e) => a + e.price, 0);
+
   const weakM = m12.filter((m) => m.income < max12 * 0.35).map((m) => m.label);
   const summary = done.length === 0
     ? "Поки замало даних — з’являться після перших завершених зйомок."
@@ -65,9 +86,70 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         </section>
         <aside className="flex-[1_1_300px] min-w-0"><Assistant items={[]} title="Помічник бачить у цифрах" empty={summary} /></aside>
       </div>
-      <div className="grid gap-3.5 mt-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
-        <section className="card min-w-0"><h2 className="text-[17px] font-semibold mb-3">Середній чек по кварталах</h2>{pts.length > 1 ? <><svg role="img" aria-label="Середній чек по кварталах" viewBox="0 0 560 190" className="w-full h-[170px] block"><defs><linearGradient id="gf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity=".35" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0" /></linearGradient></defs><polygon fill="url(#gf)" points={`${poly} ${pts[pts.length - 1][0]},175 ${pts[0][0]},175`} /><polyline fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" points={poly} />{pts.map((pt, i) => <circle key={i} cx={pt[0]} cy={pt[1]} r={i === pts.length - 1 ? 6 : 3} fill={i === pts.length - 1 ? "#fff" : "var(--accent)"} stroke="var(--accent)" strokeWidth="3" />)}</svg><div className="flex gap-2">{qs.map((q, i) => <span key={i} className="flex-1 text-center text-[10px] font-semibold text-muted min-w-0">{q.label}</span>)}</div><p className="text-[13px] text-muted mt-2">{money(qv[0].avg)} → {money(qv[qv.length - 1].avg)} за {qv.length} {plural(qv.length, "квартал", "квартали", "кварталів")}.</p></> : <div className="empty">Потрібно хоча б два квартали з оплаченими зйомками.</div>}</section>
-        <section className="card min-w-0"><h2 className="text-[17px] font-semibold mb-3">Завантаженість по тижнях · 52 тижні</h2><div className="grid gap-1" style={{ gridTemplateColumns: "repeat(13, minmax(0,1fr))" }}>{heat.map((c, i) => <i key={i} title={c.label} className="block rounded-[5px]" style={{ aspectRatio: "1/1", background: c.h === 0 ? "var(--fill-3)" : c.h === 1 ? "var(--accent-tint)" : c.h === 2 ? "var(--accent-2)" : "var(--accent)" }} />)}</div><div className="flex justify-between text-xs text-muted mt-2"><span>рік тому → цей тиждень</span><span>0 · 1 · 2 · 3+ зйомки</span></div></section>
+      <div className="grid gap-3.5 mt-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
+        {/* Хто приносить дохід — кольори ті самі, що в календарі */}
+        <section className="card min-w-0">
+          <h2 className="text-[17px] font-semibold mb-3">Хто приносить дохід</h2>
+          {topList.length ? (
+            <>
+              <div className="flex flex-col gap-2.5">
+                {topList.map((c) => (
+                  <div key={c.name} className="min-w-0">
+                    <div className="flex justify-between items-baseline gap-2 text-[13px] mb-1">
+                      <span className="font-semibold truncate">{c.name}</span>
+                      <span className="num shrink-0 text-muted">{money(c.paid)} · {Math.round(c.paid / paidAll * 100)}%</span>
+                    </div>
+                    <i className="block h-[8px] rounded-full" style={{ width: `${Math.max(3, Math.round(c.paid / topMax * 100))}%`, background: brandColor(c.hue) }} />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[13px] text-muted mt-3">Топ-3 дають <b className="text-fg">{top3Share}%</b> доходу за період{byMoney.length > 6 ? ` · усього замовників: ${byMoney.length}` : ""}.{top3Share >= 70 ? " Варто розширювати базу — залежність висока." : ""}</p>
+            </>
+          ) : <div className="empty">За цей період оплат ще не було.</div>}
+        </section>
+
+        {/* Гроші в дорозі */}
+        <section className="card min-w-0">
+          <div className="flex justify-between items-baseline gap-2 mb-3"><h2 className="text-[17px] font-semibold">Гроші в дорозі</h2><span className="num font-bold text-[17px]" style={{ color: owingTotal ? "var(--warn)" : "var(--good)" }}>{money(owingTotal)}</span></div>
+          {owing.length ? (
+            <>
+              <div className="flex flex-col gap-1.5">
+                {owing.slice(0, 5).map((sh) => (
+                  <Link key={sh.id} href={`/shoots/${sh.id}`} className="kv items-center gap-2">
+                    <span className="min-w-0 flex items-center gap-2">
+                      <i className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: brandColor(sh.client_hue) }} />
+                      <span className="truncate">{sh.client_name}<span className="text-muted"> · {fmtShort(sh.date)}</span></span>
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <b className="num block">{money(Number(sh.balance))}</b>
+                      <span className="text-[12px]" style={{ color: (sh.invoice_age_days ?? 0) > 14 ? "var(--warn)" : "var(--muted)" }}>{sh.invoice_age_days == null ? "рахунок не виставлено" : `рахунок ${sh.invoice_age_days} дн. тому`}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              {owing.length > 5 && <p className="text-[13px] text-muted mt-2">і ще {owing.length - 5} {plural(owing.length - 5, "зйомка", "зйомки", "зйомок")}.</p>}
+              <p className="text-[13px] text-muted mt-3">Це вже відпрацьовані гроші. Вони впадуть у податки того кварталу, коли прийдуть.</p>
+            </>
+          ) : <div className="empty">Усе оплачено ✓</div>}
+        </section>
+
+        {/* Законтрактовано наперед */}
+        <section className="card min-w-0">
+          <div className="flex justify-between items-baseline gap-2 mb-3"><h2 className="text-[17px] font-semibold">Законтрактовано наперед</h2><span className="num font-bold text-[17px]">{money(aheadTotal)}</span></div>
+          {aheadRows.length ? (
+            <>
+              <div className="flex flex-col gap-1.5">
+                {aheadRows.map(([k, e]) => (
+                  <div key={k} className="kv items-center">
+                    <span className="capitalize">{format(new Date(Number(k.slice(0, 4)), Number(k.slice(5, 7)) - 1, 1), "LLLL", { locale: uk })}<span className="text-muted"> · {e.count} {plural(e.count, "зйомка", "зйомки", "зйомок")}</span></span>
+                    <span className="text-right shrink-0"><b className="num block">{money(e.price)}</b>{e.left > 0 && <span className="text-[12px] text-muted num">лишиться отримати {money(e.left)}</span>}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[13px] text-muted mt-3">Сума підтверджених і запитаних зйомок попереду — орієнтир для планування й податків.</p>
+            </>
+          ) : <div className="empty">Попереду поки нічого не заплановано.</div>}
+        </section>
       </div>
     </>
   );
