@@ -4,15 +4,18 @@ import { uk } from "date-fns/locale";
 import { getShoots, getIncomeMonthly, getSavings, getSettings, getTaxQuarters, getTaxPaid } from "@/lib/data";
 import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor, taxTimeline, fmtDate, fx, CURRENCIES } from "@/lib/domain";
 import { Kpi } from "@/components/ui";
-import { Assistant } from "@/components/assistant";
 import { CsvButton } from "./csv-button";
 
 export const metadata = { title: "Аналітика" };
 
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ p?: string; y?: string }> }) {
-  const { p = "year", y: yParam } = await searchParams; const period = ["quarter", "year", "all"].includes(p) ? p : "year";
+  const { p = "year", y: yParam } = await searchParams;
   const now = nowKyiv(); const today = todayISO(); const y = now.getFullYear();
   const [shoots, monthly, savings, settings, quarters, taxPaid] = await Promise.all([getShoots(), getIncomeMonthly(), getSavings(), getSettings(), getTaxQuarters(), getTaxPaid()]);
+  // Period: this quarter, one calendar year, or everything. "year" (the old link) means the current year.
+  const years = [...new Set([...monthly.map((m) => m.month.slice(0, 4)), String(y)])].sort().reverse();
+  const period = p === "quarter" || p === "all" ? p : years.includes(p) ? p : String(y);
+  const periodYear = period === "quarter" || period === "all" ? null : period;
   // the ФОП band: this quarter's own numbers, plus anything unpaid from a closed quarter
   const tl = taxTimeline(quarters, taxPaid, settings);
   const qNo = Math.floor(now.getMonth() / 3) + 1;
@@ -25,7 +28,12 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const limitPct = Math.min(100, Math.round(yearIncome / Number(settings.income_limit) * 100));
   let from: string, to: string, prevFrom: string | null = null, prevTo = "", label: string;
   if (period === "quarter") { from = iso(startOfQuarter(now)); to = iso(endOfQuarter(now)); const pq = subQuarters(now, 1); prevFrom = iso(startOfQuarter(pq)); prevTo = iso(endOfQuarter(pq)); label = `${Math.floor(now.getMonth() / 3) + 1} квартал ${y}`; }
-  else if (period === "year") { from = `${y}-01-01`; to = `${y}-12-31`; prevFrom = `${y - 1}-01-01`; prevTo = `${y - 1}-${today.slice(5)}`; label = `Рік ${y} (до сьогодні)`; }
+  else if (periodYear) {
+    const n = Number(periodYear); const running = n === y;
+    from = `${n}-01-01`; to = running ? `${n}-12-31` : `${n}-12-31`;
+    prevFrom = `${n - 1}-01-01`; prevTo = running ? `${n - 1}-${today.slice(5)}` : `${n - 1}-12-31`;
+    label = running ? `Рік ${n} (до сьогодні)` : `Рік ${n}`;
+  }
   else { from = "2000-01-01"; to = "2100-01-01"; label = "Увесь час"; }
   const done = shoots.filter((s) => s.status !== "cancelled" && s.status !== "request" && s.date >= from && s.date <= to && s.date <= today);
   const incomeIn = (a: string, b: string) => monthly.filter((m) => m.month >= a.slice(0, 7) + "-01" && m.month <= b).reduce((x, m) => x + m.income, 0);
@@ -33,8 +41,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const delta = prevIncome ? Math.round((income / prevIncome - 1) * 100) : null;
   const avg = done.length ? done.reduce((a, s) => a + s.price, 0) / done.length : 0;
   // Chart range: the rolling twelve months, or a calendar year picked in the header
-  const years = [...new Set(monthly.map((m) => m.month.slice(0, 4)))].sort().reverse();
-  const chartYear = yParam && years.includes(yParam) ? yParam : null;
+  const chartYear = yParam === "12" ? null : yParam && years.includes(yParam) ? yParam : periodYear && periodYear !== String(y) ? periodYear : null;
   const m12 = Array.from({ length: 12 }, (_, i) => {
     const d = chartYear ? new Date(Number(chartYear), i, 1) : startOfMonth(subMonths(now, 11 - i));
     return { key: format(d, "yyyy-MM"), label: format(d, "LLL", { locale: uk }).replace(".", ""), income: monthly.find((m) => m.month.startsWith(format(d, "yyyy-MM")))?.income ?? 0 };
@@ -70,31 +77,31 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const aheadRows = [...ahead.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(0, 4);
   const aheadTotal = [...ahead.values()].reduce((a, e) => a + e.price, 0);
 
-  const weakM = m12.filter((m) => m.income < max12 * 0.35).map((m) => m.label);
-  const summary = done.length === 0
-    ? "Поки замало даних — з’являться після перших завершених зйомок."
-    : `Середній чек ${money(avg)} за ${done.length} ${plural(done.length, "зйомку", "зйомки", "зйомок")}.${delta != null ? ` Дохід ${delta >= 0 ? "виріс" : "просів"} на ${Math.abs(delta)}% до того ж періоду торік.` : ""}${weakM.length ? ` Найтихіші місяці: ${weakM.slice(0, 3).join(", ")} — місце для промо або відпустки.` : ""}`;
   const csv = [["№", "Дата", "Клієнт", "Локація", "Статус", "Ціна", "Отримано", "Віддати до"], ...shoots.map((s) => [s.no ?? "", s.date, s.client_name, s.location ?? "", s.status, s.price, s.paid, s.deadline ?? ""])].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
 
   return (
     <>
       <div className="flex justify-between items-end gap-4 flex-wrap mb-4 px-1">
         <div><div className="text-[13px] text-muted font-medium mb-1.5">{label}</div><h1 className="text-[clamp(26px,4vw,38px)] font-bold tracking-[-0.01em]">Як іде рік 📈</h1></div>
-        <div className="flex gap-2 flex-wrap"><div className="seg">{[["quarter", "Квартал"], ["year", "Рік"], ["all", "Увесь час"]].map(([k, l]) => <Link key={k} href={`/analytics?p=${k}`} className={period === k ? "on" : ""}>{l}</Link>)}</div><CsvButton csv={csv} filename={`shoots-${today}.csv`} /></div>
+        <div className="flex gap-2 flex-wrap"><div className="seg">
+            <Link href="/analytics?p=quarter" className={period === "quarter" ? "on" : ""}>Квартал</Link>
+            {years.slice(0, 4).map((yy) => <Link key={yy} href={`/analytics?p=${yy}`} className={period === yy ? "on" : ""}>{yy}</Link>)}
+            <Link href="/analytics?p=all" className={period === "all" ? "on" : ""}>Увесь час</Link>
+          </div><CsvButton csv={csv} filename={`shoots-${today}.csv`} /></div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
         <Kpi label="Отримано" value={money(income)} sub={delta == null ? "усі платежі" : `${delta >= 0 ? "↑ +" : "↓ "}${delta}% до того ж періоду`} subTone={delta == null ? undefined : delta >= 0 ? "good" : "warn"} />
-        <Kpi label="Зйомок" value={done.length} sub={period === "year" ? `≈ ${Math.round(done.length / (now.getMonth() + 1) * 10) / 10} на місяць` : undefined} />
+        <Kpi label="Зйомок" value={done.length} sub={periodYear ? `≈ ${Math.round(done.length / (periodYear === String(y) ? now.getMonth() + 1 : 12) * 10) / 10} на місяць` : undefined} />
         <Kpi label="Середній чек" value={money(avg)} />
       </div>
-      {/* the year's shape, with the assistant reading it from the side */}
+      {/* the year's shape */}
       <div className="flex flex-wrap gap-3.5">
-        <section className="card flex-[999_1_560px] min-w-0">
+        <section className="card flex-1 min-w-0">
           <div className="flex justify-between items-center gap-3 flex-wrap mb-3">
             <h2 className="text-[17px] font-semibold">Отримано по місяцях · {chartYear ?? "12 міс"}</h2>
             <div className="seg">
-              <Link href={`/analytics?p=${period}`} className={chartYear ? "" : "on"}>12 міс</Link>
-              {years.map((yy) => <Link key={yy} href={`/analytics?p=${period}&y=${yy}`} className={chartYear === yy ? "on" : ""}>{yy}</Link>)}
+              <Link href={`/analytics?p=${period}&y=12`} className={chartYear ? "" : "on"}>12 міс</Link>
+              {years.slice(0, 4).map((yy) => <Link key={yy} href={`/analytics?p=${period}&y=${yy}`} className={chartYear === yy ? "on" : ""}>{yy}</Link>)}
             </div>
           </div>
           <div className="flex items-end gap-1.5 sm:gap-2 h-[190px]">
@@ -113,7 +120,6 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           <div className="flex gap-1.5 sm:gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] sm:text-[11px] font-medium min-w-0" style={{ color: m.key === chartNow ? "var(--fg)" : "var(--muted)" }}>{m.label}</span>)}</div>
           <p className="text-[13px] text-muted mt-3.5">Усього за {chartYear ? `${chartYear} рік` : "12 місяців"} — <b className="num text-fg">{money(total12)}</b>{best12.income > 0 ? <> · найкращий місяць — <b className="text-fg">{best12.label}</b> (<span className="num">{money(best12.income)}</span>)</> : null}</p>
         </section>
-        <aside className="flex-[1_1_300px] min-w-0"><Assistant items={[]} title="Помічник бачить у цифрах" empty={summary} /></aside>
       </div>
       <div className="grid gap-3.5 mt-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
         {/* Хто приносить дохід — кольори ті самі, що в календарі */}
@@ -175,14 +181,15 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
         {/* Законтрактовано наперед */}
         <section className="card min-w-0">
-          <div className="flex justify-between items-baseline gap-2 mb-3"><h2 className="text-[17px] font-semibold">Законтрактовано наперед</h2><span className="num font-bold text-[17px]">{money(aheadTotal)}</span></div>
+          <h2 className="text-[17px] font-semibold mb-1">Законтрактовано наперед</h2>
+          <div className="text-[26px] font-bold tracking-[-0.01em] num leading-tight mb-3">{money(aheadTotal)}</div>
           {aheadRows.length ? (
             <>
               <div className="flex flex-col gap-1.5">
                 {aheadRows.map(([k, e]) => (
                   <div key={k} className="kv items-center">
-                    <span className="capitalize">{format(new Date(Number(k.slice(0, 4)), Number(k.slice(5, 7)) - 1, 1), "LLLL", { locale: uk })}<span className="text-muted"> · {e.count} {plural(e.count, "зйомка", "зйомки", "зйомок")}</span></span>
-                    <span className="text-right shrink-0"><b className="num block">{money(e.price)}</b>{e.left > 0 && <span className="text-[12px] text-muted num">лишиться отримати {money(e.left)}</span>}</span>
+                    <span className="capitalize min-w-0 truncate">{format(new Date(Number(k.slice(0, 4)), Number(k.slice(5, 7)) - 1, 1), "LLLL", { locale: uk })}<span className="text-muted"> · {e.count} {plural(e.count, "зйомка", "зйомки", "зйомок")}</span></span>
+                    <span className="text-right shrink-0 leading-tight"><b className="num block">{money(e.price)}</b>{e.left > 0 && <span className="text-[12px] text-muted num">ще {money(e.left)}</span>}</span>
                   </div>
                 ))}
               </div>
