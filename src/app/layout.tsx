@@ -13,7 +13,7 @@ export type Bg = (typeof BACKGROUNDS)[number];
 export const BG_STRENGTHS = ["soft", "medium", "vivid"] as const;
 export type BgStrength = (typeof BG_STRENGTHS)[number];
 export const BG_DEFAULT: Bg = "sunrise";
-export const BGS_DEFAULT: BgStrength = "soft";
+export const BGS_DEFAULT: BgStrength = "medium";
 export function readBg(raw?: string): Bg { return BACKGROUNDS.includes(raw as Bg) ? (raw as Bg) : BG_DEFAULT; }
 export function readBgs(raw?: string): BgStrength { return BG_STRENGTHS.includes(raw as BgStrength) ? (raw as BgStrength) : BGS_DEFAULT; }
 
