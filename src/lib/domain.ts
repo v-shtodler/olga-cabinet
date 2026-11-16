@@ -55,6 +55,8 @@ export type Currency = "EUR" | "USD";
 export const CURRENCIES: Currency[] = ["EUR", "USD"];
 export interface Saving { id: string; month: string; currency: Currency; amount: number; rate: number; uah: number; note: string | null; created_at: string; }
 export const CUR_SIGN: Record<Currency, string> = { EUR: "€", USD: "$" };
+/** Each currency keeps one colour everywhere, so a glance separates euro from dollars. */
+export const CUR_COLOR: Record<Currency, string> = { EUR: "#8ab6f0", USD: "#87d1a4" };
 export const fx = (n: number, c: Currency) => `${Math.round(n).toLocaleString("uk-UA").replace(/,/g, " ")} ${CUR_SIGN[c]}`;
 
 export const money = (n: number) => Math.round(n).toLocaleString("uk-UA").replace(/,/g, " ") + " ₴";
