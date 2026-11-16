@@ -5,7 +5,6 @@
 :root {
   color-scheme: light;
   --bg: light-dark(#f2f2f7, #000000);                 /* systemGroupedBackground */
-  --bg-a: var(--bg); --bg-b: var(--bg); --bg-c: var(--bg);
   --fg: light-dark(#000000, #ffffff);                 /* label */
   --muted: light-dark(rgba(60,60,67,0.6), rgba(235,235,245,0.6));     /* secondaryLabel */
   --muted-2: light-dark(rgba(60,60,67,0.3), rgba(235,235,245,0.3));   /* tertiaryLabel */
@@ -30,7 +29,6 @@
   --assist-a: #0a84ff; --assist-b: #bf5af2; --assist-c: #ff375f; --assist-d: #ff9f0a;
   --assist-soft: light-dark(rgba(0,122,255,0.08), rgba(10,132,255,0.14));
   --assist-grad: linear-gradient(135deg, var(--assist-a), var(--assist-b) 45%, var(--assist-c) 75%, var(--assist-d));
-  --blob-1: transparent; --blob-2: transparent; --blob-3: transparent; --blob-4: transparent; --blob-opacity: 0;
   --shadow-c: light-dark(rgba(0,0,0,0.04), rgba(0,0,0,0.4)); --shadow-c2: light-dark(rgba(0,0,0,0.12), rgba(0,0,0,0.6));
   --shadow: 0 0 0 0 transparent; --shadow-2: 0 10px 30px var(--shadow-c2);
   --bar: light-dark(rgba(249,249,249,0.84), rgba(29,29,31,0.78));      /* translucent toolbars */
@@ -39,6 +37,38 @@
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="system"] { color-scheme: light dark; }
+
+/* ---- Background wash: three soft colour clouds behind everything. Chosen in Settings → Фон.
+   data-bg picks the palette, data-bgs the strength; dark themes dim it so it stays easy on the eyes. ---- */
+:root { --g1: transparent; --g2: transparent; --g3: transparent; --g-str: 0; --g-dim: 1; }
+:root[data-theme="dark"] { --g-dim: 0.42; }
+@media (prefers-color-scheme: dark) { :root[data-theme="system"] { --g-dim: 0.42; } }
+
+:root[data-bgs="soft"] { --g-str: 0.5; }
+:root[data-bgs="medium"] { --g-str: 0.85; }
+:root[data-bgs="vivid"] { --g-str: 1.3; }
+
+:root[data-bg="sunrise"], .bgp[data-bg="sunrise"] { --g1: #ffb49a; --g2: #c3b6ff; --g3: #a9ecc9; }
+:root[data-bg="ocean"], .bgp[data-bg="ocean"] { --g1: #8cccff; --g2: #a5e6ff; --g3: #b6ecd8; }
+:root[data-bg="blossom"], .bgp[data-bg="blossom"] { --g1: #ffb3d1; --g2: #dcb8ff; --g3: #ffe6ad; }
+:root[data-bg="sand"], .bgp[data-bg="sand"] { --g1: #ffcb9a; --g2: #ffe2c2; --g3: #ffbfae; }
+:root[data-bg="mint"], .bgp[data-bg="mint"] { --g1: #a6eed3; --g2: #cdf0ad; --g3: #b3dcff; }
+:root[data-bg="lavender"], .bgp[data-bg="lavender"] { --g1: #cbb8ff; --g2: #b3c7ff; --g3: #ffc6e6; }
+:root[data-bg="peach"], .bgp[data-bg="peach"] { --g1: #ffb0a8; --g2: #ffd6a0; --g3: #ffc0d8; }
+:root[data-bg="steel"], .bgp[data-bg="steel"] { --g1: #b9c6d8; --g2: #cfd8e3; --g3: #aec7d6; }
+
+html::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: calc(var(--g-str) * var(--g-dim));
+  background:
+    radial-gradient(90vw 70vh at 0% 0%, var(--g1), transparent 68%),
+    radial-gradient(85vw 75vh at 100% 8%, var(--g2), transparent 66%),
+    radial-gradient(100vw 80vh at 45% 100%, var(--g3), transparent 70%);
+}
+/* colour swatch in Settings */
+.bgp { background: linear-gradient(135deg, var(--g1), var(--g2) 52%, var(--g3)); }
+.bgp-none { background: var(--bg); }
+@media print { html::before { display: none; } }
 
 @theme inline {
   --color-bg: var(--bg); --color-fg: var(--fg); --color-muted: var(--muted); --color-muted-2: var(--muted-2);

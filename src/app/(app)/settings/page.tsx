@@ -4,9 +4,10 @@ import { AssistantInline } from "@/components/assistant";
 import { saveSettings } from "@/app/actions";
 import { cookies } from "next/headers";
 import { ThemeToggle } from "./theme-toggle";
+import { BgPicker } from "./bg-picker";
 import { IcalCard } from "./ical-card";
 import { AvatarCard } from "./avatar-card";
-import { THEMES, type Theme } from "@/app/layout";
+import { THEMES, type Theme, readBg, readBgs } from "@/app/layout";
 
 export const metadata = { title: "Налаштування" };
 
@@ -17,6 +18,7 @@ function F({ id, label, name, type = "text", value, step, min, max }: { id: stri
 export default async function SettingsPage() {
   const [s, { user }, jar] = await Promise.all([getSettings(), getSession(), cookies()]);
   const raw = jar.get("theme")?.value; const theme: Theme = THEMES.includes(raw as Theme) ? (raw as Theme) : "light";
+  const bg = readBg(jar.get("bg")?.value), bgs = readBgs(jar.get("bgs")?.value);
   return (
     <>
       <PageHead eyebrow="Кабінет" title="Налаштування" />
@@ -55,6 +57,7 @@ export default async function SettingsPage() {
           <AvatarCard src={s.avatar_url ?? null} name={s.display_name} />
           <IcalCard token={s.ical_token ?? null} />
           <Group title="Тема"><p className="text-[13px] text-muted mb-3">Світла вдень, темна «нічна» — для очей увечері. Запам’ятовується на цьому пристрої; «Як у системі» перемикається разом із телефоном чи Mac.</p><ThemeToggle initial={theme} /></Group>
+          <Group title="Фон" note="колір за картками"><p className="text-[13px] text-muted mb-3">М’який кольоровий градієнт за інтерфейсом. У темній темі він автоматично приглушується. Налаштування запам’ятовується на цьому пристрої.</p><BgPicker initial={bg} initialStrength={bgs} /></Group>
           <AssistantInline>Щоб додати кабінет на екран телефону: у Safari «Поділитися → На Початковий екран». Він відкриватиметься як застосунок, без адресного рядка.</AssistantInline>
           <AssistantInline>Податки рахуються за датами <b>отримання</b> платежів, а не за датами зйомок. Якщо гроші прийшли в іншому кварталі — поправте дату платежу в картці зйомки.</AssistantInline>
         </aside>
