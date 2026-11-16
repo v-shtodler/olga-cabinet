@@ -2,7 +2,7 @@ import Link from "next/link";
 import { addDays, addMonths, addYears, format, startOfMonth, endOfMonth, parseISO, isWeekend, isValid } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getBlockedDays, getSettings } from "@/lib/data";
-import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, type ShootView } from "@/lib/domain";
+import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, type ShootView } from "@/lib/domain";
 import { ShootRow, Chip, Bar } from "@/components/ui";
 import { AssistantInline } from "@/components/assistant";
 import { toggleBlockedDay } from "@/app/actions";
@@ -82,18 +82,36 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-[999_1_640px] min-w-0">
-          {/* ---------- MONTH ---------- */}
+          {/* ---------- MONTH: iOS Calendar — a clean grid, each event a brand-coloured pill ---------- */}
           {view === "month" && (
-            <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-              {WEEKDAYS.map((w) => <div key={w} className="text-[12px] font-medium text-muted px-1.5 pb-1">{w}</div>)}
+            <div className="grid grid-cols-7 gap-px rounded-[12px] overflow-hidden" style={{ background: "var(--hair)" }}>
+              {WEEKDAYS.map((w) => <div key={w} className="text-[12px] font-medium text-muted text-center py-1.5" style={{ background: "var(--glass)" }}>{w}</div>)}
               {cells.map((d) => {
                 const k = iso(d); const out = d.getMonth() !== monthStart.getMonth(); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
                 const isSel = k === sel; const isToday = k === today; const isFree = !out && !isWeekend(d) && ev.length === 0 && !blocked.has(k) && k >= today;
                 return (
-                  <Link key={k} href={dayLink(d)} className="min-h-[56px] sm:min-h-[92px] p-1.5 sm:p-2 rounded-[12px] border flex flex-col gap-1 text-left" style={{ background: blocked.has(k) ? "var(--fill-2)" : isFree ? "var(--good-bg)" : "var(--glass-2)", borderColor: isSel ? "var(--accent)" : "var(--line)", boxShadow: isSel ? "0 0 0 2px var(--accent-tint)" : undefined, opacity: out ? 0.45 : 1 }}>
-                    <span className="w-[26px] h-[26px] rounded-full inline-flex items-center justify-center text-[13px] font-semibold" style={isToday ? { background: "var(--accent)", color: "#fff" } : undefined}>{d.getDate()}</span>
-                    <span className="hidden sm:flex flex-col gap-1">{ev.slice(0, 3).map((s) => <span key={s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}{dl.slice(0, 1).map((s) => <span key={"d" + s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}{ev.length > 3 && <span className="text-[10px] text-muted">+{ev.length - 3}</span>}</span>
-                    <span className="flex sm:hidden gap-[3px]">{ev.map((s) => <i key={s.id} className="w-[5px] h-[5px] rounded-full" style={{ background: "var(--accent)" }} />)}{dl.map((s) => <i key={"d" + s.id} className="w-[5px] h-[5px] rounded-full" style={{ background: "var(--sun)" }} />)}</span>
+                  <Link key={k} href={dayLink(d)} className="min-h-[88px] sm:min-h-[112px] p-1 sm:p-1.5 flex flex-col gap-1 text-left transition-colors"
+                    style={{ background: isSel ? "var(--accent-tint)" : "var(--glass)", opacity: out ? 0.45 : 1 }}>
+                    <span className="self-center sm:self-start w-[26px] h-[26px] rounded-full inline-flex items-center justify-center text-[14px] font-semibold shrink-0"
+                      style={isToday ? { background: "var(--accent)", color: "#fff" } : blocked.has(k) ? { background: "var(--fill-2)", color: "var(--muted)" } : isFree ? { color: "var(--good)" } : undefined}>{d.getDate()}</span>
+                    <span className="hidden sm:flex flex-col gap-[3px] min-w-0">
+                      {ev.slice(0, 3).map((s) => {
+                        const col = brandColor(s.client_hue);
+                        return (
+                          <span key={s.id} className="flex items-center gap-1 px-1.5 py-[2px] rounded-[5px] text-[11px] font-medium truncate"
+                            style={{ background: `color-mix(in srgb, ${col} 16%, transparent)`, color: col }}>
+                            <i className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: col }} />
+                            <span className="truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
+                          </span>
+                        );
+                      })}
+                      {dl.slice(0, 1).map((s) => <span key={"d" + s.id} className="px-1.5 py-[2px] rounded-[5px] text-[11px] font-medium truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
+                      {ev.length > 3 && <span className="text-[11px] text-muted px-1.5">ще {ev.length - 3}</span>}
+                    </span>
+                    <span className="flex sm:hidden gap-[3px] justify-center flex-wrap">
+                      {ev.map((s) => <i key={s.id} className="w-[6px] h-[6px] rounded-full" style={{ background: brandColor(s.client_hue) }} />)}
+                      {dl.map((s) => <i key={"d" + s.id} className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--sun)" }} />)}
+                    </span>
                   </Link>
                 );
               })}
@@ -114,7 +132,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                       {ev.map((s) => (
-                        <span key={s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] leading-tight" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>
+                        <span key={s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] leading-tight" style={{ background: `color-mix(in srgb, ${brandColor(s.client_hue)} 16%, transparent)`, color: brandColor(s.client_hue) }}>
                           {s.start_time && <b className="block num">{s.start_time.slice(0, 5)}</b>}
                           <span className="block font-semibold truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
                         </span>
@@ -147,8 +165,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                       {mDays.map((d) => {
                         const k = iso(d); const out = d.getMonth() !== m; const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
                         const isToday = k === today;
-                        const bg = out ? "transparent" : ev.length ? "var(--accent-tint)" : dl.length ? "var(--sun-bg)" : blocked.has(k) ? "var(--fill-2)" : "transparent";
-                        const fg = out ? "var(--muted-2)" : ev.length ? "var(--accent)" : dl.length ? "var(--sun)" : "var(--fg)";
+                        const bg = out ? "transparent" : ev.length ? `color-mix(in srgb, ${brandColor(ev[0].client_hue)} 18%, transparent)` : dl.length ? "var(--sun-bg)" : blocked.has(k) ? "var(--fill-2)" : "transparent";
+                        const fg = out ? "var(--muted-2)" : ev.length ? brandColor(ev[0].client_hue) : dl.length ? "var(--sun)" : "var(--fg)";
                         return (
                           <Link key={k} href={dayLink(d)} aria-label={k} className="aspect-square rounded-[5px] flex items-center justify-center text-[10px] font-medium" style={isToday ? { background: "var(--accent)", color: "#fff", fontWeight: 600 } : { background: bg, color: fg, opacity: out ? 0.4 : 1 }}>{d.getDate()}</Link>
                         );
@@ -161,7 +179,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           )}
 
           <div className="flex gap-3.5 flex-wrap text-[13px] text-muted font-medium mt-3">
-            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--accent)" }} />Зйомка</span>
+            <span>Колір — бренд замовника</span>
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Закрито</span>
           </div>
         </section>

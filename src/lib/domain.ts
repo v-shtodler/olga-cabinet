@@ -9,6 +9,10 @@ export const STATUS_UA: Record<ShootStatus, string> = { request: "Запит", c
 export const STATUS_TONE: Record<ShootStatus, Tone> = { request: "neutral", confirmed: "info", shot: "warn", delivered: "purple", paid: "good", cancelled: "neutral" };
 export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Підтвердити (передоплата отримана)", confirmed: "Позначити «відзнято»", shot: "Позначити «віддано»", delivered: "Позначити «оплачено»" };
 
+/** Eight system colours, one per brand (clients.avatar_hue). iOS Calendar reads this way: colour = whose event. */
+export const BRAND = ["#ff9500", "#af52de", "#007aff", "#34c759", "#ff2d55", "#ffcc00", "#5ac8fa", "#5856d6"] as const;
+export const brandColor = (hue: number) => BRAND[((hue % BRAND.length) + BRAND.length) % BRAND.length];
+
 export type Tone = "good" | "warn" | "info" | "purple" | "sun" | "pink" | "neutral" | "dark";
 
 export interface Settings { owner_id: string; display_name: string; ep_rate: number; vz_rate: number; esv_monthly: number; income_limit: number; rates_from: string; remind_days: number; month_capacity: number;
@@ -19,7 +23,7 @@ export interface Shoot {
   id: string; client_id: string; no: string | null; status: ShootStatus; date: string; start_time: string | null; location: string | null;
   price: number; deposit_pct: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null; created_at: string;
 }
-export interface ShootView extends Shoot { client_name: string; paid: number; balance: number; deadline: string | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
+export interface ShootView extends Shoot { client_name: string; client_hue: number; paid: number; balance: number; deadline: string | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
 export interface Payment { id: string; shoot_id: string; amount: number; paid_on: string; kind: "deposit" | "balance" | "extra" | "refund"; method: "invoice" | "card" | "cash" | "other"; note: string | null; }
 export interface Note { id: string; shoot_id: string; text: string; created_at: string; }
 export interface ChecklistItem { id: string; shoot_id: string; text: string; done: boolean; sort: number; }

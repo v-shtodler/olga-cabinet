@@ -1,6 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { type Tone, type ShootView, STATUS_TONE, STATUS_UA, money, relDays, daysBetween, todayISO, fmtShort } from "@/lib/domain";
+import { type Tone, type ShootView, brandColor, STATUS_TONE, STATUS_UA, money, relDays, daysBetween, todayISO, fmtShort } from "@/lib/domain";
 import { parseISO, format } from "date-fns";
 import * as I from "./icons";
 import { uk } from "date-fns/locale";
@@ -16,10 +16,10 @@ export function Avatar({ name, hue, size = 38 }: { name: string; hue: number; si
   const ini = name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   return <span aria-hidden="true" className="inline-flex items-center justify-center text-white font-bold shrink-0" style={{ width: size, height: size, borderRadius: Math.round(size * 0.32), background: GRADS[hue % GRADS.length], fontSize: Math.round(size * 0.3) }}>{ini}</span>;
 }
-export function DateBox({ date, tone }: { date: string; tone: Tone }) {
+export function DateBox({ date, tone, accent }: { date: string; tone: Tone; accent?: string }) {
   const d = parseISO(date);
   return (
-    <div className="w-12 h-12 shrink-0 rounded-[12px] flex flex-col items-center justify-center leading-none" style={{ background: TONE_BG[tone], color: TONE_FG[tone] }}>
+    <div className="w-12 h-12 shrink-0 rounded-[12px] flex flex-col items-center justify-center leading-none" style={accent ? { background: `color-mix(in srgb, ${accent} 16%, transparent)`, color: accent } : { background: TONE_BG[tone], color: TONE_FG[tone] }}>
       <div className="text-[17px] font-semibold tracking-[-0.01em]">{d.getDate()}</div>
       {/* three letters always fit the 48pt box: "лист." / "листоп" overflowed */}
       <div className="text-[10px] font-semibold uppercase mt-1 tracking-[0.02em]">{format(d, "LLL", { locale: uk }).replace(".", "").slice(0, 3)}</div>
@@ -34,7 +34,7 @@ export function ShootRow({ s, rel }: { s: ShootView; rel?: boolean }) {
   else end = <Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip>;
   return (
     <Link href={`/shoots/${s.id}`} className="srow">
-      <DateBox date={s.date} tone={STATUS_TONE[s.status]} />
+      <DateBox date={s.date} tone="neutral" accent={brandColor(s.client_hue)} />
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="font-semibold truncate">{s.client_name}</div>
         <div className="text-[13px] text-muted truncate">{s.location ?? "—"}{s.start_time ? `, ${s.start_time.slice(0, 5)}` : ""}{rel && d >= 0 ? ` · ${relDays(d)}` : ""}</div>

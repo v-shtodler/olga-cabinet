@@ -1,111 +1,128 @@
 import Link from "next/link";
-import { addDays, format, isWeekend, subMonths, startOfMonth } from "date-fns";
+import { format, subMonths, startOfMonth, startOfQuarter, endOfQuarter, endOfMonth } from "date-fns";
 import { uk } from "date-fns/locale";
-import { getShoots, getClients, getClientPrefs, getSettings, getDismissed, getBlockedDays, getTaxQuarters, getTaxPaid, getIncomeMonthly } from "@/lib/data";
-import { nowKyiv, buildInsights, taxTimeline, groupByDay, deadlinesByDay, freeDays, todayISO, iso, money, moneyK, plural, relDays, daysBetween, fmtShort, quarterOf } from "@/lib/domain";
-import { Assistant } from "@/components/assistant";
-import { Kpi, ShootRow } from "@/components/ui";
+import { getShoots, getSettings, getTaxQuarters, getTaxPaid, getIncomeMonthly } from "@/lib/data";
+import { nowKyiv, taxTimeline, todayISO, iso, money, moneyK, fmtDate, brandColor, STATUS_UA, STATUS_TONE } from "@/lib/domain";
+import { Kpi, Chip, DateBox } from "@/components/ui";
 
-export default async function HomePage() {
+type Period = "month" | "quarter" | "year";
+const PERIODS: [Period, string][] = [["month", "Місяць"], ["quarter", "Квартал"], ["year", "Рік"]];
+const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
+  const sp = await searchParams;
+  const period: Period = sp.p === "quarter" || sp.p === "year" ? sp.p : "month";
   const today = todayISO(); const now = nowKyiv();
-  const [shoots, clients, prefs, settings, dismissed, blocked, quarters, taxPaid, monthly] = await Promise.all([
-    getShoots({ from: iso(subMonths(now, 13)) }), getClients(), getClientPrefs(), getSettings(), getDismissed(), getBlockedDays(), getTaxQuarters(), getTaxPaid(), getIncomeMonthly(),
+  const [shoots, settings, quarters, taxPaid, monthly] = await Promise.all([
+    getShoots({ from: iso(subMonths(now, 13)) }), getSettings(), getTaxQuarters(), getTaxPaid(), getIncomeMonthly(),
   ]);
   const tl = taxTimeline(quarters, taxPaid, settings);
   const taxNext = tl.find((t) => !t.paid && !t.ongoing) ?? null;
-  const insights = buildInsights({ shoots, clients, prefs, settings, dismissed, blocked, scope: { type: "home" }, taxNext: taxNext ? { key: taxNext.key, label: taxNext.label, amount: taxNext.amount, due: taxNext.due } : null });
 
   const active = shoots.filter((s) => s.status !== "cancelled");
-  const upcoming = active.filter((s) => s.date >= today && s.status !== "request");
-  const requests = active.filter((s) => s.status === "request");
-  const inWork = active.filter((s) => s.status === "shot");
-  const owed = active.filter((s) => s.status === "delivered" && s.balance > 0);
-  const owedSum = owed.reduce((a, s) => a + s.balance, 0);
-  const byDay = groupByDay(active); const dlByDay = deadlinesByDay(active);
-  const free = freeDays(byDay, blocked, now, 14);
-  const wk = upcoming.filter((s) => daysBetween(today, s.date) < 7).length;
+  const upcoming = active.filter((s) => s.date >= today && s.status !== "cancelled").slice(0, 5);
   const h = now.getHours(); const greet = h < 12 ? "Доброго ранку" : h < 18 ? "Добрий день" : "Добрий вечір";
 
-  // 12-month income
-  const m12 = Array.from({ length: 12 }, (_, i) => { const d = startOfMonth(subMonths(now, 11 - i)); const k = format(d, "yyyy-MM"); return { d, label: format(d, "LLL", { locale: uk }).replace(".", ""), income: monthly.find((m) => m.month.startsWith(k))?.income ?? 0 }; });
+  // The period controls the three numbers at the top.
+  const range = period === "month" ? { from: iso(startOfMonth(now)), to: iso(endOfMonth(now)), label: cap(format(now, "LLLL", { locale: uk })) }
+    : period === "quarter" ? { from: iso(startOfQuarter(now)), to: iso(endOfQuarter(now)), label: `${Math.floor(now.getMonth() / 3) + 1} кв.` }
+      : { from: `${now.getFullYear()}-01-01`, to: `${now.getFullYear()}-12-31`, label: String(now.getFullYear()) };
+  const incomeIn = (a: string, b: string) => monthly.filter((m) => m.month >= a.slice(0, 7) + "-01" && m.month <= b).reduce((x, m) => x + m.income, 0);
+  const income = incomeIn(range.from, range.to);
+  const prevStart = period === "month" ? iso(startOfMonth(subMonths(now, 1))) : period === "quarter" ? iso(startOfQuarter(subMonths(now, 3))) : `${now.getFullYear() - 1}-01-01`;
+  const prevEnd = period === "month" ? iso(endOfMonth(subMonths(now, 1))) : period === "quarter" ? iso(endOfQuarter(subMonths(now, 3))) : `${now.getFullYear() - 1}-12-31`;
+  const prevIncome = incomeIn(prevStart, prevEnd);
+  const delta = prevIncome ? Math.round((income / prevIncome - 1) * 100) : null;
+  const inRange = active.filter((s) => s.date >= range.from && s.date <= range.to);
+  const avgCheque = inRange.length ? Math.round(inRange.reduce((a, s) => a + s.price, 0) / inRange.length) : 0;
+
+  // Taxes of the quarter the period falls into
+  const qNo = Math.floor(now.getMonth() / 3) + 1;
+  const qRow = quarters.find((x) => x.year === now.getFullYear() && x.quarter === qNo);
+  const qIncome = Number(qRow?.income ?? 0);
+  const qTax = Number(qRow?.ep ?? 0) + Number(qRow?.vz ?? 0);
+  const esv = Number(settings.esv_monthly) * 3;
+
+  const m12 = Array.from({ length: 12 }, (_, i) => {
+    const d = startOfMonth(subMonths(now, 11 - i)); const k = format(d, "yyyy-MM");
+    return { d, label: format(d, "LLL", { locale: uk }).replace(".", ""), income: monthly.filter((m) => m.month.startsWith(k)).reduce((a, m) => a + m.income, 0) };
+  });
   const max12 = Math.max(...m12.map((m) => m.income), 1);
-  const cur = m12[11], prev = m12[10]; const delta = prev.income ? Math.round((cur.income / prev.income - 1) * 100) : null;
-  const q = quarterOf(now); const qInc = quarters.filter((x) => `${x.year}` === q.from.slice(0, 4) && x.quarter === Math.floor(now.getMonth() / 3) + 1).reduce((a, x) => a + Number(x.income), 0);
-  const qTax = qInc * (settings.ep_rate + settings.vz_rate) / 100;
+  const total12 = m12.reduce((a, m) => a + m.income, 0);
+  const best = m12.slice().sort((a, b) => b.income - a.income)[0];
+  const yearIncome = incomeIn(`${now.getFullYear()}-01-01`, `${now.getFullYear()}-12-31`);
+  const limitPct = Math.min(100, Math.round(yearIncome / settings.income_limit * 100));
 
   return (
     <>
       <div className="flex justify-between items-end gap-4 flex-wrap mb-5 px-1">
         <div>
-          <div className="text-[13px] text-muted font-medium mb-1.5">{format(now, "EEEE, d MMMM yyyy", { locale: uk })}</div>
-          <h1 className="text-[clamp(26px,4vw,38px)] font-extrabold leading-[1.08] tracking-tighter">{greet}, {settings.display_name} ☀️</h1>
-          <p className="text-muted mt-1.5">Цього тижня {wk} {plural(wk, "зйомка", "зйомки", "зйомок")}, {inWork.length} {plural(inWork.length, "віддача", "віддачі", "віддач")} в роботі{owed.length ? `, ${owed.length} ${plural(owed.length, "рахунок", "рахунки", "рахунків")} чекає оплати` : ""}.</p>
+          <div className="text-[13px] text-muted font-medium mb-1">{cap(format(now, "EEEE, d MMMM yyyy", { locale: uk }))}</div>
+          <h1 className="text-[34px] md:text-[32px] font-bold leading-[1.1] tracking-[-0.01em]">{greet}, {settings.display_name}</h1>
+          <p className="text-muted mt-1">{upcoming.length ? `Найближча зйомка — ${fmtDate(upcoming[0].date)}, ${upcoming[0].client_name}.` : "Попереду поки нічого не заплановано."}</p>
         </div>
+        <div className="seg">{PERIODS.map(([k, l]) => <Link key={k} href={`/?p=${k}`} className={k === period ? "on" : ""}>{l}</Link>)}</div>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {/* 14-day strip */}
-        <section className="card">
-          <div className="flex justify-between items-baseline gap-3 mb-3.5 flex-wrap"><h2 className="text-[17px] font-semibold">Найближчі 14 днів</h2><Link href="/calendar" className="text-[13px] font-semibold text-accent">Повний календар →</Link></div>
-          {/* iPhone: one scroll-snapped row of day cards; iPad/Mac: a 7-column grid of two weeks */}
-          <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-7 sm:gap-1.5 sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {Array.from({ length: 14 }, (_, i) => {
-              const d = addDays(now, i); const k = iso(d); const we = isWeekend(d); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
-              const isFree = !we && ev.length === 0 && !blocked.has(k);
-              return (
-                <Link key={k} href={`/calendar?d=${k}`} className="snap-start shrink-0 w-[76px] sm:w-auto rounded-[12px] p-2 min-h-[84px] sm:min-h-[86px] flex flex-col gap-1 border text-left" style={{ background: isFree ? "var(--good-bg)" : blocked.has(k) ? "var(--fill-2)" : "var(--glass-2)", borderColor: i === 0 ? "var(--accent)" : isFree ? "transparent" : "var(--line)", boxShadow: i === 0 ? "0 0 0 2px var(--accent-tint)" : undefined, opacity: we && !ev.length ? 0.8 : 1 }}>
-                  <div className="flex justify-between items-baseline"><span className="text-[15px] font-semibold">{d.getDate()}</span><small className="font-medium text-muted text-[11px] uppercase">{format(d, "EEEEEE", { locale: uk })}</small></div>
-                  {ev.map((s) => <span key={s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}
-                  {dl.map((s) => <span key={"dl" + s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
-                  {isFree && <span className="text-[11px] font-medium mt-auto" style={{ color: "var(--good)" }}>вільно</span>}
-                </Link>
-              );
-            })}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <Kpi label={`Дохід · ${range.label}`} dot="var(--good)" value={money(income)}
+          sub={delta == null ? "усі платежі" : `${delta >= 0 ? "↑ +" : "↓ "}${delta}% до попереднього періоду`} subTone={delta != null && delta < 0 ? "warn" : "good"} />
+        <Kpi label={`Зйомок · ${range.label}`} dot="var(--accent)" value={inRange.length}
+          sub={inRange.length ? `середній чек ${money(avgCheque)}` : "поки порожньо"} />
+        <Kpi label={`Податки за ${qNo} кв.`} dot="var(--purple)" value={money(qTax)}
+          sub={`ЄП ${settings.ep_rate}% + ВЗ ${settings.vz_rate}% з ${money(qIncome)}`} />
+      </div>
+
+      <div className="flex flex-wrap gap-3.5 mt-3.5">
+        <section className="card flex-[999_1_520px] min-w-0">
+          <div className="flex justify-between items-baseline mb-4 gap-3">
+            <h2 className="text-[17px] font-semibold">Дохід за 12 місяців</h2>
+            <Link href="/analytics" className="text-[15px] font-medium text-accent">Уся аналітика →</Link>
           </div>
-          <div className="flex gap-3.5 flex-wrap text-xs text-muted font-medium mt-3">
-            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--accent)" }} />Зйомка</span>
-            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн віддачі</span>
-            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільний день</span>
-            <span>? — запит без передоплати</span>
+          <div className="flex items-end gap-1.5 sm:gap-2 h-[190px]">
+            {m12.map((m, i) => (
+              <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5">
+                {m.income > 0 && <span className="text-[10px] sm:text-[11px] font-semibold num" style={{ color: i === 11 ? "var(--accent)" : "var(--muted)" }}>{moneyK(m.income)}</span>}
+                <i className="block w-full rounded-t-[6px] rounded-b-[2px]" style={{ height: Math.max(4, Math.round(m.income / max12 * 150)), background: i === 11 ? "var(--accent)" : "var(--accent-tint)" }} />
+              </div>
+            ))}
           </div>
+          <div className="flex gap-1.5 sm:gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] sm:text-[11px] font-medium" style={{ color: i === 11 ? "var(--fg)" : "var(--muted)" }}>{m.label}</span>)}</div>
+          <p className="text-[13px] text-muted mt-3.5">Усього за 12 місяців — <b className="num text-fg">{money(total12)}</b>{best.income > 0 ? <> · найкращий місяць — {format(best.d, "LLLL", { locale: uk })} ({money(best.income)})</> : null}</p>
         </section>
 
-        <Assistant items={insights} />
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <Kpi label="Заброньовано · 14 днів" dot="var(--accent)" value={upcoming.filter((s) => daysBetween(today, s.date) < 14).length} sub={`${requests.length} ${plural(requests.length, "запит", "запити", "запитів")} без передоплати`} />
-          <Kpi label="Вільних днів · 14 днів" dot="var(--good)" value={free.length} sub={free.length ? `найближчий — ${fmtShort(free[0])}` : "усе зайнято"} />
-          <Kpi label="Дедлайнів у роботі" dot="var(--warn)" value={inWork.length} sub={(() => { const ds = inWork.map((s) => s.deadline).filter(Boolean).map((d) => daysBetween(today, d as string)); return ds.length ? `найближчий ${relDays(Math.min(...ds))}` : inWork.length ? "без дати віддачі" : "нічого не висить"; })()} />
-          <Kpi label="Очікую оплату" dot="var(--purple)" value={money(owedSum)} sub={`${owed.length} ${plural(owed.length, "рахунок", "рахунки", "рахунків")}`} subTone={owed.length ? "warn" : undefined} />
-        </div>
-
-        <div className="flex flex-wrap gap-3.5">
-          <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5">
-            <section className="card">
-              <div className="flex justify-between items-baseline mb-3.5"><h2 className="text-[17px] font-semibold">Найближчі зйомки</h2><Link href="/shoots" className="text-[13px] font-semibold text-accent">Усі зйомки →</Link></div>
-              <div className="flex flex-col gap-2">{upcoming.length ? upcoming.slice(0, 5).map((s) => <ShootRow key={s.id} s={s} rel />) : <div className="empty">Запланованих зйомок нема — час писати клієнтам 🙂</div>}</div>
-            </section>
-            <section className="card">
-              <div className="flex justify-between items-baseline mb-3.5"><h2 className="text-[17px] font-semibold">Отримано за 12 місяців</h2><Link href="/analytics" className="text-[13px] font-semibold text-accent">Аналітика →</Link></div>
-              <div className="flex items-end gap-2 h-[180px]">
-                {m12.map((m, i) => <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5"><div className="text-[10px] text-muted font-semibold num whitespace-nowrap">{m.income ? moneyK(m.income) : ""}</div><i className="block w-full rounded-t-lg rounded-b" style={{ height: Math.max(4, Math.round(m.income / max12 * 140)), background: i === 11 ? "var(--accent)" : "var(--fill)" }} /></div>)}
-              </div>
-              <div className="flex gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] font-semibold text-muted min-w-0">{m.label}</span>)}</div>
-              <p className="text-[13px] text-muted mt-3">{format(cur.d, "LLLL", { locale: uk })}: <b className="num text-fg">{money(cur.income)}</b>{delta != null && <> <span className="font-bold" style={{ color: delta >= 0 ? "var(--good)" : "var(--warn)" }}>{delta >= 0 ? "↑ +" : "↓ "}{delta}%</span> до {format(prev.d, "LLLL", { locale: uk }).toLowerCase()}</>}</p>
-            </section>
+        <section className="card flex-[1_1_320px] min-w-0">
+          <div className="flex justify-between items-baseline mb-3.5 gap-3">
+            <h2 className="text-[17px] font-semibold">Найближчі зйомки</h2>
+            <Link href="/calendar" className="text-[15px] font-medium text-accent">Календар →</Link>
           </div>
-          <div className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
-            <section className="card">
-              <h2 className="text-[17px] font-semibold mb-3.5">В роботі зараз</h2>
-              <div className="flex flex-col gap-2">{inWork.length ? inWork.map((s) => <ShootRow key={s.id} s={s} />) : <div className="empty">Нічого не висить — усе віддано ✨</div>}</div>
-            </section>
-            <section className="card flex flex-wrap gap-4 items-center justify-between" style={{ background: "var(--accent-tint)" }}>
-              <div className="flex-1 min-w-[200px]"><div className="text-[13px] font-semibold text-muted">ФОП 3 група · поточний квартал</div><div className="text-2xl font-bold tracking-[-0.01em] num">{money(qTax)}</div><div className="text-[13px] text-muted">ЄП {settings.ep_rate}% + ВЗ {settings.vz_rate}% з отриманих {money(qInc)}</div></div>
-              <Link href="/taxes" className="btn btn-primary">Податковий модуль</Link>
-            </section>
+          <div className="flex flex-col gap-2">
+            {upcoming.length ? upcoming.map((s) => (
+              <Link key={s.id} href={`/shoots/${s.id}`} className="srow">
+                <DateBox date={s.date} tone="neutral" accent={brandColor(s.client_hue)} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate">{s.client_name}</div>
+                  <div className="text-[13px] text-muted truncate">{s.location ?? "—"}{s.start_time ? `, ${s.start_time.slice(0, 5)}` : ""}</div>
+                </div>
+                <Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip>
+              </Link>
+            )) : <div className="empty">Нових зйомок поки немає.</div>}
           </div>
-        </div>
+        </section>
       </div>
+
+      <section className="card mt-3.5 flex flex-wrap gap-5 items-center justify-between" style={{ background: "var(--accent-tint)" }}>
+        <div className="flex-1 min-w-[260px]">
+          <div className="text-[13px] font-semibold text-muted">ФОП 3 група · {qNo} квартал {now.getFullYear()}</div>
+          <p className="text-[15px] mt-1">Отримано <b className="num">{money(qIncome)}</b> → ЄП {settings.ep_rate}% <b className="num">{money(Number(qRow?.ep ?? 0))}</b> + ВЗ {settings.vz_rate}% <b className="num">{money(Number(qRow?.vz ?? 0))}</b> = <b className="num">{money(qTax)}</b>. ЄСВ за квартал — <b className="num">{money(esv)}</b>{taxNext ? <>, сплата до {fmtDate(taxNext.due)}</> : null}.</p>
+        </div>
+        <div className="min-w-[180px]">
+          <div className="flex justify-between text-[13px] font-semibold mb-1.5"><span className="text-muted">Ліміт року</span><span>{limitPct}%</span></div>
+          <div className="bar" style={{ background: "var(--glass)" }}><i style={{ width: `${Math.max(1, limitPct)}%`, background: limitPct > 80 ? "var(--warn)" : "var(--accent)" }} /></div>
+          <div className="text-[12px] text-muted mt-1.5 num">{money(yearIncome)} / {money(settings.income_limit)}</div>
+        </div>
+        <Link href="/taxes" className="btn btn-primary">Податковий модуль</Link>
+      </section>
     </>
   );
 }
