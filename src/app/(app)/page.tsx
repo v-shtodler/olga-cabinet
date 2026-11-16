@@ -61,7 +61,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="flex justify-between items-end gap-4 flex-wrap mb-5 px-1">
         <div>
           <div className="text-[13px] text-muted font-medium mb-1">{cap(format(now, "EEEE, d MMMM yyyy", { locale: uk }))}</div>
-          <h1 className="text-[34px] md:text-[32px] font-bold leading-[1.1] tracking-[-0.01em]">{greet}, {settings.display_name}</h1>
+          <h1 className="text-[34px] md:text-[32px] font-bold leading-[1.1] tracking-[-0.01em]">{greet}, {settings.display_name} <span aria-hidden="true">☀️</span></h1>
           <p className="text-muted mt-1">{upcoming.length ? `Найближча зйомка — ${fmtDate(upcoming[0].date)}, ${upcoming[0].client_name}.` : "Попереду поки нічого не заплановано."}</p>
         </div>
         <div className="seg">{PERIODS.map(([k, l]) => <Link key={k} href={`/?p=${k}`} className={k === period ? "on" : ""}>{l}</Link>)}</div>
