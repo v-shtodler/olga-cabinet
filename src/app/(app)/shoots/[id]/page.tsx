@@ -5,7 +5,7 @@ import { STATUSES, STATUS_UA, NEXT_STEP, TYPE_TONE, STATUS_TONE, buildInsights, 
 import { Chip, Avatar, Kpi, Bar } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment } from "@/app/actions";
-import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle } from "./client-bits";
+import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle, PhotosDelivered } from "./client-bits";
 import * as I from "@/components/icons";
 
 export default async function ShootPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +21,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
   const sameType = history.filter((x) => x.type === s.type && x.status === "paid" && x.hourly_rate);
   const rateAvg = sameType.length ? Math.round(sameType.reduce((a, x) => a + (x.hourly_rate ?? 0), 0) / sameType.length) : null;
   const done = checklist.filter((x) => x.done).length;
-  const terms: [string, string][] = [["Фото", `${s.photos} ретуш${s.extra_photos ? ` + ~${s.extra_photos} кольорокорекція` : ""}`], ["Термін віддачі", `${s.delivery_days} дн. після зйомки`], ["Передоплата", `${s.deposit_pct}%`], ["Права", s.rights ?? "—"], ["Локація", s.location ?? "—"], ["Віддано фото", s.photos_delivered != null ? String(s.photos_delivered) : "—"]];
+  const terms: [string, string][] = [["Фото", `${s.photos} ретуш${s.extra_photos ? ` + ~${s.extra_photos} кольорокорекція` : ""}`], ["Термін віддачі", `${s.delivery_days} дн. після зйомки`], ["Передоплата", `${s.deposit_pct}%`], ["Права", s.rights ?? "—"], ["Локація", s.location ?? "—"]];
 
   return (
     <>
@@ -35,6 +35,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="flex gap-2 flex-wrap">
             {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)} data-op="advanceShoot" data-args={JSON.stringify([s.id])} data-label={NEXT_STEP[s.status] ?? ""}><button className={`btn ${s.status === "delivered" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
+            {s.status !== "cancelled" && <Link href={`/shoots/${s.id}/edit`} className="btn">Редагувати</Link>}
             <Link href={`/shoots/new?dup=${s.id}`} className="btn">Дублювати</Link>
             {s.status !== "paid" && s.status !== "cancelled" && <CancelButton id={s.id} />}
           </div>
@@ -65,7 +66,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-          <section className="card"><h2 className="text-lg font-bold mb-3">Умови замовника</h2><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{terms.map(([k, v]) => <div key={k} className="kv"><span className="text-muted">{k}</span><b>{v}</b></div>)}</div></section>
+          <section className="card"><h2 className="text-lg font-bold mb-3">Умови замовника</h2><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{terms.map(([k, v]) => <div key={k} className="kv"><span className="text-muted">{k}</span><b>{v}</b></div>)}<div className="kv items-center"><span className="text-muted">Віддано фото</span><PhotosDelivered id={s.id} value={s.photos_delivered} planned={s.photos} /></div></div></section>
 
           <section className="card">
             <h2 className="text-lg font-bold mb-3">Таймінг · ≈ {s.total_hours} год</h2>
@@ -101,7 +102,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)], ["Платять", c.default_deposit_pct === 100 ? "наперед ✓" : st?.avg_pay_delay_days != null ? `~${Math.round(st.avg_pay_delay_days)} дн` : "—"], ["Середній чек", money(st?.avg_check ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,.18)" }}><div className="text-xs opacity-85">{k}</div><div className="font-extrabold num">{v}</div></div>)}</div>
             {prefs.length > 0 && <div className="mt-3.5"><div className="text-xs font-semibold opacity-85 mb-1.5">Що важливо для цього клієнта</div><ul className="m-0 pl-[18px] text-[13px] leading-relaxed">{prefs.map((p) => <li key={p.id}>{p.text}</li>)}</ul></div>}
           </section>
-          <section className="card"><h2 className="text-lg font-bold mb-3">Історія з {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{h.title}</b><br /><span className="text-muted text-xs">{fmtDate(h.date)} · {h.photos} фото</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>
+          <section className="card"><h2 className="text-lg font-bold mb-3">Історія · {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{h.title}</b><br /><span className="text-muted text-xs">{fmtDate(h.date)} · {h.photos} фото</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>
         </aside>
       </div>
     </>

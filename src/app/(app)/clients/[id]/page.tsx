@@ -6,6 +6,7 @@ import { Avatar, Kpi, ShootRow } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { addClientPref, deleteClientPref } from "@/app/actions";
 import * as I from "@/components/icons";
+import { ContactCard } from "./edit-client";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,7 +23,6 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
   const avgAll = allPaid.length ? allPaid.reduce((a, s) => a + s.price, 0) / allPaid.length : 0;
   if (st && st.avg_check && avgAll && st.avg_check < avgAll * 0.75 && st.shoots >= 3 && !dismissed.has(`price-${id}`)) insights.push({ key: `price-${id}`, kind: "price", sev: "low", tag: "Ціна нижча за ваш середній чек", text: `Середній чек ${c.name} — ${money(st.avg_check)}, ваш середній по всіх — ${money(avgAll)}. ${st.shoots} ${plural(st.shoots, "зйомка", "зйомки", "зйомок")} — привід переглянути прайс.` });
   if (st?.avg_pay_delay_days != null && st.avg_pay_delay_days > 7 && !dismissed.has(`paypat-${id}`)) insights.push({ key: `paypat-${id}`, kind: "payment", sev: "low", tag: "Патерн оплати", text: `${c.name} платять у середньому на ${Math.round(st.avg_pay_delay_days)}-й день після рахунку. Варто ставити 100% передоплату або нагадувати на 7-й день.` });
-  const labelOf = (t: string) => presets.find((p) => p.type === t)?.label ?? t;
 
   return (
     <>
@@ -53,13 +53,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
             <form action={addClientPref.bind(null, c.id)} data-op="addClientPref" data-args={JSON.stringify([c.id])} className="flex gap-2 mt-3"><input name="text" placeholder="Напр.: не любить теплий баланс" required maxLength={300} className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-line bg-glass-2" aria-label="Нова вимога" /><button className="btn btn-sm">Додати</button></form>
             <p className="text-xs text-muted mt-2.5">Ці пункти помічник підказує за день до кожної зйомки з цим клієнтом.</p>
           </section>
-          <section className="card"><h2 className="text-lg font-bold mb-3">Контакт і умови</h2><div className="flex flex-col gap-1.5">
-            <div className="kv"><span className="text-muted">Контакт</span><b>{c.contact_name ?? "—"}</b></div>
-            {c.contact_email && <div className="kv"><span className="text-muted">Пошта</span><b className="select-all">{c.contact_email}</b></div>}
-            {c.contact_phone && <div className="kv"><span className="text-muted">Телефон</span><b className="select-all">{c.contact_phone}</b></div>}
-            <div className="kv"><span className="text-muted">Передоплата</span><b>{c.default_deposit_pct}%</b></div>
-            <div className="kv"><span className="text-muted">Типові зйомки</span><b>{c.default_types.map(labelOf).join(", ") || "—"}</b></div>
-          </div></section>
+          <ContactCard c={c} presets={presets} labelOf={Object.fromEntries(presets.map((p) => [p.type, p.label]))} />
         </aside>
       </div>
     </>

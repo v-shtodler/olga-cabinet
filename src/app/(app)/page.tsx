@@ -41,7 +41,6 @@ export default async function HomePage() {
           <h1 className="text-[clamp(26px,4vw,38px)] font-extrabold leading-[1.08] tracking-tighter">{greet}, {settings.display_name} ☀️</h1>
           <p className="text-muted mt-1.5">Цього тижня {wk} {plural(wk, "зйомка", "зйомки", "зйомок")}, {inWork.length} {plural(inWork.length, "віддача", "віддачі", "віддач")} в роботі{owed.length ? `, ${owed.length} ${plural(owed.length, "рахунок", "рахунки", "рахунків")} чекає оплати` : ""}.</p>
         </div>
-        <Link href="/shoots/new" className="btn btn-primary">+ Нова зйомка</Link>
       </div>
 
       <div className="flex flex-col gap-4">

@@ -7,10 +7,10 @@ const KEY = "outbox.v1";
 const EVT = "outbox:change";
 
 export const OP_LABEL: Record<string, string> = {
-  createShoot: "Нова зйомка", addPayment: "Платіж", addNote: "Замітка", addChecklistItem: "Пункт чек-листа", addDefaultChecklist: "Стандартний чек-лист",
+  createShoot: "Нова зйомка", updateShoot: "Зміни в зйомці", addPayment: "Платіж", addNote: "Замітка", addChecklistItem: "Пункт чек-листа", addDefaultChecklist: "Стандартний чек-лист",
   toggleChecklist: "Чек-лист", advanceShoot: "Наступний крок зйомки", cancelShoot: "Скасування зйомки", markInvoiceSent: "Рахунок виставлено",
   deletePayment: "Видалення платежу", updateShootField: "Зміна в зйомці", dismissInsight: "Приховати зауваження", markTaxPaid: "Податок сплачено",
-  toggleBlockedDay: "Вихідний у календарі", createClient_: "Новий замовник", addClientPref: "Побажання замовника", deleteClientPref: "Видалення побажання",
+  toggleBlockedDay: "Вихідний у календарі", createClient_: "Новий замовник", updateClient: "Зміни замовника", addClientPref: "Побажання замовника", deleteClientPref: "Видалення побажання",
   saveSettings: "Налаштування", savePreset: "Пресет",
 };
 

@@ -2,14 +2,19 @@
 import { useState, useTransition } from "react";
 import { addDays, format } from "date-fns";
 import type { Client, Preset, Shoot, ShootType } from "@/lib/domain";
-import { createShoot } from "@/app/actions";
+import { createShoot, updateShoot } from "@/app/actions";
 import { callOrQueue } from "@/lib/outbox";
 import { useRouter } from "next/navigation";
 
-export function ShootForm({ clients, presets, initial }: { clients: Client[]; presets: Preset[]; initial: { date?: string; clientId?: string; source?: Shoot | null } }) {
+const NEW = "__new";
+
+export function ShootForm({ clients, presets, initial, editId }: { clients: Client[]; presets: Preset[]; initial: { date?: string; clientId?: string; source?: Shoot | null }; editId?: string }) {
   const src = initial.source;
+  const edit = !!editId;
   const firstClient = clients.find((c) => c.id === (src?.client_id ?? initial.clientId)) ?? clients[0];
-  const [clientId, setClientId] = useState(firstClient.id);
+  const [clientId, setClientId] = useState(firstClient?.id ?? NEW);
+  const [newClient, setNewClient] = useState("");
+  const [depositNow, setDepositNow] = useState(true);
   const [type, setType] = useState<ShootType>(src?.type ?? (firstClient.default_types[0] as ShootType) ?? "product");
   const preset = presets.find((p) => p.type === type) ?? presets[0];
   const [title, setTitle] = useState(src?.title ?? preset.label);
@@ -19,7 +24,7 @@ export function ShootForm({ clients, presets, initial }: { clients: Client[]; pr
   const [dd, setDd] = useState(String(src?.delivery_days ?? preset.delivery_days));
   const [sh, setSh] = useState(String(src?.shoot_hours ?? preset.shoot_hours));
   const [rh, setRh] = useState(String(src?.retouch_hours ?? preset.retouch_hours));
-  const [deposit, setDeposit] = useState(String(src?.deposit_pct ?? firstClient.default_deposit_pct));
+  const [deposit, setDeposit] = useState(String(src?.deposit_pct ?? firstClient?.default_deposit_pct ?? 50));
   const [start, setStart] = useState(src?.start_time?.slice(0, 5) ?? "10:00");
   const [end, setEnd] = useState(src?.end_time?.slice(0, 5) ?? "15:00");
   const [pending, startTransition] = useTransition();
@@ -33,12 +38,17 @@ export function ShootForm({ clients, presets, initial }: { clients: Client[]; pr
     setPrice(String(p.price)); setPhotos(String(p.photos)); setExtra(String(p.extra_photos)); setDd(String(p.delivery_days)); setSh(String(p.shoot_hours)); setRh(String(p.retouch_hours));
     const h = parseInt(start.slice(0, 2), 10); setEnd(`${String(Math.min(23, h + Math.round(Number(p.shoot_hours)))).padStart(2, "0")}:00`);
   }
-  function applyClient(id: string) { setClientId(id); const c = clients.find((x) => x.id === id); if (c) { setDeposit(String(c.default_deposit_pct)); if (c.default_types[0] && !src) applyType(c.default_types[0] as ShootType); } }
+  function applyClient(id: string) { setClientId(id); if (id === NEW) return; const c = clients.find((x) => x.id === id); if (c) { setDeposit(String(c.default_deposit_pct)); if (c.default_types[0] && !src) applyType(c.default_types[0] as ShootType); } }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setErr(null);
     const fd = new FormData(e.currentTarget);
-    startTransition(async () => { try { const r = await callOrQueue("createShoot", [], fd, `Нова зйомка: ${fd.get("title")} · ${fd.get("date")}`, () => createShoot(fd)); if (r.queued) router.push("/shoots"); } catch (x) { setErr(x instanceof Error ? x.message : "Не вдалося зберегти"); } });
+    startTransition(async () => {
+      try {
+        if (edit) { const r = await callOrQueue("updateShoot", [editId], fd, `Зміни в зйомці: ${fd.get("title")}`, () => updateShoot(editId!, fd)); router.push(`/shoots/${editId}`); if (!r.queued) router.refresh(); }
+        else { const r = await callOrQueue("createShoot", [], fd, `Нова зйомка: ${fd.get("title")} · ${fd.get("date")}`, () => createShoot(fd)); if (r.queued) router.push("/shoots"); }
+      } catch (x) { setErr(x instanceof Error ? x.message : "Не вдалося зберегти"); }
+    });
   }
 
   const TYPE_LABEL: Record<ShootType, string> = Object.fromEntries(presets.map((p) => [p.type, p.label])) as Record<ShootType, string>;
@@ -46,10 +56,11 @@ export function ShootForm({ clients, presets, initial }: { clients: Client[]; pr
 
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div className="field flex flex-col gap-1.5"><label htmlFor="client_id">Замовник</label><select id="client_id" name="client_id" value={clientId} onChange={(e) => applyClient(e.target.value)}>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+      <div className="field flex flex-col gap-1.5"><label htmlFor="client_id">Замовник</label><select id="client_id" name="client_id" value={clientId} onChange={(e) => applyClient(e.target.value)}>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}{!edit && <option value={NEW}>+ Новий замовник…</option>}</select></div>
+      {clientId === NEW && <div className="field flex flex-col gap-1.5"><label htmlFor="new_client_name">Назва нового замовника</label><input id="new_client_name" name="new_client_name" value={newClient} onChange={(e) => setNewClient(e.target.value)} placeholder="Бренд або ім’я" required maxLength={120} autoFocus /></div>}
       <div className="field flex flex-col gap-1.5"><label htmlFor="type">Тип зйомки</label><select id="type" name="type" value={type} onChange={(e) => applyType(e.target.value as ShootType)}>{presets.map((p) => <option key={p.type} value={p.type}>{p.label}</option>)}</select></div>
       <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="title">Назва</label><input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Напр.: Lookbook FW26" required maxLength={120} /></div>
-      <div className="field flex flex-col gap-1.5"><label htmlFor="date">Дата</label><input id="date" name="date" type="date" defaultValue={initial.date ?? format(addDays(new Date(), 7), "yyyy-MM-dd")} required /></div>
+      <div className="field flex flex-col gap-1.5"><label htmlFor="date">Дата</label><input id="date" name="date" type="date" defaultValue={initial.date ?? (edit ? src?.date : undefined) ?? format(addDays(new Date(), 7), "yyyy-MM-dd")} required /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="location">Локація</label><input id="location" name="location" defaultValue={src?.location ?? "Студія"} maxLength={200} /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="start_time">Початок</label><input id="start_time" name="start_time" type="time" value={start} onChange={(e) => setStart(e.target.value)} /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="end_time">Кінець</label><input id="end_time" name="end_time" type="time" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
@@ -61,11 +72,12 @@ export function ShootForm({ clients, presets, initial }: { clients: Client[]; pr
       <div className="field flex flex-col gap-1.5"><label htmlFor="rights">Права на використання</label><input id="rights" name="rights" defaultValue={src?.rights ?? "Сайт, соцмережі, 2 роки"} maxLength={200} /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="shoot_hours">Годин зйомки</label><input id="shoot_hours" name="shoot_hours" type="number" step="0.5" min="0" value={sh} onChange={(e) => setSh(e.target.value)} /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="retouch_hours">Годин ретушу (оцінка)</label><input id="retouch_hours" name="retouch_hours" type="number" step="0.5" min="0" value={rh} onChange={(e) => setRh(e.target.value)} /></div>
-      <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="note">Замітка</label><textarea id="note" name="note" placeholder="Вимоги, референси, команда…" maxLength={2000} /></div>
-      <label className="sm:col-span-2 flex items-center gap-3 px-3 py-2.5 rounded-xl bg-glass-2 border border-line cursor-pointer font-medium"><input type="checkbox" name="deposit_received" defaultChecked className="w-[18px] h-[18px]" style={{ accentColor: "#1d6ff2" }} /> Передоплату вже отримано (статус «Підтверджено», платіж запишеться сьогоднішньою датою)</label>
+      {!edit && <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="note">Замітка</label><textarea id="note" name="note" placeholder="Вимоги, референси, команда…" maxLength={2000} /></div>}
+      {!edit && <label className="sm:col-span-2 flex items-center gap-3 px-3 py-2.5 rounded-xl bg-glass-2 border border-line cursor-pointer font-medium"><input type="checkbox" name="deposit_received" checked={depositNow} onChange={(e) => setDepositNow(e.target.checked)} className="w-[18px] h-[18px]" style={{ accentColor: "#1d6ff2" }} /> Передоплату вже отримано — статус «Підтверджено»</label>}
+      {!edit && depositNow && Number(deposit) > 0 && <div className="field flex flex-col gap-1.5"><label htmlFor="deposit_on">Дата передоплати <span className="font-normal">(визначає податковий квартал)</span></label><input id="deposit_on" name="deposit_on" type="date" defaultValue={format(new Date(), "yyyy-MM-dd")} /></div>}
       <div className="sm:col-span-2 flex items-center justify-between gap-3 flex-wrap">
         <span className="text-xs text-muted">Пресет «{TYPE_LABEL[type]}» · ≈ {effHours} год разом · {rate} ₴/год</span>
-        <button className="btn btn-primary" type="submit" disabled={pending}>{pending ? "Зберігаю…" : "Створити зйомку"}</button>
+        <button className="btn btn-primary" type="submit" disabled={pending}>{pending ? "Зберігаю…" : edit ? "Зберегти зміни" : "Створити зйомку"}</button>
       </div>
       {err && <p className="sm:col-span-2 text-warn text-[13px]">{err}</p>}
     </form>

@@ -31,29 +31,47 @@ export async function toggleBlockedDay(day: string) {
 
 /* ---------- shoots ---------- */
 const ShootInput = z.object({
-  client_id: z.string().uuid(), type: z.enum(["lookbook", "product", "campaign", "portrait", "other"]), title: z.string().min(1).max(120),
+  client_id: z.string().min(1), new_client_name: z.string().max(120).optional(), type: z.enum(["lookbook", "product", "campaign", "portrait", "other"]), title: z.string().min(1).max(120),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), start_time: z.string().optional(), end_time: z.string().optional(), location: z.string().max(200).optional(),
   price: z.coerce.number().min(0), deposit_pct: z.coerce.number().min(0).max(100), photos: z.coerce.number().min(0), extra_photos: z.coerce.number().min(0),
   delivery_days: z.coerce.number().min(0), shoot_hours: z.coerce.number().min(0), retouch_hours: z.coerce.number().min(0), rights: z.string().max(200).optional(),
-  note: z.string().max(2000).optional(), deposit_received: z.coerce.boolean().optional(),
+  note: z.string().max(2000).optional(), deposit_received: z.coerce.boolean().optional(), deposit_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
 });
 export async function createShoot(formData: FormData) {
   const { supabase } = await db();
   const raw = Object.fromEntries(formData.entries()); raw.deposit_received = formData.get("deposit_received") === "on" ? "true" : "";
   const p = ShootInput.parse(raw);
+  let clientId = p.client_id;
+  if (clientId === "__new") {
+    const name = (p.new_client_name ?? "").trim(); if (!name) throw new Error("Вкажіть назву нового замовника");
+    const { data: c, error: ce } = await supabase.from("clients").insert({ name, default_deposit_pct: p.deposit_pct, default_types: [p.type] }).select("id").single();
+    if (ce || !c) throw new Error(ce?.message ?? "client insert failed");
+    clientId = c.id;
+  }
   const status: ShootStatus = p.deposit_received ? "confirmed" : "request";
   const { data: shoot, error } = await supabase.from("shoots").insert({
-    client_id: p.client_id, type: p.type, title: p.title, status, date: p.date, start_time: p.start_time || null, end_time: p.end_time || null, location: p.location || null,
+    client_id: clientId, type: p.type, title: p.title, status, date: p.date, start_time: p.start_time || null, end_time: p.end_time || null, location: p.location || null,
     price: p.price, deposit_pct: p.deposit_pct, photos: p.photos, extra_photos: p.extra_photos, delivery_days: p.delivery_days, shoot_hours: p.shoot_hours, retouch_hours: p.retouch_hours, rights: p.rights || null,
   }).select("id").single();
   if (error || !shoot) throw new Error(error?.message ?? "insert failed");
   if (p.note) await supabase.from("shoot_notes").insert({ shoot_id: shoot.id, text: p.note });
-  if (status === "confirmed" && p.deposit_pct > 0) await supabase.from("payments").insert({ shoot_id: shoot.id, amount: Math.round(p.price * p.deposit_pct / 100), paid_on: todayISO(), kind: "deposit", method: "invoice" });
+  if (status === "confirmed" && p.deposit_pct > 0) await supabase.from("payments").insert({ shoot_id: shoot.id, amount: Math.round(p.price * p.deposit_pct / 100), paid_on: p.deposit_on || todayISO(), kind: "deposit", method: "invoice" });
   all(); redirect(`/shoots/${shoot.id}`);
+}
+/** Full edit of a shoot's terms (the same form as creation; status, payments and notes are untouched). */
+export async function updateShoot(id: string, formData: FormData) {
+  const { supabase } = await db();
+  const p = ShootInput.parse(Object.fromEntries(formData.entries()));
+  const { error } = await supabase.from("shoots").update({
+    client_id: p.client_id, type: p.type, title: p.title, date: p.date, start_time: p.start_time || null, end_time: p.end_time || null, location: p.location || null,
+    price: p.price, deposit_pct: p.deposit_pct, photos: p.photos, extra_photos: p.extra_photos, delivery_days: p.delivery_days, shoot_hours: p.shoot_hours, retouch_hours: p.retouch_hours, rights: p.rights || null,
+  }).eq("id", id);
+  if (error) throw new Error(error.message);
+  all();
 }
 export async function updateShootField(id: string, field: "title" | "location" | "rights" | "price" | "photos_delivered", value: string) {
   const { supabase } = await db();
-  const v = field === "price" || field === "photos_delivered" ? Number(value) : value;
+  const v = field === "photos_delivered" ? (value === "" ? null : Number(value)) : field === "price" ? Number(value) : value;
   await supabase.from("shoots").update({ [field]: v }).eq("id", id);
   all();
 }
@@ -112,6 +130,14 @@ export async function toggleChecklist(id: string, done: boolean) { const { supab
 
 /* ---------- clients ---------- */
 const ClientInput = z.object({ name: z.string().min(1).max(120), kind: z.string().max(80).optional(), contact_name: z.string().max(120).optional(), contact_email: z.string().max(120).optional(), contact_phone: z.string().max(40).optional(), default_deposit_pct: z.coerce.number().min(0).max(100), pref: z.string().max(300).optional() });
+export async function updateClient(id: string, formData: FormData) {
+  const { supabase } = await db();
+  const p = ClientInput.omit({ pref: true }).parse(Object.fromEntries(formData.entries()));
+  const types = formData.getAll("default_types").map(String).filter(Boolean);
+  const { error } = await supabase.from("clients").update({ name: p.name, kind: p.kind || null, contact_name: p.contact_name || null, contact_email: p.contact_email || null, contact_phone: p.contact_phone || null, default_deposit_pct: p.default_deposit_pct, default_types: types }).eq("id", id);
+  if (error) throw new Error(error.message);
+  all();
+}
 export async function createClient_(formData: FormData) {
   const { supabase } = await db();
   const p = ClientInput.parse(Object.fromEntries(formData.entries()));
