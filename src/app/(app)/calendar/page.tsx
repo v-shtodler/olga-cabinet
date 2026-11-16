@@ -53,7 +53,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
   const mEnd = endOfMonth(monthStart);
   const inMonth = active.filter((s) => s.date >= iso(monthStart) && s.date <= iso(mEnd));
-  const hours = inMonth.reduce((a, s) => a + s.total_hours, 0); const planned = inMonth.reduce((a, s) => a + s.price, 0);
+  const planned = inMonth.reduce((a, s) => a + s.price, 0);
+  const dlInMonth = active.filter((s) => s.deadline && s.deadline >= iso(monthStart) && s.deadline <= iso(mEnd) && !s.delivered_on).length;
   const pct = Math.min(100, Math.round(inMonth.length / settings.month_capacity * 100));
   const freeFrom = new Date(Math.max(monthStart.getTime(), parseISO(today).getTime()));
   const freeM = freeFrom <= mEnd ? freeDays(byDay, blocked, freeFrom, Math.round((mEnd.getTime() - freeFrom.getTime()) / 86400000) + 1) : [];
@@ -181,13 +182,13 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           {view === "year" ? (
             <section className="card">
               <h2 className="text-[17px] font-semibold mb-3">{monthStart.getFullYear()} у цифрах</h2>
-              <div className="grid grid-cols-2 gap-3">{[["Зйомок", inYear.length], ["Годин роботи", `~${Math.round(inYear.reduce((a, s) => a + s.total_hours, 0))}`], ["Сума", money(inYear.reduce((a, s) => a + s.price, 0))], ["Місяців із зйомками", new Set(inYear.map((s) => s.date.slice(0, 7))).size]].map(([k, v]) => <div key={String(k)}><div className="text-[13px] text-muted font-semibold">{k}</div><div className="text-2xl font-bold tracking-[-0.01em] num">{v}</div></div>)}</div>
+              <div className="grid grid-cols-2 gap-3">{[["Зйомок", inYear.length], ["Місяців із зйомками", new Set(inYear.map((s) => s.date.slice(0, 7))).size], ["Сума", money(inYear.reduce((a, s) => a + s.price, 0))], ["Середній чек", money(inYear.length ? Math.round(inYear.reduce((a, s) => a + s.price, 0) / inYear.length) : 0)]].map(([k, v]) => <div key={String(k)}><div className="text-[13px] text-muted font-semibold">{k}</div><div className="text-2xl font-bold tracking-[-0.01em] num">{v}</div></div>)}</div>
               <p className="text-[13px] text-muted mt-3">Клацніть місяць — відкриється сітка місяця; клацніть день — відкриється той день.</p>
             </section>
           ) : (
             <section className="card">
               <h2 className="text-[17px] font-semibold mb-3">{monthName(monthStart)} у цифрах</h2>
-              <div className="grid grid-cols-2 gap-3">{[["Зйомок", inMonth.length], ["Годин роботи", `~${Math.round(hours)}`], ["Заплановано", money(planned)], ["Вільних днів", freeM.length]].map(([k, v]) => <div key={String(k)}><div className="text-[13px] text-muted font-semibold">{k}</div><div className="text-2xl font-bold tracking-[-0.01em] num">{v}</div></div>)}</div>
+              <div className="grid grid-cols-2 gap-3">{[["Зйомок", inMonth.length], ["Віддач у місяці", dlInMonth], ["Заплановано", money(planned)], ["Вільних днів", freeM.length]].map(([k, v]) => <div key={String(k)}><div className="text-[13px] text-muted font-semibold">{k}</div><div className="text-2xl font-bold tracking-[-0.01em] num">{v}</div></div>)}</div>
               <div className="mt-3.5"><div className="flex justify-between text-[13px] font-semibold"><span className="text-muted">Завантаженість</span><span style={{ color: pct >= 90 ? "var(--warn)" : "var(--fg)" }}>{pct}%</span></div><div className="mt-1.5"><Bar pct={pct} color={pct >= 90 ? "var(--warn)" : undefined} /></div><p className="text-[13px] text-muted mt-2">100% ≈ {settings.month_capacity} зйомок на місяць (налаштовується). Вище 90% — ретуш починає зʼїдати вихідні.</p></div>
             </section>
           )}
