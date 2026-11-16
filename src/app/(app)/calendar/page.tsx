@@ -1,10 +1,10 @@
 import Link from "next/link";
-import clsx from "clsx";
 import { addDays, addMonths, addYears, format, startOfMonth, endOfMonth, parseISO, isValid } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getBlockedDays, getSettings } from "@/lib/data";
 import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, type ShootView } from "@/lib/domain";
 import { ShootRow, Chip, Bar } from "@/components/ui";
+import { MonthGrid } from "@/components/month-grid";
 import { AssistantInline } from "@/components/assistant";
 import { toggleBlockedDay } from "@/app/actions";
 import * as I from "@/components/icons";
@@ -61,7 +61,13 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const freeM = freeFrom <= mEnd ? freeDays(byDay, blocked, freeFrom, Math.round((mEnd.getTime() - freeFrom.getTime()) / 86400000) + 1) : [];
   const selShoots = byDay.get(sel) ?? []; const selDl = dlByDay.get(sel) ?? [];
   const selBlocked = blocked.has(sel);
-  const cells = (() => { const g = addDays(monthStart, -((monthStart.getDay() + 6) % 7)); return Array.from({ length: 42 }, (_, i) => addDays(g, i)).filter((d, i) => i < 35 || d.getMonth() === monthStart.getMonth()); })();
+  // Six weeks, but the last one only when the month actually reaches into it — and always
+  // whole rows, so no half-empty row of bare grid shows at the bottom.
+  const cells = (() => {
+    const g = addDays(monthStart, -((monthStart.getDay() + 6) % 7));
+    const all = Array.from({ length: 42 }, (_, i) => addDays(g, i));
+    return all.slice(35).some((d) => d.getMonth() === monthStart.getMonth()) ? all : all.slice(0, 35);
+  })();
   const inYear = active.filter((s) => s.date.startsWith(String(monthStart.getFullYear())));
 
   const dayLink = (d: Date, v: View = "month") => href({ v, d: iso(d), m: format(startOfMonth(d), "yyyy-MM") });
@@ -85,35 +91,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         <section className="card flex-[999_1_640px] min-w-0">
           {/* ---------- MONTH: iOS Calendar — a clean grid, each event a brand-coloured pill ---------- */}
           {view === "month" && (
-            <div className="grid grid-cols-7 gap-px rounded-[12px] overflow-hidden" style={{ background: "var(--hair)" }}>
-              {WEEKDAYS.map((w) => <div key={w} className="text-[12px] font-medium text-muted text-center py-1.5" style={{ background: "var(--glass)" }}>{w}</div>)}
-              {cells.map((d) => {
-                const k = iso(d); const out = d.getMonth() !== monthStart.getMonth(); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
-                const isSel = k === sel; const isToday = k === today; const isFree = !out && ev.length === 0 && !blocked.has(k) && k >= today;
-                return (
-                  <Link key={k} href={dayLink(d)} className="min-h-[74px] sm:min-h-[112px] p-[3px] sm:p-1.5 flex flex-col gap-1 text-left transition-colors"
-                    style={{ background: isSel ? "var(--accent-tint)" : "var(--glass)", opacity: out ? 0.45 : 1 }}>
-                    <span className="self-center sm:self-start w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] rounded-full inline-flex items-center justify-center text-[13px] sm:text-[14px] font-semibold shrink-0"
-                      style={isToday ? { background: "var(--accent)", color: "#fff" } : blocked.has(k) ? { background: "var(--fill-2)", color: "var(--muted)" } : isFree ? { color: "var(--good)" } : undefined}>{d.getDate()}</span>
-                    <span className="flex flex-col gap-[2px] sm:gap-[3px] min-w-0">
-                      {ev.slice(0, 3).map((s, i) => {
-                        const col = brandColor(s.client_hue);
-                        return (
-                          <span key={s.id} className={clsx("flex items-center gap-1 px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[9px] sm:text-[11px] font-semibold sm:font-medium leading-[1.25] min-w-0", i > 1 && "hidden sm:flex")}
-                            style={{ background: `color-mix(in srgb, ${col} 16%, transparent)`, color: col }}>
-                            <i className="hidden sm:block w-[5px] h-[5px] rounded-full shrink-0" style={{ background: col }} />
-                            <span className="truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
-                          </span>
-                        );
-                      })}
-                      {dl.slice(0, 1).map((s) => <span key={"d" + s.id} className={clsx("px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[9px] sm:text-[11px] font-semibold sm:font-medium truncate", ev.length > 1 && "hidden sm:block")} style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
-                      {ev.length > 2 && <span className="text-[9px] sm:text-[11px] text-muted px-[3px] sm:px-1.5 sm:hidden">ще {ev.length - 2}</span>}
-                      {ev.length > 3 && <span className="text-[11px] text-muted px-1.5 hidden sm:block">ще {ev.length - 3}</span>}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+            <MonthGrid cells={cells} month={monthStart.getMonth()} byDay={byDay} dlByDay={dlByDay} blocked={blocked} sel={sel} today={today} dayLink={dayLink} />
           )}
 
           {/* ---------- WEEK: a column per day, shoots with times ---------- */}
@@ -178,7 +156,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
           <div className="flex gap-x-3.5 gap-y-1.5 flex-wrap text-[12px] sm:text-[13px] text-muted font-medium mt-3">
             <span>Колір — бренд замовника</span>
-            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Закрито</span>
+            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Особистий день</span>
           </div>
         </section>
 
