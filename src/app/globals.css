@@ -1,21 +1,41 @@
 @import "tailwindcss";
 
-/* Design tokens — Glass direction chosen in the prototype.
-   Light is the default; data-theme="dark" forces the night theme, data-theme="system" follows the OS. */
+/* Design tokens — Apple HIG (iOS 18 / macOS Sequoia): system grouped backgrounds, inset white cards,
+   hairline separators, system colors, SF typography. Light by default; data-theme="dark" | "system". */
 :root {
   color-scheme: light;
-  --bg: light-dark(#eef1fa, #111527); --fg: light-dark(#1c1c1e, #f2f3f7); --muted: light-dark(#5b5b66, #a8abba); --muted-2: light-dark(#8a8a95, #7c7f8e);
-  /* page gradient: soft pastel lavender → sky → peach; night: deep navy with a violet corner */
-  --bg-a: light-dark(#f1ecff, #141833); --bg-b: light-dark(#e9f1fd, #10142a); --bg-c: light-dark(#fff0ea, #1a1430);
-  --glass: light-dark(rgba(255,255,255,0.62), rgba(255,255,255,0.07)); --glass-2: light-dark(rgba(255,255,255,0.78), rgba(255,255,255,0.11)); --line: light-dark(rgba(255,255,255,0.85), rgba(255,255,255,0.12)); --hair: light-dark(rgba(60,80,140,0.10), rgba(255,255,255,0.10));
-  --accent: light-dark(#1d6ff2, #5b9cff); --accent-2: light-dark(#4f9bff, #8dbbff);
-  --good: light-dark(#15803d, #4ade80); --good-bg: light-dark(#dcfce7, rgba(74,222,128,0.16)); --warn: light-dark(#c2410c, #fb923c); --warn-bg: light-dark(#ffe4d6, rgba(251,146,60,0.18)); --info: light-dark(#1d4ed8, #93b4ff); --info-bg: light-dark(#dcebff, rgba(93,156,255,0.18));
-  --purple: light-dark(#6d28d9, #c4b5fd); --purple-bg: light-dark(#ede9fe, rgba(167,139,250,0.2)); --sun: light-dark(#7a5a00, #fcd34d); --sun-bg: light-dark(#ffe9a8, rgba(252,211,77,0.16)); --pink: light-dark(#be185d, #f9a8d4); --pink-bg: light-dark(#fce7f3, rgba(244,114,182,0.18));
-  --assist-a: light-dark(#312e81, #4338ca); --assist-b: light-dark(#4f46e5, #6366f1); --assist-soft: light-dark(rgba(79,70,229,0.12), rgba(99,102,241,0.2));
-  --blob-1: light-dark(#ffc7b3, #6b3328); --blob-2: light-dark(#bfd0ff, #27356e); --blob-3: light-dark(#b9f0d6, #1c523e); --blob-4: light-dark(#ffe9a8, #5e4f18);
-  --blob-opacity: light-dark(0.9, 0.55);
-  --shadow-c: light-dark(rgba(60,80,140,0.08), rgba(0,0,0,0.35)); --shadow-c2: light-dark(rgba(60,80,140,0.14), rgba(0,0,0,0.5));
-  --shadow: 0 10px 30px var(--shadow-c); --shadow-2: 0 14px 36px var(--shadow-c2);
+  --bg: light-dark(#f2f2f7, #000000);                 /* systemGroupedBackground */
+  --bg-a: var(--bg); --bg-b: var(--bg); --bg-c: var(--bg);
+  --fg: light-dark(#000000, #ffffff);                 /* label */
+  --muted: light-dark(rgba(60,60,67,0.6), rgba(235,235,245,0.6));     /* secondaryLabel */
+  --muted-2: light-dark(rgba(60,60,67,0.3), rgba(235,235,245,0.3));   /* tertiaryLabel */
+  --glass: light-dark(#ffffff, #1c1c1e);              /* secondarySystemGroupedBackground — cards */
+  --glass-2: light-dark(#f2f2f7, #2c2c2e);            /* tertiary grouped — nested plates */
+  --fill: light-dark(rgba(120,120,128,0.2), rgba(120,120,128,0.36));   /* systemFill */
+  --fill-2: light-dark(rgba(120,120,128,0.16), rgba(120,120,128,0.32));
+  --fill-3: light-dark(rgba(118,118,128,0.12), rgba(118,118,128,0.24)); /* tertiaryFill — inputs, seg track */
+  --line: transparent;
+  --hair: light-dark(rgba(60,60,67,0.29), rgba(84,84,88,0.65));        /* separator */
+  --accent: light-dark(#007aff, #0a84ff); --accent-2: light-dark(#0a84ff, #409cff); --accent-fg: #ffffff;
+  --accent-tint: light-dark(rgba(0,122,255,0.12), rgba(10,132,255,0.2));
+  --good: light-dark(#34c759, #30d158); --good-bg: light-dark(rgba(52,199,89,0.14), rgba(48,209,88,0.2));
+  --warn: light-dark(#ff9500, #ff9f0a); --warn-bg: light-dark(rgba(255,149,0,0.14), rgba(255,159,10,0.2));
+  --danger: light-dark(#ff3b30, #ff453a); --danger-bg: light-dark(rgba(255,59,48,0.12), rgba(255,69,58,0.2));
+  --info: light-dark(#007aff, #0a84ff); --info-bg: light-dark(rgba(0,122,255,0.12), rgba(10,132,255,0.2));
+  --purple: light-dark(#af52de, #bf5af2); --purple-bg: light-dark(rgba(175,82,222,0.14), rgba(191,90,242,0.2));
+  --sun: light-dark(#ff9f0a, #ffd60a); --sun-bg: light-dark(rgba(255,204,0,0.2), rgba(255,214,10,0.18));
+  --pink: light-dark(#ff2d55, #ff375f); --pink-bg: light-dark(rgba(255,45,85,0.12), rgba(255,55,95,0.2));
+  --teal: light-dark(#5ac8fa, #64d2ff); --indigo: light-dark(#5856d6, #5e5ce6);
+  /* Assistant: white card with an "intelligence" gradient ring */
+  --assist-a: #0a84ff; --assist-b: #bf5af2; --assist-c: #ff375f; --assist-d: #ff9f0a;
+  --assist-soft: light-dark(rgba(0,122,255,0.08), rgba(10,132,255,0.14));
+  --assist-grad: linear-gradient(135deg, var(--assist-a), var(--assist-b) 45%, var(--assist-c) 75%, var(--assist-d));
+  --blob-1: transparent; --blob-2: transparent; --blob-3: transparent; --blob-4: transparent; --blob-opacity: 0;
+  --shadow-c: light-dark(rgba(0,0,0,0.04), rgba(0,0,0,0.4)); --shadow-c2: light-dark(rgba(0,0,0,0.12), rgba(0,0,0,0.6));
+  --shadow: 0 0 0 0 transparent; --shadow-2: 0 10px 30px var(--shadow-c2);
+  --bar: light-dark(rgba(249,249,249,0.84), rgba(29,29,31,0.78));      /* translucent toolbars */
+  --sidebar: light-dark(#f5f5f7, #161618);
+  --seg-on: light-dark(#ffffff, #636366);
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="system"] { color-scheme: light dark; }
@@ -29,38 +49,64 @@
   --color-sun: var(--sun); --color-sun-bg: var(--sun-bg); --color-pink: var(--pink); --color-pink-bg: var(--pink-bg);
   --color-assist-a: var(--assist-a); --color-assist-b: var(--assist-b); --color-assist-soft: var(--assist-soft);
   --shadow-glass: var(--shadow); --shadow-glass-2: var(--shadow-2);
-  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --radius-card: 22px; --radius-sm: 14px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", var(--font-inter), "Inter", system-ui, "Segoe UI", sans-serif;
+  --radius-card: 16px; --radius-sm: 12px; --color-fill: var(--fill); --color-fill-2: var(--fill-2); --color-fill-3: var(--fill-3); --color-danger: var(--danger); --color-danger-bg: var(--danger-bg); --color-accent-tint: var(--accent-tint);
 }
 
-html { min-height: 100%; background: linear-gradient(135deg, var(--bg-a) 0%, var(--bg-b) 48%, var(--bg-c) 100%) fixed var(--bg); }
-body { min-height: 100%; background: transparent; color: var(--fg); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-h1, h2, h3 { letter-spacing: -0.025em; text-wrap: balance; }
+html { min-height: 100%; background: var(--bg); }
+body { min-height: 100%; background: transparent; color: var(--fg); font-family: var(--font-sans); font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+h1 { letter-spacing: -0.015em; text-wrap: balance; } h2, h3 { letter-spacing: -0.005em; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .num { font-variant-numeric: tabular-nums; }
 
-@utility glass { background: var(--glass); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid var(--line); box-shadow: var(--shadow); }
+/* "glass" = card surface (kept for compatibility) */
+@utility glass { background: var(--glass); border: 1px solid var(--line); box-shadow: var(--shadow); }
 
 @layer components {
-  .card { @apply glass rounded-[22px] p-5 min-w-0; }
-  .chip { @apply inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap; }
-  .btn { @apply inline-flex items-center justify-center gap-1.5 px-4 min-h-10 rounded-full border border-line bg-glass-2 font-semibold text-[13px] whitespace-nowrap cursor-pointer transition-shadow hover:shadow-glass disabled:opacity-50 disabled:cursor-default; }
-  .btn-primary { @apply border-0 text-white; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 18px rgba(29,111,242,0.35); }
-  .btn-good { @apply border-0 text-white; background: linear-gradient(135deg, #15a05a, #35c777); box-shadow: 0 6px 18px rgba(21,160,90,0.35); }
-  .btn-ghost { @apply bg-transparent border-transparent text-muted; }
-  .btn-sm { @apply px-3 min-h-8 text-xs; }
-  .icon-btn { @apply w-[38px] h-[38px] rounded-full inline-flex items-center justify-center border border-line bg-glass-2 cursor-pointer; }
-  .seg { @apply inline-flex gap-[3px] p-[3px] rounded-full glass max-w-full overflow-x-auto; scrollbar-width: none; }
+  .card { @apply glass rounded-[16px] p-4 sm:p-5 min-w-0; }
+  .chip { @apply inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-[3px] rounded-full whitespace-nowrap; }
+  /* Buttons: filled (primary), tinted/gray (default), plain (ghost). 40–44pt tall */
+  .btn { @apply inline-flex items-center justify-center gap-1.5 px-4 min-h-[40px] rounded-[12px] font-semibold text-[15px] whitespace-nowrap cursor-pointer transition-[transform,opacity,background-color] duration-150 active:scale-[0.97] disabled:opacity-40 disabled:cursor-default; background: var(--fill-3); color: var(--accent); border: 0; }
+  .btn:hover { background: var(--fill-2); }
+  .btn-primary { background: var(--accent); color: var(--accent-fg); }
+  .btn-primary:hover { background: var(--accent-2); }
+  .btn-good { background: var(--good); color: #fff; }
+  .btn-good:hover { opacity: 0.9; }
+  .btn-ghost { background: transparent; }
+  .btn-ghost:hover { background: var(--fill-3); }
+  .btn-sm { @apply px-3 min-h-[32px] text-[13px] rounded-[10px]; }
+  .icon-btn { @apply w-[36px] h-[36px] rounded-full inline-flex items-center justify-center cursor-pointer transition-colors; background: var(--fill-3); color: var(--accent); }
+  .icon-btn:hover { background: var(--fill-2); }
+  /* iOS segmented control */
+  .seg { @apply inline-flex gap-0 p-[2px] rounded-[9px] max-w-full overflow-x-auto; background: var(--fill-3); scrollbar-width: none; }
   .seg::-webkit-scrollbar { display: none; }
-  .seg > * { @apply border-0 bg-transparent text-muted font-medium text-[13px] px-3.5 py-[7px] rounded-full whitespace-nowrap cursor-pointer; }
-  .seg > .on { @apply bg-glass-2 text-fg font-bold; box-shadow: 0 2px 8px rgba(60,80,140,0.14); }
-  .field label { @apply text-xs font-semibold text-muted; }
-  .field :is(input, select, textarea) { @apply w-full px-3 py-2.5 rounded-xl border border-line bg-glass-2 text-fg min-h-[42px]; }
-  .kv { @apply flex justify-between gap-3 px-3 py-2.5 rounded-xl bg-glass-2 text-[13px]; }
-  .srow { @apply flex items-center gap-3 px-3.5 py-3 rounded-2xl bg-glass-2 border border-line cursor-pointer transition-shadow hover:shadow-glass; }
-  .bar { @apply h-2.5 rounded-[5px] bg-hair overflow-hidden; }
-  .bar > i { @apply block h-full rounded-[5px]; }
-  .empty { @apply p-5 border border-dashed border-hair rounded-2xl text-center text-muted font-medium; }
+  .seg > * { @apply border-0 bg-transparent font-medium text-[13px] px-3.5 py-[5px] rounded-[7px] whitespace-nowrap cursor-pointer transition-colors; color: var(--fg); }
+  .seg > .on { @apply font-semibold; background: var(--seg-on); box-shadow: 0 3px 8px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.04); }
+  /* Forms */
+  .field label { @apply text-[13px] font-medium; color: var(--muted); }
+  .field :is(input, select, textarea) { @apply w-full px-3 py-2.5 rounded-[10px] text-fg min-h-[44px] text-[15px]; background: var(--fill-3); border: 1px solid transparent; }
+  .field :is(input, select, textarea):focus { outline: none; background: var(--glass); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+  .field input[type="checkbox"] { min-height: 0; }
+  /* Grouped list rows */
+  .kv { @apply flex justify-between gap-3 px-3.5 py-2.5 rounded-[12px] text-[15px]; background: var(--glass-2); }
+  .srow { @apply flex items-center gap-3 px-3.5 py-3 rounded-[12px] cursor-pointer transition-colors; background: var(--glass-2); }
+  .srow:hover { background: var(--fill-3); }
+  .bar { @apply h-2 rounded-[4px] overflow-hidden; background: var(--fill-3); }
+  .bar > i { @apply block h-full rounded-[4px]; }
+  .empty { @apply p-5 rounded-[12px] text-center font-medium; background: var(--glass-2); color: var(--muted); }
+  /* Inset grouped list with hairlines, like Settings.app */
+  .list { @apply rounded-[12px] overflow-hidden; background: var(--glass-2); }
+  .list > * + * { border-top: 0.5px solid var(--hair); }
+  /* Assistant: gradient ring + mark */
+  .assist { background: linear-gradient(var(--glass), var(--glass)) padding-box, var(--assist-grad) border-box; border: 1.5px solid transparent; }
+  .assist-mark { background: var(--assist-grad); color: #fff; }
+  /* iOS switch (checkbox.switch) */
+  .switch { appearance: none; -webkit-appearance: none; width: 51px; height: 31px; border-radius: 16px; background: var(--fill); position: relative; cursor: pointer; transition: background .2s; flex: none; margin: 0; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 3px 1px rgba(0,0,0,.06); transition: transform .2s; }
+  .switch:checked { background: var(--good); }
+  .switch:checked::after { transform: translateX(20px); }
+  /* translucent bars */
+  .bar-material { background: var(--bar); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

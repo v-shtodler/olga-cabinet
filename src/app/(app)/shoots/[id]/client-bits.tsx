@@ -48,7 +48,7 @@ export function ChecklistToggle({ id, text, done: initial }: { id: string; text:
   const [pending, start] = useTransition(); const [done, setDone] = useState(initial);
   return (
     <label className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer font-medium ${done ? "line-through border-transparent" : "bg-glass-2 border-line"}`} style={done ? { background: "var(--good-bg)", color: "var(--good)" } : undefined}>
-      <input type="checkbox" checked={done} disabled={pending} onChange={(e) => { const v = e.target.checked; setDone(v); start(async () => { await callOrQueue("toggleChecklist", [id, v], undefined, `${v ? "✓" : "☐"} ${text}`, () => toggleChecklist(id, v)); }); }} className="w-[18px] h-[18px]" style={{ accentColor: "#15a05a" }} /> <span className="flex-1 min-w-0">{text}</span>
+      <input type="checkbox" checked={done} disabled={pending} onChange={(e) => { const v = e.target.checked; setDone(v); start(async () => { await callOrQueue("toggleChecklist", [id, v], undefined, `${v ? "✓" : "☐"} ${text}`, () => toggleChecklist(id, v)); }); }} className="w-[18px] h-[18px]" style={{ accentColor: "var(--good)" }} /> <span className="flex-1 min-w-0">{text}</span>
       {!done && <button type="button" className="text-muted text-xs px-1" aria-label="Видалити пункт" title="Видалити" onClick={(e) => { e.preventDefault(); start(async () => { await callOrQueue("deleteChecklistItem", [id], undefined, `Видалити: ${text}`, () => deleteChecklistItem(id)); }); }}>×</button>}
     </label>
   );
