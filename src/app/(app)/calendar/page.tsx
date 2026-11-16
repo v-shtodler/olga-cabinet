@@ -55,7 +55,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const mEnd = endOfMonth(monthStart);
   const inMonth = active.filter((s) => s.date >= iso(monthStart) && s.date <= iso(mEnd));
   const planned = inMonth.reduce((a, s) => a + s.price, 0);
-  const dlInMonth = active.filter((s) => s.deadline && s.deadline >= iso(monthStart) && s.deadline <= iso(mEnd) && !s.delivered_on).length;
+  const dlInMonth = active.filter((s) => s.deadline && s.deadline >= iso(monthStart) && s.deadline <= iso(mEnd) && s.status !== "paid").length;
   const pct = Math.min(100, Math.round(inMonth.length / settings.month_capacity * 100));
   const freeFrom = new Date(Math.max(monthStart.getTime(), parseISO(today).getTime()));
   const freeM = freeFrom <= mEnd ? freeDays(byDay, blocked, freeFrom, Math.round((mEnd.getTime() - freeFrom.getTime()) / 86400000) + 1) : [];

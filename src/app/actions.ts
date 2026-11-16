@@ -79,8 +79,7 @@ export async function advanceShoot(id: string) {
   // The date stays editable in the shoot card.
   const today = todayISO();
   const on = (d?: string | null) => (d && d < today ? d : today);
-  if (next === "delivered") { patch.delivered_on = on(s.deadline ?? s.date); if (Number(s.balance) > 0) patch.invoice_sent_on = on(s.deadline ?? s.date); }
-  if (next === "paid" && Number(s.balance) > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Number(s.balance), paid_on: on(s.delivered_on ?? s.date), kind: "balance", method: "invoice" });
+  if (next === "paid" && Number(s.balance) > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Number(s.balance), paid_on: on(s.date), kind: "balance", method: "invoice" });
   await supabase.from("shoots").update(patch).eq("id", id);
   all();
 }
@@ -127,7 +126,7 @@ export async function addPayment(formData: FormData) {
   const p = PaymentInput.parse(Object.fromEntries(formData.entries()));
   await supabase.from("payments").insert(p);
   const { data: s } = await supabase.from("v_shoots").select("status, balance").eq("id", p.shoot_id).single();
-  if (s?.status === "delivered" && Number(s.balance) <= 0) await supabase.from("shoots").update({ status: "paid" }).eq("id", p.shoot_id);
+  if (s?.status === "confirmed" && Number(s.balance) <= 0) await supabase.from("shoots").update({ status: "paid" }).eq("id", p.shoot_id);
   if (s?.status === "request") await supabase.from("shoots").update({ status: "confirmed" }).eq("id", p.shoot_id);
   all();
 }
@@ -138,13 +137,25 @@ const SavingInput = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
   currency: z.enum(["EUR", "USD"]),
   amount: z.coerce.number().positive().max(10_000_000),
-  rate: z.coerce.number().positive().max(1000),
-  note: z.string().max(200).optional(),
 });
+/** Official NBU rate for that month (its last day, or today for the running month). 0 if the bank is unreachable. */
+async function nbuRate(currency: string, month: string): Promise<number> {
+  const [y, m] = month.split("-").map(Number);
+  const last = new Date(y, m, 0), now = nowKyiv();
+  const d = last < now ? last : now;
+  const day = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  try {
+    const res = await fetch(`https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?valcode=${currency}&date=${day}&json`, { cache: "no-store", signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return 0;
+    const rows = await res.json() as { rate?: number }[];
+    return Number(rows?.[0]?.rate) || 0;
+  } catch { return 0; }
+}
 export async function addSaving(formData: FormData) {
   const { supabase } = await db();
   const p = SavingInput.parse(Object.fromEntries(formData.entries()));
-  const { error } = await supabase.from("savings").insert({ month: `${p.month}-01`, currency: p.currency, amount: p.amount, rate: p.rate, note: p.note || null });
+  const rate = await nbuRate(p.currency, p.month);
+  const { error } = await supabase.from("savings").insert({ month: `${p.month}-01`, currency: p.currency, amount: p.amount, rate });
   if (error) throw new Error(error.code === "42P01" ? "Спочатку застосуйте міграцію 0014_savings.sql у Supabase → SQL Editor." : error.message);
   all();
 }

@@ -2,12 +2,12 @@
 import { addDays, differenceInCalendarDays, format, parseISO, startOfQuarter, endOfQuarter } from "date-fns";
 import { uk } from "date-fns/locale";
 
-export type ShootStatus = "request" | "confirmed" | "shot" | "delivered" | "paid" | "cancelled";
+export type ShootStatus = "request" | "confirmed" | "paid" | "cancelled";
 
-export const STATUSES: ShootStatus[] = ["request", "confirmed", "shot", "delivered", "paid"];
-export const STATUS_UA: Record<ShootStatus, string> = { request: "Запит", confirmed: "Підтверджено", shot: "Відзнято", delivered: "Віддано", paid: "Оплачено", cancelled: "Скасовано" };
-export const STATUS_TONE: Record<ShootStatus, Tone> = { request: "neutral", confirmed: "info", shot: "warn", delivered: "purple", paid: "good", cancelled: "neutral" };
-export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Підтвердити зйомку", confirmed: "Позначити «відзнято»", shot: "Позначити «віддано»", delivered: "Позначити «оплачено»" };
+export const STATUSES: ShootStatus[] = ["request", "confirmed", "paid"];
+export const STATUS_UA: Record<ShootStatus, string> = { request: "Запит", confirmed: "Підтверджено", paid: "Оплачено", cancelled: "Скасовано" };
+export const STATUS_TONE: Record<ShootStatus, Tone> = { request: "neutral", confirmed: "info", paid: "good", cancelled: "neutral" };
+export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Підтвердити зйомку", confirmed: "Позначити «оплачено»" };
 
 /** Eight system colours, one per brand (clients.avatar_hue). iOS Calendar reads this way: colour = whose event. */
 export const BRAND = [
@@ -32,9 +32,9 @@ export interface Client { id: string; name: string; kind: string | null; contact
 export interface ClientPref { id: string; client_id: string; text: string; sort: number; }
 export interface Shoot {
   id: string; client_id: string; no: string | null; status: ShootStatus; date: string; start_time: string | null; location: string | null;
-  price: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null; created_at: string;
+  price: number; deadline_on: string | null; invoice_sent_on: string | null; created_at: string;
 }
-export interface ShootView extends Shoot { client_name: string; client_hue: number; paid: number; balance: number; deadline: string | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
+export interface ShootView extends Shoot { client_name: string; client_hue: number; paid: number; balance: number; deadline: string | null; invoice_age_days: number | null; }
 export interface Payment { id: string; shoot_id: string; amount: number; paid_on: string; kind: "deposit" | "balance" | "extra" | "refund"; method: "invoice" | "card" | "cash" | "other"; note: string | null; }
 export interface Note { id: string; shoot_id: string; text: string; created_at: string; }
 export interface ChecklistItem { id: string; shoot_id: string; text: string; done: boolean; sort: number; }
@@ -75,7 +75,7 @@ export function freeDays(shootsByDay: Map<string, ShootView[]>, blocked: Set<str
   return out;
 }
 export function groupByDay(shoots: ShootView[]) { const m = new Map<string, ShootView[]>(); for (const s of shoots) { if (s.status === "cancelled") continue; const a = m.get(s.date) ?? []; a.push(s); m.set(s.date, a); } return m; }
-export function deadlinesByDay(shoots: ShootView[]) { const m = new Map<string, ShootView[]>(); for (const s of shoots) { if ((s.status !== "shot" && s.status !== "confirmed") || !s.deadline) continue; const a = m.get(s.deadline) ?? []; a.push(s); m.set(s.deadline, a); } return m; }
+export function deadlinesByDay(shoots: ShootView[]) { const m = new Map<string, ShootView[]>(); for (const s of shoots) { if (s.status !== "confirmed" || !s.deadline) continue; const a = m.get(s.deadline) ?? []; a.push(s); m.set(s.deadline, a); } return m; }
 
 /* ---------- assistant: one voice, rule-based ---------- */
 export type InsightKind = "deadline" | "payment" | "request" | "prep" | "load" | "tax" | "price";
@@ -96,11 +96,11 @@ export function buildInsights(inp: InsightInput): Insight[] {
 
   if (inp.scope.type !== "taxes") for (const s of list) {
     const c = clientOf(s.client_id); const cname = c?.name ?? s.client_name;
-    if (s.status === "shot" && s.deadline) {
+    if (s.status === "confirmed" && s.deadline && s.date <= today) {
       const d = daysBetween(today, s.deadline);
-      if (d <= inp.settings.remind_days) push({ key: `dl-${s.id}`, kind: "deadline", sev: d < 0 ? "high" : "mid", tag: d < 0 ? "Дедлайн прострочено" : `Дедлайн · ${relDays(d)}`, text: `Зйомка ${cname} від ${fmtShort(s.date)} ще у статусі «відзнято». Віддати до ${fmtDate(s.deadline)}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
+      if (d <= inp.settings.remind_days) push({ key: `dl-${s.id}`, kind: "deadline", sev: d < 0 ? "high" : "mid", tag: d < 0 ? "Дедлайн прострочено" : `Дедлайн · ${relDays(d)}`, text: `Зйомка ${cname} від ${fmtShort(s.date)} ще не віддана. Віддати до ${fmtDate(s.deadline)}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
     }
-    if (s.status === "delivered" && s.balance > 0) {
+    if (s.status === "confirmed" && s.balance > 0 && s.date < today) {
       const age = s.invoice_age_days ?? 0; const late = age > 7;
       push({ key: `pay-${s.id}`, kind: "payment", sev: late ? "high" : "mid", tag: late ? "Оплата · прострочено" : "Оплата · очікую", text: `${cname} винні ${money(s.balance)} за зйомку ${fmtShort(s.date)}.${s.invoice_sent_on ? ` Рахунок виставлено ${relDays(-age)}.` : " Рахунок ще не виставлено."}`, action: { label: late ? "Нагадати клієнту" : "Деталі", href: `/shoots/${s.id}` } });
     }

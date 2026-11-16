@@ -30,7 +30,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             <p className="text-muted mt-2">📅 {fmtWeekday(s.date)}, {fmtDate(s.date, true)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ""} &nbsp; 📍 {s.location ?? "—"}{c.contact_name ? <> &nbsp; 👤 {c.contact_name}</> : null}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)} data-op="advanceShoot" data-args={JSON.stringify([s.id])} data-label={NEXT_STEP[s.status] ?? ""}><button className={`btn ${s.status === "delivered" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
+            {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)} data-op="advanceShoot" data-args={JSON.stringify([s.id])} data-label={NEXT_STEP[s.status] ?? ""}><button className={`btn ${s.status === "confirmed" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
             {s.status !== "cancelled" && <Link href={`/shoots/${s.id}/edit`} className="btn">Редагувати</Link>}
             <Link href={`/shoots/new?dup=${s.id}`} className="btn">Дублювати</Link>
             {s.status !== "paid" && s.status !== "cancelled" && <CancelButton id={s.id} />}
@@ -55,7 +55,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
       </section>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <Kpi label="Віддати до" value={s.deadline ? fmtShort(s.deadline) : "—"} sub={s.delivered_on ? `віддано ${fmtShort(s.delivered_on)}` : dlDays != null ? relDays(dlDays) : "дату не вказано"} subTone={!s.delivered_on && dlDays != null && dlDays < 0 ? "warn" : undefined} className={s.status === "shot" && dlDays != null ? (dlDays < 0 ? "!bg-warn-bg" : "!bg-sun-bg") : ""} />
+        <Kpi label="Віддати до" value={s.deadline ? fmtShort(s.deadline) : "—"} sub={dlDays != null ? relDays(dlDays) : "дату не вказано"} subTone={dlDays != null && dlDays < 0 && s.status !== "paid" ? "warn" : undefined} className={s.status === "confirmed" && s.date <= today && dlDays != null ? (dlDays < 0 ? "!bg-warn-bg" : "!bg-sun-bg") : ""} />
         <Kpi label="Вартість" value={money(s.price)} />
         <Kpi label="Отримано" value={money(s.paid)} sub={s.balance > 0 ? `залишок ${money(s.balance)}` : "оплачено повністю ✓"} subTone={s.balance > 0 ? "warn" : "good"} className={s.paid > 0 ? "!bg-good-bg" : ""} />
         <Kpi label="Податок із зйомки" value={money(s.price * (settings.ep_rate + settings.vz_rate) / 100)} sub={`ЄП ${settings.ep_rate}% + ВЗ ${settings.vz_rate}%`} />
@@ -69,11 +69,11 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             <div className="flex justify-between items-baseline mb-3 gap-2 flex-wrap"><h2 className="text-[17px] font-semibold">Фінанси</h2>{s.status !== "cancelled" && <Link href={`/shoots/${s.id}/invoice`} className="btn btn-sm">Рахунок →</Link>}</div>
             <div className="flex flex-col gap-1.5">
               {payments.map((p) => <div key={p.id} className="kv items-center"><span>{{ deposit: "Оплата", balance: "Оплата", extra: "Доплата", refund: "Повернення" }[p.kind]} · {{ invoice: "Рахунок ФОП", card: "Картка", cash: "Готівка", other: "Інше" }[p.method]} · {fmtDate(p.paid_on)}</span><span className="flex items-center gap-3"><b className="num" style={{ color: "var(--good)" }}>+ {money(Number(p.amount))}</b><form action={deletePayment.bind(null, p.id)} data-op="deletePayment" data-args={JSON.stringify([p.id])}><button className="text-muted text-xs" aria-label="Видалити платіж" title="Видалити">×</button></form></span></div>)}
-              {s.balance > 0 && <div className="kv" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><span>Залишок{s.invoice_sent_on ? ` · рахунок виставлено ${relDays(-(s.invoice_age_days ?? 0))}` : s.status === "request" ? " · очікую оплату" : " · після віддачі"}</span><b className="num">{money(s.balance)}</b></div>}
+              {s.balance > 0 && <div className="kv" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><span>Залишок{s.invoice_sent_on ? ` · рахунок виставлено ${relDays(-(s.invoice_age_days ?? 0))}` : s.status === "request" ? " · очікую оплату" : " · після зйомки"}</span><b className="num">{money(s.balance)}</b></div>}
             </div>
             <div className="flex gap-2 flex-wrap mt-3">
               <PaymentForm shootId={s.id} suggested={s.balance > 0 ? s.balance : 0} />
-              {!s.invoice_sent_on && s.status === "delivered" && s.balance > 0 && <form action={markInvoiceSent.bind(null, s.id)} data-op="markInvoiceSent" data-args={JSON.stringify([s.id])}><button className="btn btn-sm">Рахунок виставлено сьогодні</button></form>}
+              {!s.invoice_sent_on && s.status === "confirmed" && s.date <= today && s.balance > 0 && <form action={markInvoiceSent.bind(null, s.id)} data-op="markInvoiceSent" data-args={JSON.stringify([s.id])}><button className="btn btn-sm">Рахунок виставлено сьогодні</button></form>}
             </div>
           </section>
 

@@ -6,7 +6,7 @@ import { PageHead, ShootRow } from "@/components/ui";
 
 export const metadata = { title: "Зйомки" };
 
-const FILTERS = [["upcoming", "Майбутні"], ["work", "В роботі"], ["owed", "Чекають оплати"], ["requests", "Запити"], ["done", "Завершені"], ["all", "Усі"]] as const;
+const FILTERS = [["upcoming", "Майбутні"], ["owed", "Чекають оплати"], ["requests", "Запити"], ["done", "Завершені"], ["all", "Усі"]] as const;
 type F = (typeof FILTERS)[number][0];
 
 export default async function ShootsPage({ searchParams }: { searchParams: Promise<{ f?: string; q?: string }> }) {
@@ -15,8 +15,7 @@ export default async function ShootsPage({ searchParams }: { searchParams: Promi
   const today = todayISO();
   let list = (await getShoots()).filter((s) => s.status !== "cancelled");
   if (filter === "upcoming") list = list.filter((s) => s.date >= today && s.status !== "request");
-  if (filter === "work") list = list.filter((s) => s.status === "shot");
-  if (filter === "owed") list = list.filter((s) => s.status === "delivered" && s.balance > 0);
+  if (filter === "owed") list = list.filter((s) => s.status === "confirmed" && s.date < today && s.balance > 0);
   if (filter === "requests") list = list.filter((s) => s.status === "request");
   if (filter === "done") list = list.filter((s) => s.status === "paid").reverse();
   if (filter === "all") list = list.slice().reverse();

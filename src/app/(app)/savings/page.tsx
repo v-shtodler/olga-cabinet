@@ -21,21 +21,15 @@ export default async function SavingsPage() {
   const incomeYear = monthly.filter((m) => m.month.startsWith(year)).reduce((a, m) => a + m.income, 0);
   const share = incomeYear ? Math.round(sum(thisYear) / incomeYear * 100) : 0;
   const months = [...new Set(rows.map((r) => r.month))];
-  const perMonth = months.length ? Math.round(sum(rows) / months.length) : 0;
-
-  // last rate used for each currency — the form starts from it
-  const lastRate: Partial<Record<Currency, number>> = {};
-  for (const r of rows) if (lastRate[r.currency] === undefined) lastRate[r.currency] = Number(r.rate);
 
   return (
     <>
       <PageHead eyebrow={`${months.length} ${months.length === 1 ? "місяць" : months.length < 5 ? "місяці" : "місяців"} із відкладеннями`} title="Відкладені 🏦" />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-3.5">
         <Kpi label={`Відкладено за ${year}`} value={money(sum(thisYear))} sub={incomeYear ? `${share}% доходу року` : "доходу ще немає"} subTone={share >= 10 ? "good" : undefined} dot="var(--good)" />
         <Kpi label="Усього в євро" value={fx(sum(rows, "EUR"), "EUR")} sub="за весь час" />
         <Kpi label="Усього в доларах" value={fx(sum(rows, "USD"), "USD")} sub="за весь час" />
-        <Kpi label="У середньому на місяць" value={money(perMonth)} sub={months.length ? `за ${months.length} ${months.length === 1 ? "місяць" : months.length < 5 ? "місяці" : "місяців"}` : "—"} />
       </div>
 
       <div className="flex flex-wrap gap-3.5">
@@ -58,7 +52,7 @@ export default async function SavingsPage() {
                         <div key={r.id} className="kv items-center">
                           <span className="min-w-0">
                             <b className="num">{fx(Number(r.amount), r.currency)}</b>
-                            <span className="text-muted"> · курс {Number(r.rate).toLocaleString("uk-UA")} ₴{r.note ? ` · ${r.note}` : ""}</span>
+                            <span className="text-muted"> · {Number(r.rate) > 0 ? `курс ${Number(r.rate).toFixed(2).replace(".", ",")} ₴` : "курс не визначено"}{r.note ? ` · ${r.note}` : ""}</span>
                           </span>
                           <span className="flex items-center gap-3 shrink-0">
                             <b className="num">{money(Number(r.uah))}</b>
@@ -79,11 +73,11 @@ export default async function SavingsPage() {
         <aside className="flex-[1_1_320px] min-w-0 flex flex-col gap-3.5">
           <section className="card">
             <h2 className="text-[17px] font-semibold mb-1">Відкласти</h2>
-            <p className="text-[13px] text-muted mb-3">Сума у валюті та курс, за яким купували. Гривневий еквівалент зберігається — саме його видно у частці від доходу.</p>
-            <SavingForm lastRate={lastRate} />
+            <p className="text-[13px] text-muted mb-3">Місяць, валюта й сума. Курс кабінет візьме сам — офіційний НБУ за той місяць, щоб порахувати частку від доходу.</p>
+            <SavingForm />
           </section>
           <AssistantInline>Відкладені гроші не зменшують дохід для податків: ЄП і ВЗ рахуються з усіх надходжень. Тут вони лише показують, скільки з доходу ви залишили собі.</AssistantInline>
-          <AssistantInline>Курс беріть той, за яким реально купували валюту — тоді частка від доходу буде чесною. {CUR_SIGN.EUR} і {CUR_SIGN.USD} зберігаються окремо, тож видно, у чому саме ви тримаєте гроші.</AssistantInline>
+          <AssistantInline>Курс береться офіційний НБУ на кінець того місяця, тож частка від доходу рахується сама. {CUR_SIGN.EUR} і {CUR_SIGN.USD} зберігаються окремо — видно, у чому саме лежать гроші.</AssistantInline>
         </aside>
       </div>
     </>
