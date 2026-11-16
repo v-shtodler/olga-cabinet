@@ -1,13 +1,14 @@
 -- The flow is Запит → Підтверджено → Оплачено: the "shot" and "delivered" stages are gone.
 -- Enum values stay in the type (Postgres cannot drop them cheaply); the app never writes them again.
 update shoots set status = 'confirmed' where status in ('shot', 'delivered');
+-- the view reads s.*, so it has to go before the column can be dropped
+drop view if exists v_shoots;
 alter table shoots drop column if exists delivered_on;
 
 -- Відкладені: the rate now comes from the NBU and may be unknown (0) when the bank is unreachable.
 alter table savings drop constraint if exists savings_rate_check;
 alter table savings add constraint savings_rate_check check (rate >= 0);
 
-drop view if exists v_shoots;
 create view v_shoots with (security_invoker = true) as
 select
   s.*,
