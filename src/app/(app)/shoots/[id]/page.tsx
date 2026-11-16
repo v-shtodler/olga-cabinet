@@ -5,7 +5,7 @@ import { STATUSES, STATUS_UA, NEXT_STEP, TYPE_TONE, STATUS_TONE, buildInsights, 
 import { Chip, Avatar, Kpi, Bar } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment } from "@/app/actions";
-import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle, PhotosDelivered } from "./client-bits";
+import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle, PhotosDelivered, DangerButton } from "./client-bits";
 import * as I from "@/components/icons";
 
 export default async function ShootPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,6 +38,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             {s.status !== "cancelled" && <Link href={`/shoots/${s.id}/edit`} className="btn">Редагувати</Link>}
             <Link href={`/shoots/new?dup=${s.id}`} className="btn">Дублювати</Link>
             {s.status !== "paid" && s.status !== "cancelled" && <CancelButton id={s.id} />}
+            {s.status === "cancelled" && <DangerButton label="Видалити назавжди" confirm="Так, видалити" op="deleteShoot" id={s.id} />}
           </div>
         </div>
         {s.status !== "cancelled" && <div className="flex gap-1.5 overflow-x-auto mt-4 pb-0.5">{STATUSES.map((k, i) => <div key={k} className="flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border" style={{ background: i === idx ? "var(--info-bg)" : "var(--glass-2)", borderColor: i === idx ? "var(--accent)" : "var(--line)", color: i < idx ? "var(--good)" : i === idx ? "var(--fg)" : "var(--muted)" }}><span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[11px]" style={{ background: i < idx ? "var(--good-bg)" : i === idx ? "var(--accent)" : "var(--hair)", color: i === idx ? "#fff" : "inherit" }}>{i < idx ? "✓" : i + 1}</span>{STATUS_UA[k]}</div>)}</div>}

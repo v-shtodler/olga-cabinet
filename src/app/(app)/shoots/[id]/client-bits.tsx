@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { addPayment, updateShootField, cancelShoot, toggleChecklist } from "@/app/actions";
+import { addPayment, updateShootField, cancelShoot, toggleChecklist, deleteShoot, deleteClient } from "@/app/actions";
 import { callOrQueue } from "@/lib/outbox";
 import { todayISO } from "@/lib/domain";
 
@@ -31,6 +31,19 @@ export function CancelButton({ id }: { id: string }) {
   return <button type="button" className="btn" style={{ color: "var(--warn)", borderColor: "var(--warn)" }} disabled={pending} onClick={() => start(async () => { const r = await callOrQueue("cancelShoot", [id], undefined, undefined, () => cancelShoot(id)); if (r.queued) setSure(false); })}>{pending ? "…" : "Точно скасувати?"}</button>;
 }
 
+/** Two-step destructive button used for permanent deletes. */
+export function DangerButton({ label, confirm, op, id }: { label: string; confirm: string; op: "deleteShoot" | "deleteClient"; id: string }) {
+  const [sure, setSure] = useState(false); const [pending, start] = useTransition(); const [err, setErr] = useState<string | null>(null);
+  const fn = op === "deleteShoot" ? deleteShoot : deleteClient;
+  if (!sure) return <button type="button" className="btn btn-ghost" style={{ color: "var(--warn)" }} onClick={() => setSure(true)}>{label}</button>;
+  return (
+    <span className="inline-flex items-center gap-2 flex-wrap">
+      <button type="button" className="btn" style={{ color: "#fff", background: "var(--warn)" }} disabled={pending} onClick={() => start(async () => { setErr(null); try { const r = await callOrQueue(op, [id], undefined, undefined, () => fn(id)); if (r.queued) setSure(false); } catch (e) { setErr(e instanceof Error ? e.message : "Не вдалося"); } })}>{pending ? "…" : confirm}</button>
+      <button type="button" className="btn btn-ghost" onClick={() => setSure(false)}>Ні</button>
+      {err && <span className="text-[12px]" style={{ color: "var(--warn)" }}>{err}</span>}
+    </span>
+  );
+}
 export function ChecklistToggle({ id, text, done: initial }: { id: string; text: string; done: boolean }) {
   const [pending, start] = useTransition(); const [done, setDone] = useState(initial);
   return (

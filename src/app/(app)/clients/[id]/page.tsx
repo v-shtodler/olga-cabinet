@@ -7,6 +7,7 @@ import { Assistant } from "@/components/assistant";
 import { addClientPref, deleteClientPref } from "@/app/actions";
 import * as I from "@/components/icons";
 import { ContactCard } from "./edit-client";
+import { DangerButton } from "../../shoots/[id]/client-bits";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,11 +50,12 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
           <section className="card">
             <h2 className="text-lg font-bold mb-3">Що важливо</h2>
-            <div className="flex flex-col gap-1.5">{prefs.map((p) => <div key={p.id} className="kv items-center"><span>{p.text}</span><form action={deleteClientPref.bind(null, p.id)}><button className="text-muted" aria-label="Видалити">×</button></form></div>)}{!prefs.length && <div className="empty">Поки нічого.</div>}</div>
+            <div className="flex flex-col gap-1.5">{prefs.map((p) => <div key={p.id} className="kv items-center"><span>{p.text}</span><form action={deleteClientPref.bind(null, p.id)} data-op="deleteClientPref" data-args={JSON.stringify([p.id])}><button className="text-muted" aria-label="Видалити">×</button></form></div>)}{!prefs.length && <div className="empty">Поки нічого.</div>}</div>
             <form action={addClientPref.bind(null, c.id)} data-op="addClientPref" data-args={JSON.stringify([c.id])} className="flex gap-2 mt-3"><input name="text" placeholder="Напр.: не любить теплий баланс" required maxLength={300} className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-line bg-glass-2" aria-label="Нова вимога" /><button className="btn btn-sm">Додати</button></form>
             <p className="text-xs text-muted mt-2.5">Ці пункти помічник підказує за день до кожної зйомки з цим клієнтом.</p>
           </section>
           <ContactCard c={c} presets={presets} labelOf={Object.fromEntries(presets.map((p) => [p.type, p.label]))} />
+          {shoots.length === 0 && <div className="px-1"><DangerButton label="Видалити замовника" confirm="Так, видалити" op="deleteClient" id={c.id} /></div>}
         </aside>
       </div>
     </>

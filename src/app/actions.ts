@@ -87,6 +87,23 @@ export async function advanceShoot(id: string) {
   await supabase.from("shoots").update(patch).eq("id", id);
   all();
 }
+/** Permanent delete — only for cancelled shoots (payments, notes, checklist go with it by cascade). */
+export async function deleteShoot(id: string) {
+  const { supabase } = await db();
+  const { data: s } = await supabase.from("shoots").select("status").eq("id", id).single();
+  if (!s) return;
+  if (s.status !== "cancelled") throw new Error("Спочатку скасуйте зйомку — видалити можна лише скасовану.");
+  const { error } = await supabase.from("shoots").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  all(); redirect("/shoots");
+}
+/** Delete a client that has no shoots (the database refuses otherwise). */
+export async function deleteClient(id: string) {
+  const { supabase } = await db();
+  const { error } = await supabase.from("clients").delete().eq("id", id);
+  if (error) throw new Error(error.code === "23503" ? "У замовника є зйомки — видалити не можна. Скасуйте й видаліть їх спершу." : error.message);
+  all(); redirect("/clients");
+}
 export async function cancelShoot(id: string) {
   const { supabase } = await db();
   await supabase.from("shoots").update({ status: "cancelled" }).eq("id", id);

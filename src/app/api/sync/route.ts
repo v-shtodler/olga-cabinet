@@ -8,7 +8,7 @@ import * as A from "@/app/actions";
 type Op = (...a: any[]) => Promise<unknown>;
 const OPS: Record<string, Op> = {
   dismissInsight: A.dismissInsight, markTaxPaid: A.markTaxPaid, toggleBlockedDay: A.toggleBlockedDay, createShoot: A.createShoot, updateShoot: A.updateShoot, updateShootField: A.updateShootField,
-  advanceShoot: A.advanceShoot, cancelShoot: A.cancelShoot, markInvoiceSent: A.markInvoiceSent, addPayment: A.addPayment, deletePayment: A.deletePayment,
+  advanceShoot: A.advanceShoot, cancelShoot: A.cancelShoot, deleteShoot: A.deleteShoot, deleteClient: A.deleteClient, markInvoiceSent: A.markInvoiceSent, addPayment: A.addPayment, deletePayment: A.deletePayment,
   addNote: A.addNote, addChecklistItem: A.addChecklistItem, addDefaultChecklist: A.addDefaultChecklist, toggleChecklist: A.toggleChecklist,
   createClient_: A.createClient_, updateClient: A.updateClient, addClientPref: A.addClientPref, deleteClientPref: A.deleteClientPref, saveSettings: A.saveSettings, savePreset: A.savePreset,
 };
