@@ -17,7 +17,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     getShoots({ from: iso(subMonths(now, 13)) }), getSettings(), getTaxQuarters(), getTaxPaid(), getIncomeMonthly(),
   ]);
   const tl = taxTimeline(quarters, taxPaid, settings);
-  const taxNext = tl.find((t) => !t.paid && !t.ongoing) ?? null;
+  // the band talks about THIS quarter, so it carries this quarter's own deadline;
+  // anything unpaid from a quarter that already closed gets its own line below it
+  const overdue = tl.filter((t) => !t.paid && !t.ongoing && t.due < today);
 
   const active = shoots.filter((s) => s.status !== "cancelled");
   const upcoming = active.filter((s) => s.date >= today && s.status !== "cancelled").slice(0, 5);
@@ -42,6 +44,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const qIncome = Number(qRow?.income ?? 0);
   const qTax = Number(qRow?.ep ?? 0) + Number(qRow?.vz ?? 0);
   const esv = Number(settings.esv_monthly) * 3;
+  const qDue = tl.find((t) => t.year === now.getFullYear() && t.quarter === qNo && t.kind === "tax")?.due ?? null;
 
   const m12 = Array.from({ length: 12 }, (_, i) => {
     const d = startOfMonth(subMonths(now, 11 - i)); const k = format(d, "yyyy-MM");
@@ -114,7 +117,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <section className="card mt-3.5 flex flex-wrap gap-5 items-center justify-between" style={{ background: "var(--accent-tint)" }}>
         <div className="flex-1 min-w-[260px]">
           <div className="text-[13px] font-semibold text-muted">ФОП 3 група · {qNo} квартал {now.getFullYear()}</div>
-          <p className="text-[15px] mt-1">Отримано <b className="num">{money(qIncome)}</b> → ЄП {settings.ep_rate}% <b className="num">{money(Number(qRow?.ep ?? 0))}</b> + ВЗ {settings.vz_rate}% <b className="num">{money(Number(qRow?.vz ?? 0))}</b> = <b className="num">{money(qTax)}</b>. ЄСВ за квартал — <b className="num">{money(esv)}</b>{taxNext ? <>, сплата до {fmtDate(taxNext.due)}</> : null}.</p>
+          <p className="text-[15px] mt-1">Отримано <b className="num">{money(qIncome)}</b> → ЄП {settings.ep_rate}% <b className="num">{money(Number(qRow?.ep ?? 0))}</b> + ВЗ {settings.vz_rate}% <b className="num">{money(Number(qRow?.vz ?? 0))}</b> = <b className="num">{money(qTax)}</b>. ЄСВ за квартал — <b className="num">{money(esv)}</b>{qDue ? <>, сплата до {fmtDate(qDue)}</> : null}.</p>
+          {overdue.length > 0 && (
+            <Link href="/taxes" className="text-[13px] font-semibold mt-1.5 inline-block" style={{ color: "var(--danger)" }}>
+              Прострочено: {overdue.map((t) => t.label.replace(/ \d{4}/, "")).join(", ")} — {money(overdue.reduce((a, t) => a + t.amount, 0))} →
+            </Link>
+          )}
         </div>
         <div className="min-w-[180px]">
           <div className="flex justify-between text-[13px] font-semibold mb-1.5"><span className="text-muted">Ліміт року</span><span>{limitPct}%</span></div>
