@@ -13,7 +13,8 @@ export const TYPE_TONE: Record<ShootType, Tone> = { lookbook: "good", product: "
 
 export type Tone = "good" | "warn" | "info" | "purple" | "sun" | "pink" | "neutral" | "dark";
 
-export interface Settings { owner_id: string; display_name: string; ep_rate: number; vz_rate: number; esv_monthly: number; income_limit: number; rates_from: string; remind_days: number; month_capacity: number; }
+export interface Settings { owner_id: string; display_name: string; ep_rate: number; vz_rate: number; esv_monthly: number; income_limit: number; rates_from: string; remind_days: number; month_capacity: number;
+  fop_name?: string | null; ipn?: string | null; iban?: string | null; bank_name?: string | null; legal_address?: string | null; invoice_note?: string | null; }
 export interface Preset { type: ShootType; label: string; price: number; photos: number; extra_photos: number; delivery_days: number; shoot_hours: number; retouch_hours: number; }
 export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; default_types: ShootType[]; avatar_hue: number; archived: boolean; }
 export interface ClientPref { id: string; client_id: string; text: string; sort: number; }

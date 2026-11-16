@@ -154,11 +154,21 @@ export async function addClientPref(clientId: string, formData: FormData) {
 export async function deleteClientPref(id: string) { const { supabase } = await db(); await supabase.from("client_prefs").delete().eq("id", id); all(); }
 
 /* ---------- settings ---------- */
-const SettingsInput = z.object({ display_name: z.string().min(1).max(60), ep_rate: z.coerce.number().min(0).max(30), vz_rate: z.coerce.number().min(0).max(10), esv_monthly: z.coerce.number().min(0), income_limit: z.coerce.number().min(0), rates_from: z.string(), remind_days: z.coerce.number().min(1).max(14), month_capacity: z.coerce.number().min(1).max(60) });
+const SettingsInput = z.object({ display_name: z.string().min(1).max(60), fop_name: z.string().max(160).optional(), ipn: z.string().max(20).optional(), iban: z.string().max(40).optional(), bank_name: z.string().max(120).optional(), legal_address: z.string().max(240).optional(), invoice_note: z.string().max(240).optional(), ep_rate: z.coerce.number().min(0).max(30), vz_rate: z.coerce.number().min(0).max(10), esv_monthly: z.coerce.number().min(0), income_limit: z.coerce.number().min(0), rates_from: z.string(), remind_days: z.coerce.number().min(1).max(14), month_capacity: z.coerce.number().min(1).max(60) });
 export async function saveSettings(formData: FormData) {
   const { supabase, uid } = await db();
   const p = SettingsInput.parse(Object.fromEntries(formData.entries()));
-  await supabase.from("settings").update(p).eq("owner_id", uid); all();
+  const req = { fop_name: p.fop_name, ipn: p.ipn, iban: p.iban?.replace(/\s+/g, "").toUpperCase(), bank_name: p.bank_name, legal_address: p.legal_address, invoice_note: p.invoice_note };
+  const clean = Object.fromEntries(Object.entries(req).filter(([, v]) => v !== undefined).map(([k, v]) => [k, v || null]));
+  const base = { display_name: p.display_name, ep_rate: p.ep_rate, vz_rate: p.vz_rate, esv_monthly: p.esv_monthly, income_limit: p.income_limit, rates_from: p.rates_from, remind_days: p.remind_days, month_capacity: p.month_capacity };
+  const { error } = await supabase.from("settings").update({ ...base, ...clean }).eq("owner_id", uid);
+  if (error?.code === "42703") { // requisite columns not migrated yet (supabase/migrations/0004) — keep the base settings working
+    await supabase.from("settings").update(base).eq("owner_id", uid); all();
+    if (Object.keys(clean).length) throw new Error("Реквізити не збережено: спочатку застосуйте міграцію 0004_invoice_profile.sql у Supabase → SQL Editor.");
+    return;
+  }
+  if (error) throw new Error(error.message);
+  all();
 }
 export async function savePreset(formData: FormData) {
   const { supabase } = await db();

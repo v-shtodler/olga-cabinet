@@ -55,7 +55,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           {insights.length > 0 && <Assistant items={insights} title="Помічник про цю зйомку" />}
 
           <section className="card">
-            <div className="flex justify-between items-baseline mb-3"><h2 className="text-lg font-bold">Фінанси</h2></div>
+            <div className="flex justify-between items-baseline mb-3 gap-2 flex-wrap"><h2 className="text-lg font-bold">Фінанси</h2>{s.status !== "cancelled" && <Link href={`/shoots/${s.id}/invoice`} className="btn btn-sm">Рахунок →</Link>}</div>
             <div className="flex flex-col gap-1.5">
               {payments.map((p) => <div key={p.id} className="kv items-center"><span>{{ deposit: "Передоплата", balance: "Залишок", extra: "Доплата", refund: "Повернення" }[p.kind]} · {{ invoice: "Рахунок ФОП", card: "Картка", cash: "Готівка", other: "Інше" }[p.method]} · {fmtDate(p.paid_on)}</span><span className="flex items-center gap-3"><b className="num" style={{ color: "var(--good)" }}>+ {money(Number(p.amount))}</b><form action={deletePayment.bind(null, p.id)} data-op="deletePayment" data-args={JSON.stringify([p.id])}><button className="text-muted text-xs" aria-label="Видалити платіж" title="Видалити">×</button></form></span></div>)}
               {s.balance > 0 && <div className="kv" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><span>Залишок{s.invoice_sent_on ? ` · рахунок виставлено ${relDays(-(s.invoice_age_days ?? 0))}` : s.status === "request" ? ` · очікую передоплату ${money(Math.round(s.price * s.deposit_pct / 100))}` : " · після віддачі"}</span><b className="num">{money(s.balance)}</b></div>}

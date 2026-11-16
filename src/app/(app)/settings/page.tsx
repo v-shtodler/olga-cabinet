@@ -36,6 +36,21 @@ export default async function SettingsPage() {
             </form>
           </section>
           <section className="card">
+            <div className="flex justify-between items-baseline mb-1 flex-wrap gap-2"><h2 className="text-lg font-bold">Реквізити для рахунків</h2><span className="text-xs text-muted">друкуються на рахунку ФОП</span></div>
+            <p className="text-[13px] text-muted mb-3">Порожні поля на рахунку не показуються. Рахунок відкривається з картки зйомки → «Рахунок».</p>
+            <form action={saveSettings} data-op="saveSettings" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* the same action needs the base fields too — pass them along hidden so one form saves everything */}
+              {(["display_name", "rates_from", "ep_rate", "vz_rate", "esv_monthly", "income_limit", "remind_days", "month_capacity"] as const).map((k) => <input key={k} type="hidden" name={k} value={String(s[k])} />)}
+              <F id="fop_name" label="Назва ФОП (як у реєстрі)" name="fop_name" value={s.fop_name ?? ""} />
+              <F id="ipn" label="РНОКПП (ІПН)" name="ipn" value={s.ipn ?? ""} />
+              <F id="iban" label="IBAN" name="iban" value={s.iban ?? ""} />
+              <F id="bank_name" label="Банк" name="bank_name" value={s.bank_name ?? ""} />
+              <div className="sm:col-span-2"><F id="legal_address" label="Адреса" name="legal_address" value={s.legal_address ?? ""} /></div>
+              <div className="sm:col-span-2"><F id="invoice_note" label="Примітка внизу рахунку" name="invoice_note" value={s.invoice_note ?? "Без ПДВ. Платник єдиного податку 3 групи."} /></div>
+              <div className="sm:col-span-2 flex justify-end"><button className="btn btn-primary">Зберегти реквізити</button></div>
+            </form>
+          </section>
+          <section className="card">
             <div className="flex justify-between items-baseline mb-3 flex-wrap gap-2"><h2 className="text-lg font-bold">Пресети типів зйомок</h2><span className="text-xs text-muted">що підставляється в нову зйомку</span></div>
             <div className="flex flex-col gap-2">
               {presets.map((p) => (
