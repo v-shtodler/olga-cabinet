@@ -1,13 +1,13 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { type Tone, type ShootView, brandColor, STATUS_TONE, STATUS_UA, money, relDays, daysBetween, todayISO, fmtShort } from "@/lib/domain";
+import { type Tone, type ShootView, BRAND, brandColor, brandText, brandInk, STATUS_TONE, STATUS_UA, money, relDays, daysBetween, todayISO, fmtShort } from "@/lib/domain";
 import { parseISO, format } from "date-fns";
 import * as I from "./icons";
 import { uk } from "date-fns/locale";
 
 export const TONE_BG: Record<Tone, string> = { good: "var(--good-bg)", warn: "var(--warn-bg)", info: "var(--info-bg)", purple: "var(--purple-bg)", sun: "var(--sun-bg)", pink: "var(--pink-bg)", neutral: "var(--glass-2)", dark: "var(--fg)" };
 export const TONE_FG: Record<Tone, string> = { good: "var(--good)", warn: "var(--warn)", info: "var(--info)", purple: "var(--purple)", sun: "var(--sun)", pink: "var(--pink)", neutral: "var(--muted)", dark: "var(--bg)" };
-export const GRADS = ["#ff9500", "#af52de", "#007aff", "#34c759", "#ff2d55", "#ffcc00", "#5ac8fa", "#5856d6"];
+export const GRADS = BRAND; // one palette for avatars, calendar chips and charts
 
 export function Chip({ tone, children, className }: { tone: Tone; children: React.ReactNode; className?: string }) {
   return <span className={clsx("chip", className)} style={{ background: TONE_BG[tone], color: TONE_FG[tone] }}>{children}</span>;
@@ -18,12 +18,13 @@ export function Avatar({ name, hue, src, size = 38 }: { name: string; hue: numbe
   // a data: URL straight from the row — next/image would only wrap a loader around it
   // eslint-disable-next-line @next/next/no-img-element
   if (src) return <img src={src} alt="" width={size} height={size} aria-hidden="true" className="object-cover shrink-0" style={box} />;
-  return <span aria-hidden="true" className="inline-flex items-center justify-center text-white font-bold shrink-0" style={{ ...box, background: GRADS[hue % GRADS.length], fontSize: Math.round(size * 0.3) }}>{ini}</span>;
+  const col = brandColor(hue);
+  return <span aria-hidden="true" className="inline-flex items-center justify-center font-bold shrink-0" style={{ ...box, background: col, color: brandText(col), fontSize: Math.round(size * 0.3) }}>{ini}</span>;
 }
 export function DateBox({ date, tone, accent }: { date: string; tone: Tone; accent?: string }) {
   const d = parseISO(date);
   return (
-    <div className="w-12 h-12 shrink-0 rounded-[12px] flex flex-col items-center justify-center leading-none" style={accent ? { background: `color-mix(in srgb, ${accent} 16%, transparent)`, color: accent } : { background: TONE_BG[tone], color: TONE_FG[tone] }}>
+    <div className="w-12 h-12 shrink-0 rounded-[12px] flex flex-col items-center justify-center leading-none" style={accent ? { background: `color-mix(in srgb, ${accent} 30%, transparent)`, color: brandInk(accent) } : { background: TONE_BG[tone], color: TONE_FG[tone] }}>
       <div className="text-[17px] font-semibold tracking-[-0.01em]">{d.getDate()}</div>
       {/* three letters always fit the 48pt box: "лист." / "листоп" overflowed */}
       <div className="text-[10px] font-semibold uppercase mt-1 tracking-[0.02em]">{format(d, "LLL", { locale: uk }).replace(".", "").slice(0, 3)}</div>

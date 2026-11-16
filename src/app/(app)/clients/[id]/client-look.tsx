@@ -47,7 +47,7 @@ export function ClientLook({ id, name, hue, src }: { id: string; name: string; h
           {photo && <button type="button" className="btn btn-sm btn-ghost" disabled={pending} style={{ color: "var(--danger)" }} onClick={removePhoto}>Прибрати</button>}
         </div>
       </div>
-      <div className="flex gap-2 flex-wrap" role="radiogroup" aria-label="Колір бренду">
+      <div className="flex gap-1.5 flex-wrap" role="radiogroup" aria-label="Колір бренду">
         {BRAND.map((c, i) => (
           <button
             key={c}
@@ -56,7 +56,7 @@ export function ClientLook({ id, name, hue, src }: { id: string; name: string; h
             aria-checked={h === i}
             aria-label={`Колір ${i + 1}`}
             onClick={() => pickColor(i)}
-            className="w-8 h-8 rounded-full cursor-pointer border-0 transition-transform active:scale-95"
+            className="w-7 h-7 rounded-full cursor-pointer border-0 transition-transform active:scale-95"
             style={{ background: c, boxShadow: h === i ? "0 0 0 2px var(--glass), 0 0 0 4px var(--fg)" : undefined }}
           />
         ))}

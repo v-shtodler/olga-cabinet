@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { nowKyiv, STATUSES, type ShootStatus, todayISO } from "@/lib/domain";
+import { nowKyiv, STATUSES, BRAND, type ShootStatus, todayISO } from "@/lib/domain";
 import { addDays, format } from "date-fns";
 
 async function db() { const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser(); if (!user) redirect("/login"); return { supabase, uid: user.id }; }
@@ -167,7 +167,7 @@ export async function createClient_(formData: FormData) {
   const { supabase } = await db();
   const p = ClientInput.parse(Object.fromEntries(formData.entries()));
   const { count } = await supabase.from("clients").select("*", { count: "exact", head: true });
-  const { data: c, error } = await supabase.from("clients").insert({ name: p.name, kind: p.kind || null, contact_name: p.contact_name || null, contact_email: p.contact_email || null, contact_phone: p.contact_phone || null, default_deposit_pct: p.default_deposit_pct, avatar_hue: (count ?? 0) % 8 }).select("id").single();
+  const { data: c, error } = await supabase.from("clients").insert({ name: p.name, kind: p.kind || null, contact_name: p.contact_name || null, contact_email: p.contact_email || null, contact_phone: p.contact_phone || null, default_deposit_pct: p.default_deposit_pct, avatar_hue: (count ?? 0) % BRAND.length }).select("id").single();
   if (error || !c) throw new Error(error?.message ?? "insert failed");
   if (p.pref) await supabase.from("client_prefs").insert({ client_id: c.id, text: p.pref });
   all(); redirect(`/clients/${c.id}`);

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { uk } from "date-fns/locale";
-import { getShoots, getIncomeMonthly } from "@/lib/data";
-import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor } from "@/lib/domain";
+import { getShoots, getIncomeMonthly, getSettings, getTaxQuarters, getTaxPaid } from "@/lib/data";
+import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor, taxTimeline, fmtDate } from "@/lib/domain";
 import { Kpi } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { CsvButton } from "./csv-button";
@@ -12,7 +12,17 @@ export const metadata = { title: "Аналітика" };
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   const { p = "year" } = await searchParams; const period = ["quarter", "year", "all"].includes(p) ? p : "year";
   const now = nowKyiv(); const today = todayISO(); const y = now.getFullYear();
-  const [shoots, monthly] = await Promise.all([getShoots(), getIncomeMonthly()]);
+  const [shoots, monthly, settings, quarters, taxPaid] = await Promise.all([getShoots(), getIncomeMonthly(), getSettings(), getTaxQuarters(), getTaxPaid()]);
+  // the ФОП band: this quarter's own numbers, plus anything unpaid from a closed quarter
+  const tl = taxTimeline(quarters, taxPaid, settings);
+  const qNo = Math.floor(now.getMonth() / 3) + 1;
+  const qRow = quarters.find((x) => x.year === now.getFullYear() && x.quarter === qNo);
+  const qIncome = Number(qRow?.income ?? 0); const qTax = Number(qRow?.ep ?? 0) + Number(qRow?.vz ?? 0);
+  const esv = Number(settings.esv_monthly) * 3;
+  const qDue = tl.find((t) => t.year === now.getFullYear() && t.quarter === qNo && t.kind === "tax")?.due ?? null;
+  const overdue = tl.filter((t) => !t.paid && !t.ongoing && t.due < today);
+  const yearIncome = monthly.filter((m) => m.month.startsWith(String(y))).reduce((acc, m) => acc + m.income, 0);
+  const limitPct = Math.min(100, Math.round(yearIncome / Number(settings.income_limit) * 100));
   let from: string, to: string, prevFrom: string | null = null, prevTo = "", label: string;
   if (period === "quarter") { from = iso(startOfQuarter(now)); to = iso(endOfQuarter(now)); const pq = subQuarters(now, 1); prevFrom = iso(startOfQuarter(pq)); prevTo = iso(endOfQuarter(pq)); label = `${Math.floor(now.getMonth() / 3) + 1} квартал ${y}`; }
   else if (period === "year") { from = `${y}-01-01`; to = `${y}-12-31`; prevFrom = `${y - 1}-01-01`; prevTo = `${y - 1}-${today.slice(5)}`; label = `Рік ${y} (до сьогодні)`; }
@@ -126,6 +136,23 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           ) : <div className="empty">Попереду поки нічого не заплановано.</div>}
         </section>
       </div>
+      <section className="card mt-3.5 flex flex-wrap gap-5 items-center justify-between" style={{ background: "var(--accent-tint)" }}>
+        <div className="flex-1 min-w-[260px]">
+          <div className="text-[13px] font-semibold text-muted">ФОП 3 група · {qNo} квартал {now.getFullYear()}</div>
+          <p className="text-[15px] mt-1">Отримано <b className="num">{money(qIncome)}</b> → ЄП {settings.ep_rate}% <b className="num">{money(Number(qRow?.ep ?? 0))}</b> + ВЗ {settings.vz_rate}% <b className="num">{money(Number(qRow?.vz ?? 0))}</b> = <b className="num">{money(qTax)}</b>. ЄСВ за квартал — <b className="num">{money(esv)}</b>{qDue ? <>, сплата до {fmtDate(qDue)}</> : null}.</p>
+          {overdue.length > 0 && (
+            <Link href="/taxes" className="text-[13px] font-semibold mt-1.5 inline-block" style={{ color: "var(--danger)" }}>
+              Прострочено: {overdue.map((t) => t.label.replace(/ \d{4}/, "")).join(", ")} — {money(overdue.reduce((a, t) => a + t.amount, 0))} →
+            </Link>
+          )}
+        </div>
+        <div className="min-w-[180px]">
+          <div className="flex justify-between text-[13px] font-semibold mb-1.5"><span className="text-muted">Ліміт року</span><span>{limitPct}%</span></div>
+          <div className="bar" style={{ background: "var(--glass)" }}><i style={{ width: `${Math.max(1, limitPct)}%`, background: limitPct > 80 ? "var(--warn)" : "var(--accent)" }} /></div>
+          <div className="text-[12px] text-muted mt-1.5 num">{money(yearIncome)} / {money(settings.income_limit)}</div>
+        </div>
+        <Link href="/taxes" className="btn btn-primary">Податковий модуль</Link>
+      </section>
     </>
   );
 }

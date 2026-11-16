@@ -10,7 +10,12 @@ export const STATUS_TONE: Record<ShootStatus, Tone> = { request: "neutral", conf
 export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Підтвердити (передоплата отримана)", confirmed: "Позначити «відзнято»", shot: "Позначити «віддано»", delivered: "Позначити «оплачено»" };
 
 /** Eight system colours, one per brand (clients.avatar_hue). iOS Calendar reads this way: colour = whose event. */
-export const BRAND = ["#ff9500", "#af52de", "#007aff", "#34c759", "#ff2d55", "#ffcc00", "#5ac8fa", "#5856d6"] as const;
+export const BRAND = [
+  "#f7a76c", "#c6a8ec", "#8ab6f0", "#87d1a4", "#f79bb0", "#f6d47a", "#8ed6e4", "#a5a5e8",
+  "#f0a79e", "#b9d18c", "#e5a9da", "#93cfc0", "#d9b68f", "#aab4d2", "#d3cf8a", "#efb9a0",
+] as const;
+/** A brand colour darkened (light theme) or lightened (dark theme) enough to read as text. */
+export const brandInk = (hex: string) => `color-mix(in srgb, ${hex} 70%, var(--fg))`;
 /** Text colour that stays readable on a chip filled with a brand colour. */
 export function brandText(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
