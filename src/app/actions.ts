@@ -92,10 +92,18 @@ export async function deleteShoot(id: string) {
   all(); redirect("/shoots");
 }
 /** Delete a client that has no shoots (the database refuses otherwise). */
-export async function deleteClient(id: string) {
+/** Delete a client. With shoots, the caller must pass withShoots — the shoots (and their payments,
+    notes and checklists, by cascade) go too, which also changes the income and tax figures. */
+export async function deleteClient(id: string, withShoots = false) {
   const { supabase } = await db();
+  const { count } = await supabase.from("shoots").select("*", { count: "exact", head: true }).eq("client_id", id);
+  if ((count ?? 0) > 0) {
+    if (!withShoots) throw new Error(`У замовника ${count} ${count === 1 ? "зйомка" : "зйомок"} — підтвердьте видалення разом із ними.`);
+    const { error: se } = await supabase.from("shoots").delete().eq("client_id", id);
+    if (se) throw new Error(se.message);
+  }
   const { error } = await supabase.from("clients").delete().eq("id", id);
-  if (error) throw new Error(error.code === "23503" ? "У замовника є зйомки — видалити не можна. Скасуйте й видаліть їх спершу." : error.message);
+  if (error) throw new Error(error.message);
   all(); redirect("/clients");
 }
 export async function cancelShoot(id: string) {

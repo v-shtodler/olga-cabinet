@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { addPayment, cancelShoot, toggleChecklist, deleteShoot, deleteClient, deleteChecklistItem } from "@/app/actions";
+import { addPayment, cancelShoot, toggleChecklist, deleteShoot, deleteChecklistItem } from "@/app/actions";
 import { callOrQueue } from "@/lib/outbox";
 import { todayISO } from "@/lib/domain";
 
@@ -11,9 +11,9 @@ export function CancelButton({ id }: { id: string }) {
 }
 
 /** Two-step destructive button used for permanent deletes. */
-export function DangerButton({ label, confirm, op, id }: { label: string; confirm: string; op: "deleteShoot" | "deleteClient"; id: string }) {
+export function DangerButton({ label, confirm, op, id }: { label: string; confirm: string; op: "deleteShoot"; id: string }) {
   const [sure, setSure] = useState(false); const [pending, start] = useTransition(); const [err, setErr] = useState<string | null>(null);
-  const fn = op === "deleteShoot" ? deleteShoot : deleteClient;
+  const fn = deleteShoot;
   if (!sure) return <button type="button" className="btn btn-ghost" style={{ color: "var(--warn)" }} onClick={() => setSure(true)}>{label}</button>;
   return (
     <span className="inline-flex items-center gap-2 flex-wrap">

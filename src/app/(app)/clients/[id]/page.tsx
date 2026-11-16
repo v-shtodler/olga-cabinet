@@ -7,7 +7,7 @@ import { Assistant } from "@/components/assistant";
 import { addClientPref, deleteClientPref } from "@/app/actions";
 import * as I from "@/components/icons";
 import { ContactCard } from "./edit-client";
-import { DangerButton } from "../../shoots/[id]/client-bits";
+import { DeleteClient } from "./delete-client";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,6 +15,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
   const c = clients.find((x) => x.id === id); if (!c) notFound();
   const st = stats.find((x) => x.client_id === id);
   const list = shoots.filter((s) => s.status !== "cancelled").slice().reverse();
+  const payCount = shoots.filter((s) => s.paid > 0).length; const paidSum = shoots.reduce((a, s) => a + s.paid, 0);
   const paidList = shoots.filter((s) => s.status === "paid").slice(-8);
   const maxP = Math.max(...paidList.map((s) => s.price), 1);
   const trend = paidList.length >= 2 ? paidList[paidList.length - 1].price / paidList[0].price - 1 : 0;
@@ -55,7 +56,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
             <p className="text-[13px] text-muted mt-2.5">Ці пункти помічник підказує за день до кожної зйомки з цим клієнтом.</p>
           </section>
           <ContactCard c={c} />
-          {shoots.length === 0 && <div className="px-1"><DangerButton label="Видалити замовника" confirm="Так, видалити" op="deleteClient" id={c.id} /></div>}
+          <DeleteClient id={c.id} name={c.name} shoots={shoots.length} payments={payCount} paid={money(paidSum)} />
         </aside>
       </div>
     </>
