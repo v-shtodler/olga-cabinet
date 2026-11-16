@@ -84,6 +84,6 @@ export async function getClientStats() {
 /* numeric columns come back as strings from PostgREST for numeric(…) */
 function num<T extends Record<string, unknown>>(row: T): T {
   const out: Record<string, unknown> = { ...row };
-  for (const k of ["price", "paid", "balance", "total_hours", "hourly_rate", "shoot_hours", "retouch_hours", "prep_hours"]) if (out[k] != null) out[k] = Number(out[k]);
+  for (const k of ["price", "paid", "balance"]) if (out[k] != null) out[k] = Number(out[k]);
   return out as T;
 }

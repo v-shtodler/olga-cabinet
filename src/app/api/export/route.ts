@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
-const TABLES = ["settings", "shoot_type_presets", "clients", "client_prefs", "shoots", "payments", "expenses", "shoot_notes", "checklist_items", "shoot_tags", "blocked_days", "tax_payments"] as const;
+const TABLES = ["settings", "clients", "client_prefs", "shoots", "payments", "expenses", "shoot_notes", "checklist_items", "shoot_tags", "blocked_days", "tax_payments"] as const;
 
 export async function GET() {
   const supabase = await createClient();

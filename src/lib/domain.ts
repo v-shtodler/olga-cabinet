@@ -2,7 +2,6 @@
 import { addDays, differenceInCalendarDays, format, parseISO, startOfQuarter, endOfQuarter, isWeekend } from "date-fns";
 import { uk } from "date-fns/locale";
 
-export type ShootType = "lookbook" | "product" | "campaign" | "portrait" | "other";
 export type ShootStatus = "request" | "confirmed" | "shot" | "delivered" | "paid" | "cancelled";
 
 export const STATUSES: ShootStatus[] = ["request", "confirmed", "shot", "delivered", "paid"];
@@ -14,14 +13,13 @@ export type Tone = "good" | "warn" | "info" | "purple" | "sun" | "pink" | "neutr
 
 export interface Settings { owner_id: string; display_name: string; ep_rate: number; vz_rate: number; esv_monthly: number; income_limit: number; rates_from: string; remind_days: number; month_capacity: number;
   fop_name?: string | null; ipn?: string | null; iban?: string | null; bank_name?: string | null; legal_address?: string | null; invoice_note?: string | null; ical_token?: string | null; avatar_url?: string | null; }
-export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; default_types: ShootType[]; avatar_hue: number; archived: boolean; }
+export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; avatar_hue: number; archived: boolean; }
 export interface ClientPref { id: string; client_id: string; text: string; sort: number; }
 export interface Shoot {
-  id: string; client_id: string; no: string | null; title: string; type: ShootType; status: ShootStatus; date: string; start_time: string | null; end_time: string | null; location: string | null;
-  price: number; deposit_pct: number; photos: number; extra_photos: number; photos_delivered: number | null; delivery_days: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null;
-  shoot_hours: number; retouch_hours: number; prep_hours: number; rights: string | null; created_at: string;
+  id: string; client_id: string; no: string | null; title: string; status: ShootStatus; date: string; start_time: string | null; location: string | null;
+  price: number; deposit_pct: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null; created_at: string;
 }
-export interface ShootView extends Shoot { client_name: string; paid: number; balance: number; deadline: string | null; total_hours: number; hourly_rate: number | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
+export interface ShootView extends Shoot { client_name: string; paid: number; balance: number; deadline: string | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
 export interface Payment { id: string; shoot_id: string; amount: number; paid_on: string; kind: "deposit" | "balance" | "extra" | "refund"; method: "invoice" | "card" | "cash" | "other"; note: string | null; }
 export interface Note { id: string; shoot_id: string; text: string; created_at: string; }
 export interface ChecklistItem { id: string; shoot_id: string; text: string; done: boolean; sort: number; }

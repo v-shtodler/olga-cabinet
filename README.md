@@ -67,3 +67,10 @@ scripts/seed.ts        демо-дані
 - Міграція `supabase/migrations/0005_ical.sql` (колонка `settings.ical_token` + функція `ical_feed(token)` із `security definer`) — застосовується вручну в SQL Editor.
 - Налаштування → «Календар на телефоні» → «Створити посилання» → `webcal://app.olgavoychik.space/api/ical/<token>`.
 - Фід: кожна зйомка (з часом або на весь день) + подія «⏱ Віддати» на дедлайн для підтверджених/відзнятих; нагадування за день. Скасовані не виводяться. «Нове посилання» робить старе недійсним.
+
+## Структура зйомки (після 0007–0008)
+
+Зйомка = замовник, назва, дата, час початку, локація, ціна, передоплата (%), необовʼязкова дата «Віддати до» (`deadline_on`), статус.
+Міграція `0008_drop_unused.sql` назавжди видалила `type`, `end_time`, `photos`, `extra_photos`, `photos_delivered`,
+`delivery_days`, `rights`, `shoot_hours`, `retouch_hours`, `prep_hours`, таблицю `shoot_type_presets`, тип `shoot_type`
+і `clients.default_types`. Разом із ними зникли пресети, кольори типів і аналітика за типами.
