@@ -2,7 +2,7 @@ import Link from "next/link";
 import { format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getIncomeMonthly } from "@/lib/data";
-import { nowKyiv, iso, todayISO, money, moneyK, plural, fmtShort, brandColor } from "@/lib/domain";
+import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor } from "@/lib/domain";
 import { Kpi } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { CsvButton } from "./csv-button";
@@ -28,20 +28,15 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const best12 = m12.reduce((a, m) => (m.income > a.income ? m : a), m12[0]);
   // Who the money comes from, in the chosen period (by money actually received)
   const inPeriod = shoots.filter((s) => s.status !== "cancelled" && s.date >= from && s.date <= to);
-  const perClient = new Map<string, { name: string; hue: number; paid: number; shoots: number }>();
+  const perClient = new Map<string, { id: string; name: string; hue: number; paid: number; shoots: number }>();
   for (const sh of inPeriod) {
-    const e = perClient.get(sh.client_id) ?? { name: sh.client_name, hue: sh.client_hue, paid: 0, shoots: 0 };
+    const e = perClient.get(sh.client_id) ?? { id: sh.client_id, name: sh.client_name, hue: sh.client_hue, paid: 0, shoots: 0 };
     e.paid += Number(sh.paid); e.shoots += 1; perClient.set(sh.client_id, e);
   }
   const byMoney = [...perClient.values()].filter((c) => c.paid > 0).sort((a, b) => b.paid - a.paid);
   const topList = byMoney.slice(0, 6); const topMax = Math.max(...byMoney.map((c) => c.paid), 1);
   const paidAll = byMoney.reduce((a, c) => a + c.paid, 0);
   const top3Share = paidAll ? Math.round(byMoney.slice(0, 3).reduce((a, c) => a + c.paid, 0) / paidAll * 100) : 0;
-
-  // Money earned but not received yet, oldest invoice first
-  const owing = shoots.filter((sh) => sh.status !== "cancelled" && Number(sh.balance) > 0 && sh.date <= today)
-    .sort((a, b) => (b.invoice_age_days ?? -1) - (a.invoice_age_days ?? -1));
-  const owingTotal = owing.reduce((a, sh) => a + Number(sh.balance), 0);
 
   // What is already booked ahead, by month
   const ahead = new Map<string, { count: number; price: number; left: number }>();
@@ -76,7 +71,12 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           <div className="flex items-end gap-1.5 sm:gap-2 h-[190px]">
             {m12.map((m, i) => (
               <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5">
-                {m.income > 0 && <span className="text-[10px] sm:text-[11px] font-semibold num" style={{ color: i === 11 ? "var(--accent)" : "var(--muted)" }}>{moneyK(m.income)}</span>}
+                {m.income > 0 && (
+                  <span className="font-semibold num whitespace-nowrap" style={{ color: i === 11 ? "var(--accent)" : "var(--muted)" }}>
+                    <span className="sm:hidden text-[10px]">{moneyK(m.income)}</span>
+                    <span className="hidden sm:inline text-[10px] lg:text-[11px]">{money(m.income)}</span>
+                  </span>
+                )}
                 <i className="block w-full rounded-t-[6px] rounded-b-[2px]" style={{ height: Math.max(4, Math.round(m.income / max12 * 150)), background: i === 11 ? "linear-gradient(180deg, var(--accent-2), var(--accent))" : "linear-gradient(180deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent))" }} />
               </div>
             ))}
@@ -94,43 +94,18 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
             <>
               <div className="flex flex-col gap-2.5">
                 {topList.map((c) => (
-                  <div key={c.name} className="min-w-0">
+                  <Link key={c.id} href={`/clients/${c.id}`} className="min-w-0 group">
                     <div className="flex justify-between items-baseline gap-2 text-[13px] mb-1">
-                      <span className="font-semibold truncate">{c.name}</span>
+                      <span className="font-semibold truncate group-hover:text-accent">{c.name}<span className="text-muted font-medium"> · {c.shoots} {plural(c.shoots, "зйомка", "зйомки", "зйомок")}</span></span>
                       <span className="num shrink-0 text-muted">{money(c.paid)} · {Math.round(c.paid / paidAll * 100)}%</span>
                     </div>
                     <i className="block h-[8px] rounded-full" style={{ width: `${Math.max(3, Math.round(c.paid / topMax * 100))}%`, background: brandColor(c.hue) }} />
-                  </div>
+                  </Link>
                 ))}
               </div>
               <p className="text-[13px] text-muted mt-3">Топ-3 дають <b className="text-fg">{top3Share}%</b> доходу за період{byMoney.length > 6 ? ` · усього замовників: ${byMoney.length}` : ""}.{top3Share >= 70 ? " Варто розширювати базу — залежність висока." : ""}</p>
             </>
           ) : <div className="empty">За цей період оплат ще не було.</div>}
-        </section>
-
-        {/* Гроші в дорозі */}
-        <section className="card min-w-0">
-          <div className="flex justify-between items-baseline gap-2 mb-3"><h2 className="text-[17px] font-semibold">Гроші в дорозі</h2><span className="num font-bold text-[17px]" style={{ color: owingTotal ? "var(--warn)" : "var(--good)" }}>{money(owingTotal)}</span></div>
-          {owing.length ? (
-            <>
-              <div className="flex flex-col gap-1.5">
-                {owing.slice(0, 5).map((sh) => (
-                  <Link key={sh.id} href={`/shoots/${sh.id}`} className="kv items-center gap-2">
-                    <span className="min-w-0 flex items-center gap-2">
-                      <i className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: brandColor(sh.client_hue) }} />
-                      <span className="truncate">{sh.client_name}<span className="text-muted"> · {fmtShort(sh.date)}</span></span>
-                    </span>
-                    <span className="shrink-0 text-right">
-                      <b className="num block">{money(Number(sh.balance))}</b>
-                      <span className="text-[12px]" style={{ color: (sh.invoice_age_days ?? 0) > 14 ? "var(--warn)" : "var(--muted)" }}>{sh.invoice_age_days == null ? "рахунок не виставлено" : `рахунок ${sh.invoice_age_days} дн. тому`}</span>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-              {owing.length > 5 && <p className="text-[13px] text-muted mt-2">і ще {owing.length - 5} {plural(owing.length - 5, "зйомка", "зйомки", "зйомок")}.</p>}
-              <p className="text-[13px] text-muted mt-3">Це вже відпрацьовані гроші. Вони впадуть у податки того кварталу, коли прийдуть.</p>
-            </>
-          ) : <div className="empty">Усе оплачено ✓</div>}
         </section>
 
         {/* Законтрактовано наперед */}
