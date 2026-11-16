@@ -14,17 +14,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <main className="min-h-dvh flex items-center justify-center px-4 py-10">
       <LoginCleanup />
-      <div className="card w-full max-w-sm p-7">
-        <div className="flex items-center gap-3 mb-6">
-          <span aria-hidden="true" className="w-8 h-8 rounded-[10px]" style={{ background: "linear-gradient(135deg,#0a84ff,#5e5ce6)" }} />
-          <div>
-            <div className="font-bold tracking-tight">Olga Voychik</div>
-            <div className="text-[13px] text-muted">Приватний кабінет</div>
-          </div>
-        </div>
-        <h1 className="text-2xl font-bold tracking-[-0.01em] mb-1">Вхід</h1>
-        <p className="text-muted text-[13px] mb-5">Тільки для власниці кабінету. Сторонніх акаунтів тут немає.</p>
-        {error === "link" && <p className="text-warn text-[13px] mb-3">Посилання застаріло або вже використане. Запитайте нове.</p>}
+      {/* Apple sign-in sheet: big app mark, title, short caption, then the fields */}
+      <div className="card w-full max-w-[360px] p-7 text-center">
+        <span aria-hidden="true" className="w-16 h-16 rounded-[14px] mx-auto mb-4 flex items-center justify-center text-[20px] font-bold text-white" style={{ background: "linear-gradient(135deg,#0a84ff,#5e5ce6)" }}>OV</span>
+        <h1 className="text-[22px] font-bold tracking-[-0.01em] mb-1">Кабінет Olga Voychik</h1>
+        <p className="text-muted text-[14px] mb-6">Приватний простір для зйомок, оплат і податків.</p>
+        {error === "link" && <p className="text-[13px] mb-3" style={{ color: "var(--warn)" }}>Посилання застаріло або вже використане. Запитайте нове.</p>}
         <LoginForm next={next ?? "/"} />
       </div>
     </main>

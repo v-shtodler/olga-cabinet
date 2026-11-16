@@ -55,7 +55,7 @@ export default async function SettingsPage() {
             <div className="flex justify-between items-baseline mb-3 flex-wrap gap-2"><h2 className="text-[17px] font-semibold">Пресети типів зйомок</h2><span className="text-[13px] text-muted">що підставляється в нову зйомку</span></div>
             <div className="flex flex-col gap-2">
               {presets.map((p) => (
-                <form key={p.type} action={savePreset} data-op="savePreset" data-label={p.label} className="grid grid-cols-3 sm:grid-cols-7 gap-2 items-end p-3 rounded-2xl bg-glass-2 border border-line">
+                <form key={p.type} action={savePreset} data-op="savePreset" data-label={p.label} className="grid grid-cols-3 sm:grid-cols-7 gap-2 items-end p-3 rounded-2xl bg-glass-2">
                   <input type="hidden" name="type" value={p.type} />
                   <div className="col-span-3 sm:col-span-1 flex items-center"><Chip tone={TYPE_TONE[p.type]}>{p.label}</Chip></div>
                   <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-price`} className="text-[11px]">Ціна</label><input id={`${p.type}-price`} name="price" type="number" step="500" defaultValue={p.price} className="!min-h-9 !py-1.5" /></div>

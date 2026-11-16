@@ -81,7 +81,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
 
           <section className="card">
             <h2 className="text-[17px] font-semibold mb-3">Замітки</h2>
-            <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 border border-line text-[13px] leading-relaxed"><div className="flex justify-between items-center mb-1"><span className="text-[11px] text-muted font-semibold">{fmtDate(n.created_at.slice(0, 10))}</span><form action={deleteNote.bind(null, n.id)} data-op="deleteNote" data-args={JSON.stringify([n.id])}><button className="text-muted text-xs" aria-label="Видалити замітку" title="Видалити">×</button></form></div><div className="whitespace-pre-wrap">{n.text}</div></div>) : <div className="empty">Поки без заміток.</div>}</div>
+            <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 text-[13px] leading-relaxed"><div className="flex justify-between items-center mb-1"><span className="text-[11px] text-muted font-semibold">{fmtDate(n.created_at.slice(0, 10))}</span><form action={deleteNote.bind(null, n.id)} data-op="deleteNote" data-args={JSON.stringify([n.id])}><button className="text-muted text-xs" aria-label="Видалити замітку" title="Видалити">×</button></form></div><div className="whitespace-pre-wrap">{n.text}</div></div>) : <div className="empty">Поки без заміток.</div>}</div>
             <form action={addNote.bind(null, s.id)} data-op="addNote" data-args={JSON.stringify([s.id])} className="field flex flex-col gap-1.5 mt-3"><label htmlFor="note">Додати замітку</label><textarea id="note" name="text" placeholder="Що важливо не забути…" maxLength={2000} required /><div><button className="btn btn-sm btn-primary mt-2">Зберегти</button></div></form>
           </section>
 
@@ -90,7 +90,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             {checklist.length > 0 && <div className="mb-3"><Bar pct={done / checklist.length * 100} color="var(--good)" /></div>}
             <div className="flex flex-col gap-1.5">{checklist.map((ci) => <ChecklistToggle key={ci.id} id={ci.id} text={ci.text} done={ci.done} />)}</div>
             <div className="flex gap-2 flex-wrap mt-3">
-              <form action={addChecklistItem.bind(null, s.id)} data-op="addChecklistItem" data-args={JSON.stringify([s.id])} className="flex gap-2 flex-1 min-w-[220px]"><input name="text" placeholder="Новий пункт" required maxLength={200} className="flex-1 px-3 py-2 rounded-xl border border-line bg-glass-2" aria-label="Новий пункт" /><button className="btn btn-sm">Додати</button></form>
+              <form action={addChecklistItem.bind(null, s.id)} data-op="addChecklistItem" data-args={JSON.stringify([s.id])} className="flex gap-2 flex-1 min-w-[220px]"><input name="text" placeholder="Новий пункт" required maxLength={200} className="flex-1 px-3 py-2 rounded-xl bg-glass-2" aria-label="Новий пункт" /><button className="btn btn-sm">Додати</button></form>
               {checklist.length === 0 && <form action={addDefaultChecklist.bind(null, s.id)} data-op="addDefaultChecklist" data-args={JSON.stringify([s.id])}><button className="btn btn-sm btn-ghost">Стандартний чек-лист</button></form>}
             </div>
           </section>

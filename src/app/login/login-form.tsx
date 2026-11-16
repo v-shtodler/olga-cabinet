@@ -27,7 +27,7 @@ export function LoginForm({ next }: { next: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3">
+    <form onSubmit={submit} className="flex flex-col gap-3 text-left">
       <div className="field flex flex-col gap-1.5">
         <label htmlFor="email">Пошта</label>
         <input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -39,7 +39,7 @@ export function LoginForm({ next }: { next: string }) {
         </div>
       )}
       {msg && <p className="text-[13px] text-muted">{msg}</p>}
-      <button className="btn btn-primary mt-1" type="submit" disabled={busy}>
+      <button className="btn btn-primary mt-1 min-h-[48px]" type="submit" disabled={busy}>
         {busy ? "Хвилинку…" : mode === "password" ? "Увійти" : "Надіслати посилання"}
       </button>
       <button type="button" className="btn btn-ghost btn-sm self-center" onClick={() => { setMode(mode === "password" ? "magic" : "password"); setMsg(null); }}>

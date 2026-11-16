@@ -1,4 +1,5 @@
 import Link from "next/link";
+import * as I from "@/components/icons";
 import { getShoots } from "@/lib/data";
 import { money, plural, todayISO } from "@/lib/domain";
 import { PageHead, ShootRow } from "@/components/ui";
@@ -28,10 +29,12 @@ export default async function ShootsPage({ searchParams }: { searchParams: Promi
       <PageHead eyebrow={`${list.length} ${plural(list.length, "зйомка", "зйомки", "зйомок")} · ${money(sum)}`} title="Зйомки" />
       <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
         <div className="seg shrink-0">{FILTERS.map(([k, label]) => <Link key={k} href={`/shoots?f=${k}${q ? `&q=${encodeURIComponent(q)}` : ""}`} className={k === filter ? "on" : ""}>{label}</Link>)}</div>
-        <form className="field flex-1 min-w-[200px]" action="/shoots" method="get">
+        {/* iOS search field: magnifier inside a rounded fill */}
+        <form className="field flex-1 min-w-[200px] relative" action="/shoots" method="get">
           <input type="hidden" name="f" value={filter} />
           <label htmlFor="q" className="sr-only">Пошук</label>
-          <input id="q" name="q" type="search" placeholder="Пошук: клієнт, назва, локація, №" defaultValue={q} />
+          <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted)" }}><I.Search /></span>
+          <input id="q" name="q" type="search" className="!pl-9" placeholder="Пошук" defaultValue={q} />
         </form>
       </div>
       <section className="card"><div className="flex flex-col gap-2">{list.length ? list.map((s) => <ShootRow key={s.id} s={s} rel />) : <div className="empty">Нічого не знайдено.</div>}</div></section>

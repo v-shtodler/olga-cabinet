@@ -58,7 +58,7 @@ export function PaymentForm({ shootId, suggested, hasDeposit }: { shootId: strin
   const [open, setOpen] = useState(false); const [pending, start] = useTransition();
   if (!open) return <button type="button" className="btn btn-sm btn-good" onClick={() => setOpen(true)}>+ Платіж{suggested > 0 ? ` (${Math.round(suggested).toLocaleString("uk-UA")} ₴)` : ""}</button>;
   return (
-    <form className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-2xl border border-line bg-glass-2" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); start(async () => { await callOrQueue("addPayment", [], fd, `Платіж ${fd.get("amount")} ₴`, () => addPayment(fd)); setOpen(false); }); }}>
+    <form className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-2xl bg-glass-2" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); start(async () => { await callOrQueue("addPayment", [], fd, `Платіж ${fd.get("amount")} ₴`, () => addPayment(fd)); setOpen(false); }); }}>
       <input type="hidden" name="shoot_id" value={shootId} />
       <div className="field flex flex-col gap-1"><label htmlFor="p-amount">Сума, ₴</label><input id="p-amount" name="amount" type="number" min="1" defaultValue={Math.round(suggested) || ""} required /></div>
       <div className="field flex flex-col gap-1"><label htmlFor="p-date">Дата отримання</label><input id="p-date" name="paid_on" type="date" defaultValue={todayISO()} required /></div>

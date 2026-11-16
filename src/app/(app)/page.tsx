@@ -47,23 +47,24 @@ export default async function HomePage() {
         {/* 14-day strip */}
         <section className="card">
           <div className="flex justify-between items-baseline gap-3 mb-3.5 flex-wrap"><h2 className="text-[17px] font-semibold">Найближчі 14 днів</h2><Link href="/calendar" className="text-[13px] font-semibold text-accent">Повний календар →</Link></div>
-          <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+          {/* iPhone: one scroll-snapped row of day cards; iPad/Mac: a 7-column grid of two weeks */}
+          <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-7 sm:gap-1.5 sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {Array.from({ length: 14 }, (_, i) => {
               const d = addDays(now, i); const k = iso(d); const we = isWeekend(d); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
               const isFree = !we && ev.length === 0 && !blocked.has(k);
               return (
-                <Link key={k} href={`/calendar?d=${k}`} className="rounded-[10px] sm:rounded-[14px] p-1.5 sm:p-2 min-h-[74px] sm:min-h-[86px] flex flex-col gap-1 border text-left" style={{ background: isFree ? "var(--good-bg)" : blocked.has(k) ? "var(--hair)" : "var(--glass-2)", borderColor: i === 0 ? "var(--accent)" : isFree ? "transparent" : "var(--line)", boxShadow: i === 0 ? "0 0 0 2px var(--accent-tint)" : undefined, opacity: we && !ev.length ? 0.8 : 1 }}>
-                  <div className="flex justify-between items-baseline text-xs font-bold"><span>{d.getDate()}</span><small className="font-medium text-muted text-[10px] uppercase">{format(d, "EEEEEE", { locale: uk })}</small></div>
-                  {ev.map((s) => <span key={s.id} className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-[7px] truncate" style={{ background: TONE_BG[TYPE_TONE[s.type]], color: TONE_FG[TYPE_TONE[s.type]] }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}
-                  {dl.map((s) => <span key={"dl" + s.id} className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-[7px] truncate bg-fg text-bg">⏱ {s.client_name}</span>)}
-                  {isFree && <span className="text-[10px] font-bold mt-auto" style={{ color: "var(--good)" }}>вільно</span>}
+                <Link key={k} href={`/calendar?d=${k}`} className="snap-start shrink-0 w-[76px] sm:w-auto rounded-[12px] p-2 min-h-[84px] sm:min-h-[86px] flex flex-col gap-1 border text-left" style={{ background: isFree ? "var(--good-bg)" : blocked.has(k) ? "var(--hair)" : "var(--glass-2)", borderColor: i === 0 ? "var(--accent)" : isFree ? "transparent" : "var(--line)", boxShadow: i === 0 ? "0 0 0 2px var(--accent-tint)" : undefined, opacity: we && !ev.length ? 0.8 : 1 }}>
+                  <div className="flex justify-between items-baseline"><span className="text-[15px] font-semibold">{d.getDate()}</span><small className="font-medium text-muted text-[11px] uppercase">{format(d, "EEEEEE", { locale: uk })}</small></div>
+                  {ev.map((s) => <span key={s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: TONE_BG[TYPE_TONE[s.type]], color: TONE_FG[TYPE_TONE[s.type]] }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}
+                  {dl.map((s) => <span key={"dl" + s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
+                  {isFree && <span className="text-[11px] font-medium mt-auto" style={{ color: "var(--good)" }}>вільно</span>}
                 </Link>
               );
             })}
           </div>
           <div className="flex gap-3.5 flex-wrap text-xs text-muted font-medium mt-3">
             {(["lookbook", "product", "campaign", "portrait"] as const).map((t) => <span key={t} className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: TONE_BG[TYPE_TONE[t]], border: `1px solid ${TONE_FG[TYPE_TONE[t]]}` }} />{{ lookbook: "Lookbook", product: "Предметка", campaign: "Кампанія", portrait: "Портрети" }[t]}</span>)}
-            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block bg-fg" />Дедлайн віддачі</span>
+            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн віддачі</span>
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільний день</span>
             <span>? — запит без передоплати</span>
           </div>
