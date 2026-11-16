@@ -190,6 +190,17 @@ export async function saveSettings(formData: FormData) {
   all();
 }
 /** New secret link for the phone-calendar feed (the old link stops working). */
+/** Profile photo: a data URL produced in the browser (resized, ≤128 KB), or null to remove it. */
+export async function saveAvatar(dataUrl: string | null) {
+  const { supabase, uid } = await db();
+  if (dataUrl !== null) {
+    if (!/^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(dataUrl)) throw new Error("Непідтримуваний формат зображення.");
+    if (dataUrl.length > 180_000) throw new Error("Фото завелике — спробуйте інше.");
+  }
+  const { error } = await supabase.from("settings").update({ avatar_url: dataUrl }).eq("owner_id", uid);
+  if (error) throw new Error(error.code === "42703" ? "Спочатку застосуйте міграцію 0006_avatar.sql у Supabase → SQL Editor." : error.message);
+  all();
+}
 export async function rotateIcalToken() {
   const { supabase, uid } = await db();
   const bytes = new Uint8Array(24); crypto.getRandomValues(bytes);

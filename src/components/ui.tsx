@@ -19,9 +19,10 @@ export function Avatar({ name, hue, size = 38 }: { name: string; hue: number; si
 export function DateBox({ date, tone }: { date: string; tone: Tone }) {
   const d = parseISO(date);
   return (
-    <div className="w-12 h-12 shrink-0 rounded-[12px] flex flex-col items-center justify-center leading-none font-bold" style={{ background: TONE_BG[tone], color: TONE_FG[tone] }}>
-      <div className="text-lg tracking-tight">{d.getDate()}</div>
-      <div className="text-[10px] font-bold uppercase mt-0.5">{format(d, "LLL", { locale: uk }).replace(".", "")}</div>
+    <div className="w-12 h-12 shrink-0 rounded-[12px] flex flex-col items-center justify-center leading-none" style={{ background: TONE_BG[tone], color: TONE_FG[tone] }}>
+      <div className="text-[17px] font-semibold tracking-[-0.01em]">{d.getDate()}</div>
+      {/* three letters always fit the 48pt box: "лист." / "листоп" overflowed */}
+      <div className="text-[10px] font-semibold uppercase mt-1 tracking-[0.02em]">{format(d, "LLL", { locale: uk }).replace(".", "").slice(0, 3)}</div>
     </div>
   );
 }

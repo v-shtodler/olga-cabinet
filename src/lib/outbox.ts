@@ -11,7 +11,7 @@ export const OP_LABEL: Record<string, string> = {
   toggleChecklist: "Чек-лист", advanceShoot: "Наступний крок зйомки", cancelShoot: "Скасування зйомки", deleteShoot: "Видалення зйомки", deleteClient: "Видалення замовника", markInvoiceSent: "Рахунок виставлено",
   deletePayment: "Видалення платежу", updateShootField: "Зміна в зйомці", dismissInsight: "Приховати зауваження", markTaxPaid: "Податок сплачено",
   toggleBlockedDay: "Вихідний у календарі", createClient_: "Новий замовник", updateClient: "Зміни замовника", addClientPref: "Побажання замовника", deleteClientPref: "Видалення побажання",
-  saveSettings: "Налаштування", rotateIcalToken: "Нове посилання календаря", savePreset: "Пресет",
+  saveSettings: "Налаштування", rotateIcalToken: "Нове посилання календаря", saveAvatar: "Фото профілю", savePreset: "Пресет",
 };
 
 export function isOnline() { return typeof navigator === "undefined" ? true : navigator.onLine; }

@@ -17,14 +17,25 @@ const ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
 ];
 const active = (path: string, href: string) => (href === "/" ? path === "/" : path.startsWith(href));
 
+/** App mark: the owner's photo when set, otherwise the blue/indigo monogram. */
+export function Mark({ src, size = 28, radius = 8 }: { src?: string | null; size?: number; radius?: number }) {
+  const style = { width: size, height: size, borderRadius: radius } as React.CSSProperties;
+  if (src) {
+    // a data: URL stored in the owner's own settings row; next/image adds nothing here
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt="" style={{ ...style, objectFit: "cover" }} className="shrink-0" />;
+  }
+  return <span style={{ ...style, background: "linear-gradient(135deg,#0a84ff,#5e5ce6)" }} className="inline-flex items-center justify-center text-[11px] font-bold text-white shrink-0">OV</span>;
+}
+
 async function onSignOut(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); const f = e.currentTarget; await cleanupForSignOut(); f.submit(); }
 
-export function Sidebar() {
+export function Sidebar({ avatar }: { avatar?: string | null }) {
   const path = usePathname();
   return (
     <aside className="hidden md:flex flex-col w-[232px] shrink-0 sticky top-0 h-dvh px-3 py-4 gap-1" style={{ background: "var(--sidebar)", borderRight: "0.5px solid var(--hair)" }}>
       <Link href="/" className="flex items-center gap-2.5 px-2 py-1.5 mb-3">
-        <span className="w-7 h-7 rounded-[8px] inline-flex items-center justify-center text-[11px] font-bold text-white" style={{ background: "linear-gradient(135deg,#0a84ff,#5e5ce6)" }}>OV</span>
+        <Mark src={avatar} size={28} radius={avatar ? 14 : 8} />
         <span className="font-semibold text-[15px]">Кабінет</span>
       </Link>
       <nav aria-label="Головна навігація" className="flex flex-col gap-0.5">
@@ -74,12 +85,12 @@ const getBar = () => snap;
 const getBarServer = () => EMPTY;
 
 /** iPhone top bar: translucent, shows the page title once the large title scrolls away; "+" on the right. */
-export function MobileBar() {
+export function MobileBar({ avatar }: { avatar?: string | null }) {
   const { title, compact } = useSyncExternalStore(subscribeBar, getBar, getBarServer);
   return (
     <header className="md:hidden sticky top-0 z-20 bar-material" style={{ paddingTop: "env(safe-area-inset-top, 0px)", borderBottom: `0.5px solid ${compact ? "var(--hair)" : "transparent"}` }}>
       <div className="h-[48px] grid grid-cols-[1fr_auto_1fr] items-center px-2">
-        <div className="justify-self-start"><Link href="/" className="w-9 h-9 inline-flex items-center justify-center rounded-full"><span className="w-7 h-7 rounded-[8px] inline-flex items-center justify-center text-[11px] font-bold text-white" style={{ background: "linear-gradient(135deg,#0a84ff,#5e5ce6)" }}>OV</span></Link></div>
+        <div className="justify-self-start"><Link href="/" className="w-9 h-9 inline-flex items-center justify-center rounded-full"><Mark src={avatar} size={28} radius={avatar ? 14 : 8} /></Link></div>
         <div className={clsx("text-[17px] font-semibold truncate max-w-[56vw] transition-opacity duration-200", compact ? "opacity-100" : "opacity-0")}>{title}</div>
         <div className="justify-self-end flex items-center gap-1">
           <Link href="/settings" className="w-9 h-9 inline-flex items-center justify-center rounded-full text-accent" aria-label="Налаштування"><I.Gear size={20} /></Link>

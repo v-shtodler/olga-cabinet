@@ -6,6 +6,7 @@ import { TYPE_TONE } from "@/lib/domain";
 import { cookies } from "next/headers";
 import { ThemeToggle } from "./theme-toggle";
 import { IcalCard } from "./ical-card";
+import { AvatarCard } from "./avatar-card";
 import { THEMES, type Theme } from "@/app/layout";
 
 export const metadata = { title: "Налаштування" };
@@ -68,6 +69,7 @@ export default async function SettingsPage() {
         </div>
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
           <Group title="Акаунт"><p className="text-[13px] text-muted mb-3">Ви увійшли як <b className="text-fg select-all">{user?.email}</b>. Реєстрація нових користувачів вимкнена — кабінет приватний.</p><div className="flex gap-2 flex-wrap"><a href="/api/export" className="btn" download>Резервна копія (JSON)</a><form action="/auth/signout" method="post"><button className="btn btn-ghost">Вийти</button></form></div><p className="text-[13px] text-muted mt-2.5">Копія містить усі ваші дані (зйомки, платежі, замовники, налаштування). Зберігайте її час від часу.</p></Group>
+          <AvatarCard src={s.avatar_url ?? null} name={s.display_name} />
           <IcalCard token={s.ical_token ?? null} />
           <Group title="Тема"><p className="text-[13px] text-muted mb-3">Світла вдень, темна «нічна» — для очей увечері. Запам’ятовується на цьому пристрої; «Як у системі» перемикається разом із телефоном чи Mac.</p><ThemeToggle initial={theme} /></Group>
           <AssistantInline>Щоб додати кабінет на екран телефону: у Safari «Поділитися → На Початковий екран». Він відкриватиметься як застосунок, без адресного рядка.</AssistantInline>
