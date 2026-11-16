@@ -95,7 +95,6 @@ export default async function SavingsPage({ searchParams }: { searchParams: Prom
             <p className="text-[13px] text-muted mb-3">Місяць, валюта й сума. Курс кабінет візьме сам — офіційний НБУ за той місяць, щоб порахувати частку від доходу.</p>
             <SavingForm />
           </section>
-          <AssistantInline>Відкладені гроші не зменшують дохід для податків: ЄП і ВЗ рахуються з усіх надходжень. Тут вони лише показують, скільки з доходу ви залишили собі.</AssistantInline>
           <AssistantInline>Курс береться офіційний НБУ на кінець того місяця, тож частка від доходу рахується сама. {CUR_SIGN.EUR} і {CUR_SIGN.USD} зберігаються окремо — видно, у чому саме лежать гроші.</AssistantInline>
         </aside>
       </div>
