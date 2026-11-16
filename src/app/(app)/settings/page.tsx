@@ -1,5 +1,5 @@
 import { getSettings, getPresets, getSession } from "@/lib/data";
-import { PageHead, Chip } from "@/components/ui";
+import { PageHead, Chip, Group } from "@/components/ui";
 import { AssistantInline } from "@/components/assistant";
 import { saveSettings, savePreset } from "@/app/actions";
 import { TYPE_TONE } from "@/lib/domain";
@@ -22,8 +22,7 @@ export default async function SettingsPage() {
       <PageHead eyebrow="Кабінет" title="Налаштування" />
       <div className="flex flex-wrap gap-3.5">
         <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5">
-          <section className="card">
-            <h2 className="text-[17px] font-semibold mb-3">Профіль і податкові ставки</h2>
+          <Group title="Профіль і податкові ставки">
             <form action={saveSettings} data-op="saveSettings" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <F id="display_name" label="Як до вас звертатись" name="display_name" value={s.display_name} />
               <F id="rates_from" label="Ставки діють з" name="rates_from" type="date" value={s.rates_from} />
@@ -35,9 +34,8 @@ export default async function SettingsPage() {
               <F id="month_capacity" label="Зйомок на місяць = 100% завантаженості" name="month_capacity" type="number" min={1} max={60} value={s.month_capacity} />
               <div className="sm:col-span-2 flex items-center justify-between gap-3 flex-wrap"><span className="text-[13px] text-muted">Ставки та мінімалка змінюються щороку — перевіряйте в січні.</span><button className="btn btn-primary">Зберегти</button></div>
             </form>
-          </section>
-          <section className="card">
-            <div className="flex justify-between items-baseline mb-1 flex-wrap gap-2"><h2 className="text-[17px] font-semibold">Реквізити для рахунків</h2><span className="text-[13px] text-muted">друкуються на рахунку ФОП</span></div>
+          </Group>
+          <Group title="Реквізити для рахунків" note="друкуються на рахунку ФОП">
             <p className="text-[13px] text-muted mb-3">Порожні поля на рахунку не показуються. Рахунок відкривається з картки зйомки → «Рахунок».</p>
             <form action={saveSettings} data-op="saveSettings" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* the same action needs the base fields too — pass them along hidden so one form saves everything */}
@@ -50,9 +48,8 @@ export default async function SettingsPage() {
               <div className="sm:col-span-2"><F id="invoice_note" label="Примітка внизу рахунку" name="invoice_note" value={s.invoice_note ?? "Без ПДВ. Платник єдиного податку 3 групи."} /></div>
               <div className="sm:col-span-2 flex justify-end"><button className="btn btn-primary">Зберегти реквізити</button></div>
             </form>
-          </section>
-          <section className="card">
-            <div className="flex justify-between items-baseline mb-3 flex-wrap gap-2"><h2 className="text-[17px] font-semibold">Пресети типів зйомок</h2><span className="text-[13px] text-muted">що підставляється в нову зйомку</span></div>
+          </Group>
+          <Group title="Пресети типів зйомок" note="що підставляється в нову зйомку">
             <div className="flex flex-col gap-2">
               {presets.map((p) => (
                 <form key={p.type} action={savePreset} data-op="savePreset" data-label={p.label} className="grid grid-cols-3 sm:grid-cols-7 gap-2 items-end p-3 rounded-2xl bg-glass-2">
@@ -67,12 +64,12 @@ export default async function SettingsPage() {
                 </form>
               ))}
             </div>
-          </section>
+          </Group>
         </div>
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
-          <section className="card"><h2 className="text-[17px] font-semibold mb-2">Акаунт</h2><p className="text-[13px] text-muted mb-3">Ви увійшли як <b className="text-fg select-all">{user?.email}</b>. Реєстрація нових користувачів вимкнена — кабінет приватний.</p><div className="flex gap-2 flex-wrap"><a href="/api/export" className="btn" download>Резервна копія (JSON)</a><form action="/auth/signout" method="post"><button className="btn btn-ghost">Вийти</button></form></div><p className="text-[13px] text-muted mt-2.5">Копія містить усі ваші дані (зйомки, платежі, замовники, налаштування). Зберігайте її час від часу.</p></section>
+          <Group title="Акаунт"><p className="text-[13px] text-muted mb-3">Ви увійшли як <b className="text-fg select-all">{user?.email}</b>. Реєстрація нових користувачів вимкнена — кабінет приватний.</p><div className="flex gap-2 flex-wrap"><a href="/api/export" className="btn" download>Резервна копія (JSON)</a><form action="/auth/signout" method="post"><button className="btn btn-ghost">Вийти</button></form></div><p className="text-[13px] text-muted mt-2.5">Копія містить усі ваші дані (зйомки, платежі, замовники, налаштування). Зберігайте її час від часу.</p></Group>
           <IcalCard token={s.ical_token ?? null} />
-          <section className="card"><h2 className="text-[17px] font-semibold mb-1">Тема</h2><p className="text-[13px] text-muted mb-3">Світла вдень, темна «нічна» — для очей увечері. Запам’ятовується на цьому пристрої; «Як у системі» перемикається разом із телефоном чи Mac.</p><ThemeToggle initial={theme} /></section>
+          <Group title="Тема"><p className="text-[13px] text-muted mb-3">Світла вдень, темна «нічна» — для очей увечері. Запам’ятовується на цьому пристрої; «Як у системі» перемикається разом із телефоном чи Mac.</p><ThemeToggle initial={theme} /></Group>
           <AssistantInline>Щоб додати кабінет на екран телефону: у Safari «Поділитися → На Початковий екран». Він відкриватиметься як застосунок, без адресного рядка.</AssistantInline>
           <AssistantInline>Податки рахуються за датами <b>отримання</b> платежів, а не за датами зйомок. Якщо гроші прийшли в іншому кварталі — поправте дату платежу в картці зйомки.</AssistantInline>
         </aside>

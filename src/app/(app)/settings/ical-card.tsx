@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { rotateIcalToken } from "@/app/actions";
+import { Group } from "@/components/ui";
 
 export function IcalCard({ token }: { token: string | null }) {
   const [pending, start] = useTransition();
@@ -11,9 +12,7 @@ export function IcalCard({ token }: { token: string | null }) {
   const webcal = https ? https.replace(/^https:/, "webcal:") : null;
   const rotate = () => start(async () => { setErr(null); try { await rotateIcalToken(); } catch (e) { setErr(e instanceof Error ? e.message : "Не вдалося"); } });
   return (
-    <section className="card">
-      <h2 className="text-[17px] font-semibold mb-1">Календар на телефоні</h2>
-      <p className="text-[13px] text-muted mb-3">Зйомки й дедлайни віддачі з’являться у Календарі iPhone / Google з нагадуванням за день. Оновлюється приблизно щогодини.</p>
+    <Group title="Календар на телефоні" footer="Зйомки й дедлайни віддачі з’являться у Календарі iPhone / Google з нагадуванням за день. Оновлюється приблизно щогодини.">
       {https ? (
         <>
           <div className="kv items-center gap-2"><span className="text-muted">Посилання</span><span className="flex items-center gap-2 min-w-0"><code className="text-[11px] truncate max-w-[180px] sm:max-w-[260px]">{https}</code><button type="button" className="btn btn-sm" onClick={() => { navigator.clipboard?.writeText(https).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}>{copied ? "Скопійовано" : "Копіювати"}</button></span></div>
@@ -24,6 +23,6 @@ export function IcalCard({ token }: { token: string | null }) {
         <div className="flex gap-2 flex-wrap"><button type="button" className="btn btn-primary" disabled={pending} onClick={rotate}>{pending ? "…" : "Створити посилання"}</button></div>
       )}
       {err && <p className="text-[13px] mt-2" style={{ color: "var(--warn)" }}>{err}</p>}
-    </section>
+    </Group>
   );
 }

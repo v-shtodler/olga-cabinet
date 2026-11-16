@@ -93,7 +93,7 @@ h1 { letter-spacing: -0.015em; text-wrap: balance; } h2, h3 { letter-spacing: -0
   .srow:hover { background: var(--fill-3); }
   .bar { @apply h-2 rounded-[4px] overflow-hidden; background: var(--fill-3); }
   .bar > i { @apply block h-full rounded-[4px]; }
-  .empty { @apply p-5 rounded-[12px] text-center font-medium; background: var(--glass-2); color: var(--muted); }
+  .empty { @apply px-5 py-7 rounded-[12px] text-center text-[15px]; background: var(--glass-2); color: var(--muted); text-wrap: balance; }
   /* Inset grouped list with hairlines, like Settings.app */
   .list { @apply rounded-[12px] overflow-hidden; background: var(--glass-2); }
   .list > * + * { border-top: 0.5px solid var(--hair); }

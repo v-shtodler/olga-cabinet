@@ -52,6 +52,21 @@ export function Kpi({ label, value, sub, subTone, dot, className }: { label: str
     </div>
   );
 }
+/** Inset grouped section: a quiet uppercase header above the card and an optional footnote under it (Settings.app). */
+export function Group({ title, note, footer, children, className }: { title?: string; note?: React.ReactNode; footer?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={clsx("min-w-0", className)}>
+      {(title || note) && (
+        <div className="flex items-baseline justify-between gap-3 px-1 mb-2">
+          {title && <h2 className="text-[13px] font-semibold uppercase tracking-[0.05em]" style={{ color: "var(--muted)" }}>{title}</h2>}
+          {note && <span className="text-[13px]" style={{ color: "var(--muted)" }}>{note}</span>}
+        </div>
+      )}
+      <div className="card">{children}</div>
+      {footer && <p className="text-[13px] px-1 mt-2" style={{ color: "var(--muted)" }}>{footer}</p>}
+    </section>
+  );
+}
 export function PageHead({ eyebrow, title, sub, actions }: { eyebrow?: string; title: React.ReactNode; sub?: React.ReactNode; actions?: React.ReactNode }) {
   return (
     <div className="flex justify-between items-end gap-4 flex-wrap mb-4 px-1">

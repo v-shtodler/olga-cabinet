@@ -41,7 +41,21 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             {s.status === "cancelled" && <DangerButton label="Видалити назавжди" confirm="Так, видалити" op="deleteShoot" id={s.id} />}
           </div>
         </div>
-        {s.status !== "cancelled" && <div className="flex gap-1.5 overflow-x-auto mt-4 pb-0.5">{STATUSES.map((k, i) => <div key={k} className="flex-none flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border" style={{ background: i === idx ? "var(--info-bg)" : "var(--glass-2)", borderColor: i === idx ? "var(--accent)" : "var(--line)", color: i < idx ? "var(--good)" : i === idx ? "var(--fg)" : "var(--muted)" }}><span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[11px]" style={{ background: i < idx ? "var(--good-bg)" : i === idx ? "var(--accent)" : "var(--hair)", color: i === idx ? "#fff" : "inherit" }}>{i < idx ? "✓" : i + 1}</span>{STATUS_UA[k]}</div>)}</div>}
+        {/* Progress through the stages, iOS-style: filled dots joined by a rail, current stage in blue */}
+        {s.status !== "cancelled" && (
+          <ol className="flex items-start mt-5 pb-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {STATUSES.map((k, i) => {
+              const done = i < idx, now = i === idx;
+              return (
+                <li key={k} className="flex-1 min-w-[72px] flex flex-col items-center gap-1.5 relative">
+                  {i > 0 && <span aria-hidden="true" className="absolute top-[11px] right-1/2 left-[-50%] h-[2px] rounded-full" style={{ background: done || now ? "var(--good)" : "var(--fill-3)" }} />}
+                  <span className="relative w-[22px] h-[22px] rounded-full inline-flex items-center justify-center text-[11px] font-semibold" style={{ background: done ? "var(--good)" : now ? "var(--accent)" : "var(--fill-3)", color: done || now ? "#fff" : "var(--muted)" }}>{done ? "✓" : i + 1}</span>
+                  <span className="text-[12px] font-medium text-center leading-tight" style={{ color: now ? "var(--fg)" : "var(--muted)" }}>{STATUS_UA[k]}</span>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </section>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
