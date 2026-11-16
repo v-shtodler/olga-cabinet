@@ -83,7 +83,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         <div className="flex gap-2 flex-wrap items-center">
           <div className="seg">{VIEWS.map(([v, label]) => <Link key={v} href={href({ v })} className={v === view ? "on" : ""}>{label}</Link>)}</div>
           <Link href={`/calendar?v=${view}&d=${today}`} className="btn btn-sm">Сьогодні</Link>
-          {view !== "year" && <Link href={`/shoots/new?date=${sel}`} className="btn btn-sm btn-primary">+ Зйомка</Link>}
+          {view !== "year" && <Link href={`/shoots/new?date=${sel}`} className="btn btn-sm btn-primary hidden sm:inline-flex">+ Зйомка</Link>}
         </div>
       </div>
 
