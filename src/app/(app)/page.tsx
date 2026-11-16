@@ -86,7 +86,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {m12.map((m, i) => (
               <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5">
                 {m.income > 0 && <span className="text-[10px] sm:text-[11px] font-semibold num" style={{ color: i === 11 ? "var(--accent)" : "var(--muted)" }}>{moneyK(m.income)}</span>}
-                <i className="block w-full rounded-t-[6px] rounded-b-[2px]" style={{ height: Math.max(4, Math.round(m.income / max12 * 150)), background: i === 11 ? "var(--accent)" : "var(--accent-tint)" }} />
+                <i className="block w-full rounded-t-[6px] rounded-b-[2px]" style={{ height: Math.max(4, Math.round(m.income / max12 * 150)), background: i === 11 ? "linear-gradient(180deg, var(--accent-2), var(--accent))" : "linear-gradient(180deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent))" }} />
               </div>
             ))}
           </div>
