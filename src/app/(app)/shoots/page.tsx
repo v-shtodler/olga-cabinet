@@ -25,9 +25,9 @@ export default async function ShootsPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHead eyebrow={`${list.length} ${plural(list.length, "зйомка", "зйомки", "зйомок")} · ${money(sum)}`} title="Зйомки" actions={<Link href="/shoots/new" className="btn btn-primary">+ Нова зйомка</Link>} />
+      <PageHead eyebrow={`${list.length} ${plural(list.length, "зйомка", "зйомки", "зйомок")} · ${money(sum)}`} title="Зйомки" />
       <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
-        <div className="seg">{FILTERS.map(([k, label]) => <Link key={k} href={`/shoots?f=${k}${q ? `&q=${encodeURIComponent(q)}` : ""}`} className={k === filter ? "on" : ""}>{label}</Link>)}</div>
+        <div className="seg shrink-0">{FILTERS.map(([k, label]) => <Link key={k} href={`/shoots?f=${k}${q ? `&q=${encodeURIComponent(q)}` : ""}`} className={k === filter ? "on" : ""}>{label}</Link>)}</div>
         <form className="field flex-1 min-w-[200px]" action="/shoots" method="get">
           <input type="hidden" name="f" value={filter} />
           <label htmlFor="q" className="sr-only">Пошук</label>

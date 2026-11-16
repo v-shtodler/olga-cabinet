@@ -4,7 +4,7 @@ import { getShoot, getShoots, getClients, getClientPrefs, getSettings, getDismis
 import { STATUSES, STATUS_UA, NEXT_STEP, TYPE_TONE, STATUS_TONE, buildInsights, money, fmtDate, fmtShort, fmtWeekday, relDays, daysBetween, todayISO, statusIdx } from "@/lib/domain";
 import { Chip, Avatar, Kpi, Bar } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
-import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment } from "@/app/actions";
+import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment, deleteNote } from "@/app/actions";
 import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle, PhotosDelivered, DangerButton } from "./client-bits";
 import * as I from "@/components/icons";
 
@@ -81,7 +81,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
 
           <section className="card">
             <h2 className="text-lg font-bold mb-3">Замітки</h2>
-            <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 border border-line text-[13px] leading-relaxed"><div className="text-[11px] text-muted font-semibold mb-1">{fmtDate(n.created_at.slice(0, 10))}</div>{n.text}</div>) : <div className="empty">Поки без заміток.</div>}</div>
+            <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 border border-line text-[13px] leading-relaxed"><div className="flex justify-between items-center mb-1"><span className="text-[11px] text-muted font-semibold">{fmtDate(n.created_at.slice(0, 10))}</span><form action={deleteNote.bind(null, n.id)} data-op="deleteNote" data-args={JSON.stringify([n.id])}><button className="text-muted text-xs" aria-label="Видалити замітку" title="Видалити">×</button></form></div><div className="whitespace-pre-wrap">{n.text}</div></div>) : <div className="empty">Поки без заміток.</div>}</div>
             <form action={addNote.bind(null, s.id)} data-op="addNote" data-args={JSON.stringify([s.id])} className="field flex flex-col gap-1.5 mt-3"><label htmlFor="note">Додати замітку</label><textarea id="note" name="text" placeholder="Що важливо не забути…" maxLength={2000} required /><div><button className="btn btn-sm btn-primary mt-2">Зберегти</button></div></form>
           </section>
 

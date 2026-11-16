@@ -143,6 +143,8 @@ export async function addDefaultChecklist(shootId: string) {
   const items = ["Передоплата отримана", "Референси й мудборд узгоджено", "RAW скопійовано на 2 диски", "Відбір надіслано на затвердження", "Ретуш віддано", "Фінальний рахунок виставлено"];
   await supabase.from("checklist_items").insert(items.map((text, sort) => ({ shoot_id: shootId, text, sort }))); all();
 }
+export async function deleteNote(id: string) { const { supabase } = await db(); await supabase.from("shoot_notes").delete().eq("id", id); all(); }
+export async function deleteChecklistItem(id: string) { const { supabase } = await db(); await supabase.from("checklist_items").delete().eq("id", id); all(); }
 export async function toggleChecklist(id: string, done: boolean) { const { supabase } = await db(); await supabase.from("checklist_items").update({ done }).eq("id", id); all(); }
 
 /* ---------- clients ---------- */
