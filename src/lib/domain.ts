@@ -16,7 +16,7 @@ export interface Settings { owner_id: string; display_name: string; ep_rate: num
 export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; avatar_hue: number; archived: boolean; }
 export interface ClientPref { id: string; client_id: string; text: string; sort: number; }
 export interface Shoot {
-  id: string; client_id: string; no: string | null; title: string; status: ShootStatus; date: string; start_time: string | null; location: string | null;
+  id: string; client_id: string; no: string | null; status: ShootStatus; date: string; start_time: string | null; location: string | null;
   price: number; deposit_pct: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null; created_at: string;
 }
 export interface ShootView extends Shoot { client_name: string; paid: number; balance: number; deadline: string | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
@@ -78,21 +78,21 @@ export function buildInsights(inp: InsightInput): Insight[] {
     const c = clientOf(s.client_id); const cname = c?.name ?? s.client_name;
     if (s.status === "shot" && s.deadline) {
       const d = daysBetween(today, s.deadline);
-      if (d <= inp.settings.remind_days) push({ key: `dl-${s.id}`, kind: "deadline", sev: d < 0 ? "high" : "mid", tag: d < 0 ? "Дедлайн прострочено" : `Дедлайн · ${relDays(d)}`, text: `${s.title} — ${cname} ще у статусі «відзнято». Віддати до ${fmtDate(s.deadline)}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
+      if (d <= inp.settings.remind_days) push({ key: `dl-${s.id}`, kind: "deadline", sev: d < 0 ? "high" : "mid", tag: d < 0 ? "Дедлайн прострочено" : `Дедлайн · ${relDays(d)}`, text: `Зйомка ${cname} від ${fmtShort(s.date)} ще у статусі «відзнято». Віддати до ${fmtDate(s.deadline)}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
     }
     if (s.status === "delivered" && s.balance > 0) {
       const age = s.invoice_age_days ?? 0; const late = age > Math.max(7, payDelay(c));
-      push({ key: `pay-${s.id}`, kind: "payment", sev: late ? "high" : "mid", tag: late ? "Оплата · прострочено" : "Оплата · очікую", text: `${cname} винні ${money(s.balance)} за «${s.title}».${s.invoice_sent_on ? ` Рахунок виставлено ${relDays(-age)}.` : " Рахунок ще не виставлено."}`, action: { label: late ? "Нагадати клієнту" : "Деталі", href: `/shoots/${s.id}` } });
+      push({ key: `pay-${s.id}`, kind: "payment", sev: late ? "high" : "mid", tag: late ? "Оплата · прострочено" : "Оплата · очікую", text: `${cname} винні ${money(s.balance)} за зйомку ${fmtShort(s.date)}.${s.invoice_sent_on ? ` Рахунок виставлено ${relDays(-age)}.` : " Рахунок ще не виставлено."}`, action: { label: late ? "Нагадати клієнту" : "Деталі", href: `/shoots/${s.id}` } });
     }
     if (s.status === "request") {
       const age = daysBetween(s.created_at.slice(0, 10), today); const until = daysBetween(today, s.date);
-      if (age >= 3 || until <= 7) push({ key: `req-${s.id}`, kind: "request", sev: until <= 3 ? "high" : "mid", tag: `Без передоплати · ${relDays(until)}`, text: `«${s.title}» для ${cname} досі не підтверджено. Дата тримається без передоплати ${age} ${plural(age, "день", "дні", "днів")}.`, action: { label: "Запросити передоплату", href: `/shoots/${s.id}` } });
+      if (age >= 3 || until <= 7) push({ key: `req-${s.id}`, kind: "request", sev: until <= 3 ? "high" : "mid", tag: `Без передоплати · ${relDays(until)}`, text: `зйомка ${cname} ${fmtShort(s.date)} досі не підтверджено. Дата тримається без передоплати ${age} ${plural(age, "день", "дні", "днів")}.`, action: { label: "Запросити передоплату", href: `/shoots/${s.id}` } });
     }
     if (s.status === "confirmed" && inp.scope.type !== "client") {
       const d = daysBetween(today, s.date);
       // the shoot date has passed but the status is still "confirmed": deadlines and payments depend on marking it as shot
-      if (d < 0) push({ key: `past-${s.id}`, kind: "deadline", sev: d <= -3 ? "high" : "mid", tag: `Зйомка минула · ${relDays(d)}`, text: `«${s.title}» для ${cname} була ${fmtShort(s.date)}, але ще не позначена як відзнята.`, action: { href: `/shoots/${s.id}`, label: "Позначити відзнятою" } });
-      if (d >= 0 && d <= 1) { const p = prefsOf(s.client_id).slice(0, 2).join("; "); push({ key: `prep-${s.id}`, kind: "prep", sev: "low", tag: `${relDays(d)} · підготовка`, text: `Зйомка «${s.title}» для ${cname}.${p ? ` Що важливо для цього клієнта: ${p}.` : ""}`, action: { label: "Картка зйомки", href: `/shoots/${s.id}` } }); }
+      if (d < 0) push({ key: `past-${s.id}`, kind: "deadline", sev: d <= -3 ? "high" : "mid", tag: `Зйомка минула · ${relDays(d)}`, text: `зйомка ${cname} ${fmtShort(s.date)} була ${fmtShort(s.date)}, але ще не позначена як відзнята.`, action: { href: `/shoots/${s.id}`, label: "Позначити відзнятою" } });
+      if (d >= 0 && d <= 1) { const p = prefsOf(s.client_id).slice(0, 2).join("; "); push({ key: `prep-${s.id}`, kind: "prep", sev: "low", tag: `${relDays(d)} · підготовка`, text: `Зйомка зйомка ${cname} ${fmtShort(s.date)}.${p ? ` Що важливо для цього клієнта: ${p}.` : ""}`, action: { label: "Картка зйомки", href: `/shoots/${s.id}` } }); }
     }
   }
 

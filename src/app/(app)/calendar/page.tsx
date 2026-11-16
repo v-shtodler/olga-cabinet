@@ -117,7 +117,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                         <span key={s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] leading-tight" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>
                           {s.start_time && <b className="block num">{s.start_time.slice(0, 5)}</b>}
                           <span className="block font-semibold truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
-                          <span className="block truncate opacity-80">{s.title}</span>
                         </span>
                       ))}
                       {dl.map((s) => <span key={"d" + s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] font-semibold truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ Віддати · {s.client_name}</span>)}
@@ -173,7 +172,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-[17px] font-semibold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selWe ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selWe ? "вихідний" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
               <div className="flex flex-col gap-2">
                 {selShoots.map((s: ShootView) => <ShootRow key={s.id} s={s} />)}
-                {selDl.map((s: ShootView) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow" style={{ background: "var(--sun-bg)" }}><div className="w-12 h-12 shrink-0 rounded-[12px] flex items-center justify-center" style={{ background: "var(--glass)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати: {s.title}</div><div className="text-[13px] text-muted truncate">{s.client_name}</div></div></Link>)}
+                {selDl.map((s: ShootView) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow" style={{ background: "var(--sun-bg)" }}><div className="w-12 h-12 shrink-0 rounded-[12px] flex items-center justify-center" style={{ background: "var(--glass)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати · {s.client_name}</div><div className="text-[13px] text-muted truncate">{s.client_name}</div></div></Link>)}
                 {!selShoots.length && !selDl.length && <div className="empty">{selBlocked ? "День закритий для зйомок." : "Нічого не заплановано."}</div>}
               </div>
               {sel >= today && <form action={toggleBlockedDay.bind(null, sel)} data-op="toggleBlockedDay" data-args={JSON.stringify([sel])} data-label={sel} className="mt-3"><button className="btn btn-sm">{selBlocked ? "Відкрити день" : "Закрити день (особисте)"}</button></form>}

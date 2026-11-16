@@ -14,7 +14,7 @@ export default async function NewShootPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <Link href="/shoots" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent mb-3"><I.Back /> Усі зйомки</Link>
-      <PageHead title={source ? "Дублювати зйомку" : "Нова зйомка"} sub={source ? `На основі «${source.title}»` : "Сім полів — і зйомка в календарі."} />
+      <PageHead title={source ? "Дублювати зйомку" : "Нова зйомка"} sub={source ? `На основі зйомки ${source.date}` : "Шість полів — і зйомка в календарі."} />
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-[999_1_560px] min-w-0"><ShootForm clients={clients} initial={{ date, clientId: client, source }} /></section>
         <aside className="flex-[1_1_280px] min-w-0 flex flex-col gap-3.5">

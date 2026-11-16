@@ -33,7 +33,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const summary = done.length === 0
     ? "Поки замало даних — з’являться після перших завершених зйомок."
     : `Середній чек ${money(avg)} за ${done.length} ${plural(done.length, "зйомку", "зйомки", "зйомок")}.${delta != null ? ` Дохід ${delta >= 0 ? "виріс" : "просів"} на ${Math.abs(delta)}% до того ж періоду торік.` : ""}${weakM.length ? ` Найтихіші місяці: ${weakM.slice(0, 3).join(", ")} — місце для промо або відпустки.` : ""}`;
-  const csv = [["№", "Дата", "Клієнт", "Назва", "Статус", "Ціна", "Отримано", "Віддати до"], ...shoots.map((s) => [s.no ?? "", s.date, s.client_name, s.title, s.status, s.price, s.paid, s.deadline ?? ""])].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+  const csv = [["№", "Дата", "Клієнт", "Локація", "Статус", "Ціна", "Отримано", "Віддати до"], ...shoots.map((s) => [s.no ?? "", s.date, s.client_name, s.location ?? "", s.status, s.price, s.paid, s.deadline ?? ""])].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
 
   return (
     <>

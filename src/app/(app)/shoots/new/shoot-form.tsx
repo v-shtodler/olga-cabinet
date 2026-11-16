@@ -34,8 +34,8 @@ export function ShootForm({ clients, initial, editId }: { clients: Client[]; ini
     const fd = new FormData(e.currentTarget);
     startTransition(async () => {
       try {
-        if (edit) { const r = await callOrQueue("updateShoot", [editId], fd, `Зміни в зйомці: ${fd.get("title")}`, () => updateShoot(editId!, fd)); router.push(`/shoots/${editId}`); if (!r.queued) router.refresh(); }
-        else { const r = await callOrQueue("createShoot", [], fd, `Нова зйомка: ${fd.get("title")} · ${fd.get("date")}`, () => createShoot(fd)); if (r.queued) router.push("/shoots"); }
+        if (edit) { const r = await callOrQueue("updateShoot", [editId], fd, `Зміни в зйомці ${fd.get("date")}`, () => updateShoot(editId!, fd)); router.push(`/shoots/${editId}`); if (!r.queued) router.refresh(); }
+        else { const r = await callOrQueue("createShoot", [], fd, `Нова зйомка ${fd.get("date")}`, () => createShoot(fd)); if (r.queued) router.push("/shoots"); }
       } catch (x) { setErr(x instanceof Error ? x.message : "Не вдалося зберегти"); }
     });
   }
@@ -44,7 +44,6 @@ export function ShootForm({ clients, initial, editId }: { clients: Client[]; ini
 
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="title">Назва</label><input id="title" name="title" defaultValue={src?.title ?? ""} placeholder="Напр.: Lookbook FW26" required maxLength={120} /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="client_id">Замовник</label><select id="client_id" name="client_id" value={clientId} onChange={(e) => applyClient(e.target.value)}>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}{!edit && <option value={NEW}>+ Новий замовник…</option>}</select></div>
       {clientId === NEW
         ? <div className="field flex flex-col gap-1.5"><label htmlFor="new_client_name">Назва нового замовника</label><input id="new_client_name" name="new_client_name" value={newClient} onChange={(e) => setNewClient(e.target.value)} placeholder="Бренд або ім’я" required maxLength={120} autoFocus /></div>

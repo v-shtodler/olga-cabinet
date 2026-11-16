@@ -1,17 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
-import { addPayment, updateShootField, cancelShoot, toggleChecklist, deleteShoot, deleteClient, deleteChecklistItem } from "@/app/actions";
+import { addPayment, cancelShoot, toggleChecklist, deleteShoot, deleteClient, deleteChecklistItem } from "@/app/actions";
 import { callOrQueue } from "@/lib/outbox";
 import { todayISO } from "@/lib/domain";
-
-export function InlineTitle({ id, title }: { id: string; title: string }) {
-  const [v, setV] = useState(title);
-  return (
-    <h1 className="text-[clamp(26px,4vw,38px)] font-extrabold leading-[1.08] tracking-tighter outline-none rounded-md focus:ring-2 focus:ring-accent/40" contentEditable suppressContentEditableWarning spellCheck={false} title="Клацніть, щоб перейменувати"
-      onBlur={(e) => { const t = (e.currentTarget.textContent ?? "").trim() || "Зйомка"; if (t !== v) { setV(t); callOrQueue("updateShootField", [id, "title", t], undefined, `Назва: ${t}`, () => updateShootField(id, "title", t)); } }}
-      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); } }}>{title}</h1>
-  );
-}
 
 export function CancelButton({ id }: { id: string }) {
   const [sure, setSure] = useState(false); const [pending, start] = useTransition();

@@ -21,7 +21,7 @@ export default async function ShootsPage({ searchParams }: { searchParams: Promi
   if (filter === "done") list = list.filter((s) => s.status === "paid").reverse();
   if (filter === "all") list = list.slice().reverse();
   const needle = q.trim().toLowerCase();
-  if (needle) list = list.filter((s) => `${s.title} ${s.client_name} ${s.location ?? ""} ${s.no ?? ""}`.toLowerCase().includes(needle));
+  if (needle) list = list.filter((s) => `${s.client_name} ${s.location ?? ""} ${s.no ?? ""}`.toLowerCase().includes(needle));
   const sum = list.reduce((a, s) => a + s.price, 0);
 
   return (

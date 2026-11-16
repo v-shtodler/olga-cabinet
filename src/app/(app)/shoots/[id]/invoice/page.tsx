@@ -21,7 +21,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   const label = mode === "deposit" ? `Передоплата ${s.deposit_pct}%` : mode === "balance" ? "Остаточний розрахунок" : "Повна вартість";
   const today = todayISO();
   const no = `${s.no ?? s.id.slice(0, 6)}${mode === "deposit" ? "-1" : mode === "balance" ? "-2" : ""}`;
-  const desc = `Фотозйомка «${s.title}»`;
+  const desc = `Фотозйомка ${fmtDate(s.date, true)}${s.location ? `, ${s.location}` : ""}`;
   const missing = !st.fop_name || !st.iban;
 
   return (

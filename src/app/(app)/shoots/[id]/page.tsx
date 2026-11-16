@@ -5,7 +5,7 @@ import { STATUSES, STATUS_UA, NEXT_STEP, STATUS_TONE, buildInsights, money, fmtD
 import { Chip, Avatar, Kpi, Bar } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment, deleteNote } from "@/app/actions";
-import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle, DangerButton } from "./client-bits";
+import { PaymentForm, CancelButton, ChecklistToggle, DangerButton } from "./client-bits";
 import * as I from "@/components/icons";
 
 export default async function ShootPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,8 +26,8 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
         <div className="flex justify-between items-start gap-4 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-2"><Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip><span className="text-[13px] text-muted">№ {s.no}</span></div>
-            <InlineTitle id={s.id} title={s.title} />
-            <p className="text-muted mt-2">📅 {fmtWeekday(s.date)}, {fmtDate(s.date, true)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ""} &nbsp; 📍 {s.location ?? "—"} &nbsp; 👤 <Link href={`/clients/${c.id}`} className="text-accent font-semibold">{c.name}</Link>{c.contact_name ? ` · ${c.contact_name}` : ""}</p>
+            <h1 className="text-[clamp(26px,4vw,34px)] font-bold tracking-[-0.01em] leading-[1.1]"><Link href={`/clients/${c.id}`}>{c.name}</Link></h1>
+            <p className="text-muted mt-2">📅 {fmtWeekday(s.date)}, {fmtDate(s.date, true)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ""} &nbsp; 📍 {s.location ?? "—"}{c.contact_name ? <> &nbsp; 👤 {c.contact_name}</> : null}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)} data-op="advanceShoot" data-args={JSON.stringify([s.id])} data-label={NEXT_STEP[s.status] ?? ""}><button className={`btn ${s.status === "delivered" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
@@ -102,7 +102,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)], ["Платять", c.default_deposit_pct === 100 ? "наперед ✓" : st?.avg_pay_delay_days != null ? `~${Math.round(st.avg_pay_delay_days)} дн` : "—"], ["Середній чек", money(st?.avg_check ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-[10px]" style={{ background: "var(--glass-2)" }}><div className="text-[12px] text-muted">{k}</div><div className="font-semibold num">{v}</div></div>)}</div>
             {prefs.length > 0 && <div className="mt-3.5"><div className="text-[13px] font-semibold text-muted mb-1.5">Що важливо для цього клієнта</div><ul className="m-0 pl-[18px] text-[13px] leading-relaxed">{prefs.map((p) => <li key={p.id}>{p.text}</li>)}</ul></div>}
           </section>
-          <section className="card"><h2 className="text-[17px] font-semibold mb-3">Історія · {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{h.title}</b><br /><span className="text-muted text-xs">{fmtDate(h.date)}</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>
+          <section className="card"><h2 className="text-[17px] font-semibold mb-3">Історія · {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{fmtDate(h.date)}</b><br /><span className="text-muted text-xs">{h.location ?? "—"}</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>
         </aside>
       </div>
     </>

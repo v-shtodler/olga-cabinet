@@ -36,7 +36,7 @@ export function ShootRow({ s, rel }: { s: ShootView; rel?: boolean }) {
     <Link href={`/shoots/${s.id}`} className="srow">
       <DateBox date={s.date} tone={STATUS_TONE[s.status]} />
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <div className="font-semibold truncate">{s.title} · {s.client_name}</div>
+        <div className="font-semibold truncate">{s.client_name}</div>
         <div className="text-[13px] text-muted truncate">{s.location ?? "—"}{s.start_time ? `, ${s.start_time.slice(0, 5)}` : ""}{rel && d >= 0 ? ` · ${relDays(d)}` : ""}</div>
       </div>
       <div className="flex flex-col items-end gap-1"><div className="font-semibold num">{money(s.price)}</div>{end}</div>

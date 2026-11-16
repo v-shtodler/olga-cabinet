@@ -31,7 +31,7 @@ export async function toggleBlockedDay(day: string) {
 
 /* ---------- shoots ---------- */
 const ShootInput = z.object({
-  client_id: z.string().min(1), new_client_name: z.string().max(120).optional(), title: z.string().min(1).max(120),
+  client_id: z.string().min(1), new_client_name: z.string().max(120).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), start_time: z.string().optional(), location: z.string().max(200).optional(),
   price: z.coerce.number().min(0), deposit_pct: z.coerce.number().min(0).max(100),
   deadline_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
@@ -50,7 +50,7 @@ export async function createShoot(formData: FormData) {
   }
   const status: ShootStatus = p.deposit_received ? "confirmed" : "request";
   const { data: shoot, error } = await supabase.from("shoots").insert({
-    client_id: clientId, title: p.title, status, date: p.date, start_time: p.start_time || null, location: p.location || null,
+    client_id: clientId, status, date: p.date, start_time: p.start_time || null, location: p.location || null,
     price: p.price, deposit_pct: p.deposit_pct, deadline_on: p.deadline_on || null,
   }).select("id").single();
   if (error || !shoot) throw new Error(error?.message ?? "insert failed");
@@ -63,16 +63,10 @@ export async function updateShoot(id: string, formData: FormData) {
   const { supabase } = await db();
   const p = ShootInput.parse(Object.fromEntries(formData.entries()));
   const { error } = await supabase.from("shoots").update({
-    client_id: p.client_id, title: p.title, date: p.date, start_time: p.start_time || null, location: p.location || null,
+    client_id: p.client_id, date: p.date, start_time: p.start_time || null, location: p.location || null,
     price: p.price, deposit_pct: p.deposit_pct, deadline_on: p.deadline_on || null,
   }).eq("id", id);
   if (error) throw new Error(error.message);
-  all();
-}
-export async function updateShootField(id: string, field: "title" | "location" | "rights" | "price" | "photos_delivered", value: string) {
-  const { supabase } = await db();
-  const v = field === "photos_delivered" ? (value === "" ? null : Number(value)) : field === "price" ? Number(value) : value;
-  await supabase.from("shoots").update({ [field]: v }).eq("id", id);
   all();
 }
 export async function advanceShoot(id: string) {
