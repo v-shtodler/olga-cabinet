@@ -7,7 +7,7 @@ export type ShootStatus = "request" | "confirmed" | "shot" | "delivered" | "paid
 export const STATUSES: ShootStatus[] = ["request", "confirmed", "shot", "delivered", "paid"];
 export const STATUS_UA: Record<ShootStatus, string> = { request: "Запит", confirmed: "Підтверджено", shot: "Відзнято", delivered: "Віддано", paid: "Оплачено", cancelled: "Скасовано" };
 export const STATUS_TONE: Record<ShootStatus, Tone> = { request: "neutral", confirmed: "info", shot: "warn", delivered: "purple", paid: "good", cancelled: "neutral" };
-export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Підтвердити (передоплата отримана)", confirmed: "Позначити «відзнято»", shot: "Позначити «віддано»", delivered: "Позначити «оплачено»" };
+export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Підтвердити зйомку", confirmed: "Позначити «відзнято»", shot: "Позначити «віддано»", delivered: "Позначити «оплачено»" };
 
 /** Eight system colours, one per brand (clients.avatar_hue). iOS Calendar reads this way: colour = whose event. */
 export const BRAND = [
@@ -28,11 +28,11 @@ export type Tone = "good" | "warn" | "info" | "purple" | "sun" | "pink" | "neutr
 
 export interface Settings { owner_id: string; display_name: string; ep_rate: number; vz_rate: number; esv_monthly: number; income_limit: number; rates_from: string; remind_days: number; month_capacity: number;
   fop_name?: string | null; ipn?: string | null; iban?: string | null; bank_name?: string | null; legal_address?: string | null; invoice_note?: string | null; ical_token?: string | null; avatar_url?: string | null; }
-export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; avatar_hue: number; avatar_url: string | null; archived: boolean; }
+export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; avatar_hue: number; avatar_url: string | null; archived: boolean; }
 export interface ClientPref { id: string; client_id: string; text: string; sort: number; }
 export interface Shoot {
   id: string; client_id: string; no: string | null; status: ShootStatus; date: string; start_time: string | null; location: string | null;
-  price: number; deposit_pct: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null; created_at: string;
+  price: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null; created_at: string;
 }
 export interface ShootView extends Shoot { client_name: string; client_hue: number; paid: number; balance: number; deadline: string | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
 export interface Payment { id: string; shoot_id: string; amount: number; paid_on: string; kind: "deposit" | "balance" | "extra" | "refund"; method: "invoice" | "card" | "cash" | "other"; note: string | null; }
@@ -85,7 +85,6 @@ export function buildInsights(inp: InsightInput): Insight[] {
   const push = (i: Insight) => { if (!inp.dismissed.has(i.key)) out.push(i); };
   const clientOf = (id: string) => inp.clients.find((c) => c.id === id);
   const prefsOf = (id: string) => inp.prefs.filter((p) => p.client_id === id).sort((a, b) => a.sort - b.sort).map((p) => p.text);
-  const payDelay = (c?: Client) => c?.default_deposit_pct === 100 ? 0 : 7; // refined later from v_client_stats
   const list = inp.shoots.filter((s) => s.status !== "cancelled" && (inp.scope.type !== "shoot" || s.id === inp.scope.id) && (inp.scope.type !== "client" || s.client_id === inp.scope.id));
 
   if (inp.scope.type !== "taxes") for (const s of list) {
@@ -95,12 +94,12 @@ export function buildInsights(inp: InsightInput): Insight[] {
       if (d <= inp.settings.remind_days) push({ key: `dl-${s.id}`, kind: "deadline", sev: d < 0 ? "high" : "mid", tag: d < 0 ? "Дедлайн прострочено" : `Дедлайн · ${relDays(d)}`, text: `Зйомка ${cname} від ${fmtShort(s.date)} ще у статусі «відзнято». Віддати до ${fmtDate(s.deadline)}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
     }
     if (s.status === "delivered" && s.balance > 0) {
-      const age = s.invoice_age_days ?? 0; const late = age > Math.max(7, payDelay(c));
+      const age = s.invoice_age_days ?? 0; const late = age > 7;
       push({ key: `pay-${s.id}`, kind: "payment", sev: late ? "high" : "mid", tag: late ? "Оплата · прострочено" : "Оплата · очікую", text: `${cname} винні ${money(s.balance)} за зйомку ${fmtShort(s.date)}.${s.invoice_sent_on ? ` Рахунок виставлено ${relDays(-age)}.` : " Рахунок ще не виставлено."}`, action: { label: late ? "Нагадати клієнту" : "Деталі", href: `/shoots/${s.id}` } });
     }
     if (s.status === "request") {
       const age = daysBetween(s.created_at.slice(0, 10), today); const until = daysBetween(today, s.date);
-      if (age >= 3 || until <= 7) push({ key: `req-${s.id}`, kind: "request", sev: until <= 3 ? "high" : "mid", tag: `Без передоплати · ${relDays(until)}`, text: `зйомка ${cname} ${fmtShort(s.date)} досі не підтверджено. Дата тримається без передоплати ${age} ${plural(age, "день", "дні", "днів")}.`, action: { label: "Запросити передоплату", href: `/shoots/${s.id}` } });
+      if (age >= 3 || until <= 7) push({ key: `req-${s.id}`, kind: "request", sev: until <= 3 ? "high" : "mid", tag: `Не підтверджено · ${relDays(until)}`, text: `зйомка ${cname} ${fmtShort(s.date)} досі не підтверджена. Дата тримається ${age} ${plural(age, "день", "дні", "днів")}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
     }
     if (s.status === "confirmed" && inp.scope.type !== "client") {
       const d = daysBetween(today, s.date);

@@ -15,8 +15,7 @@ export function ShootForm({ clients, initial, editId }: { clients: Client[]; ini
   const firstClient = clients.find((c) => c.id === (src?.client_id ?? initial.clientId)) ?? clients[0];
   const [clientId, setClientId] = useState(firstClient?.id ?? NEW);
   const [newClient, setNewClient] = useState("");
-  const [deposit, setDeposit] = useState(String(src?.deposit_pct ?? firstClient?.default_deposit_pct ?? 50));
-  const [depositNow, setDepositNow] = useState(true);
+  const [confirmed, setConfirmed] = useState(true);
   const [price, setPrice] = useState(src ? String(src.price) : "");
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -24,9 +23,6 @@ export function ShootForm({ clients, initial, editId }: { clients: Client[]; ini
 
   function applyClient(id: string) {
     setClientId(id);
-    if (id === NEW) return;
-    const c = clients.find((x) => x.id === id);
-    if (c) setDeposit(String(c.default_deposit_pct));
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -40,8 +36,6 @@ export function ShootForm({ clients, initial, editId }: { clients: Client[]; ini
     });
   }
 
-  const depositSum = Math.round(Number(price || 0) * Number(deposit || 0) / 100);
-
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="field flex flex-col gap-1.5"><label htmlFor="client_id">Замовник</label><select id="client_id" name="client_id" value={clientId} onChange={(e) => applyClient(e.target.value)}>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}{!edit && <option value={NEW}>+ Новий замовник…</option>}</select></div>
@@ -52,13 +46,10 @@ export function ShootForm({ clients, initial, editId }: { clients: Client[]; ini
       <div className="field flex flex-col gap-1.5"><label htmlFor="date">Дата</label><input id="date" name="date" type="date" defaultValue={initial.date ?? (edit ? src?.date : undefined) ?? format(addDays(new Date(), 7), "yyyy-MM-dd")} required /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="start_time">Початок</label><input id="start_time" name="start_time" type="time" defaultValue={src?.start_time?.slice(0, 5) ?? "10:00"} /></div>
       <div className="field flex flex-col gap-1.5"><label htmlFor="price">Ціна, ₴</label><input id="price" name="price" type="number" step="any" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" required /></div>
-      <div className="field flex flex-col gap-1.5"><label htmlFor="deposit_pct">Передоплата, %</label><input id="deposit_pct" name="deposit_pct" type="number" min="0" max="100" step="1" value={deposit} onChange={(e) => setDeposit(e.target.value)} /></div>
       <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="deadline_on">Віддати до <span className="font-normal">(не обов’язково)</span></label><input id="deadline_on" name="deadline_on" type="date" defaultValue={src?.deadline_on ?? ""} /></div>
       {!edit && <div className="field flex flex-col gap-1.5 sm:col-span-2"><label htmlFor="note">Замітка</label><textarea id="note" name="note" placeholder="Вимоги, референси, команда…" maxLength={2000} /></div>}
-      {!edit && <label className="sm:col-span-2 flex items-center gap-3 px-3 py-2.5 rounded-xl bg-glass-2 cursor-pointer font-medium"><input type="checkbox" name="deposit_received" checked={depositNow} onChange={(e) => setDepositNow(e.target.checked)} className="switch" /> Передоплату вже отримано — статус «Підтверджено»</label>}
-      {!edit && depositNow && Number(deposit) > 0 && <div className="field flex flex-col gap-1.5"><label htmlFor="deposit_on">Дата передоплати <span className="font-normal">(визначає податковий квартал)</span></label><input id="deposit_on" name="deposit_on" type="date" defaultValue={format(new Date(), "yyyy-MM-dd")} /></div>}
-      <div className="sm:col-span-2 flex items-center justify-between gap-3 flex-wrap">
-        <span className="text-[13px] text-muted">{depositSum > 0 ? `Передоплата ≈ ${depositSum.toLocaleString("uk-UA")} ₴` : "Передоплати немає"}</span>
+      {!edit && <label className="sm:col-span-2 flex items-center gap-3 px-3 py-2.5 rounded-xl bg-glass-2 cursor-pointer font-medium"><input type="checkbox" name="confirmed" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="switch" /> Зйомку підтверджено — інакше збережеться як «Запит»</label>}
+      <div className="sm:col-span-2 flex items-center justify-end gap-3 flex-wrap">
         <button className="btn btn-primary" type="submit" disabled={pending}>{pending ? "Зберігаю…" : edit ? "Зберегти зміни" : "Створити зйомку"}</button>
       </div>
       {err && <p className="sm:col-span-2 text-[13px]" style={{ color: "var(--warn)" }}>{err}</p>}

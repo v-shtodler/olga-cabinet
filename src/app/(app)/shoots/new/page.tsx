@@ -18,8 +18,8 @@ export default async function NewShootPage({ searchParams }: { searchParams: Pro
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-[999_1_560px] min-w-0"><ShootForm clients={clients} initial={{ date, clientId: client, source }} /></section>
         <aside className="flex-[1_1_280px] min-w-0 flex flex-col gap-3.5">
-          <AssistantInline>Якщо передоплата ще не отримана, зйомка створиться як <b>Запит</b> і дата не блокує календар для помічника. Щойно гроші прийшли — натисніть «Підтвердити» у картці.</AssistantInline>
-          <AssistantInline>Дата передоплати визначає податковий квартал — якщо гроші прийшли раніше, поставте фактичну дату.</AssistantInline>
+          <AssistantInline>Якщо зйомка ще не підтверджена, вона створиться як <b>Запит</b> і дата не блокує календар для помічника. Щойно домовились — натисніть «Підтвердити» у картці.</AssistantInline>
+          <AssistantInline>Податковий квартал визначає дата платежу — її можна поставити вручну, коли додаєте оплату в картці зйомки.</AssistantInline>
         </aside>
       </div>
     </>

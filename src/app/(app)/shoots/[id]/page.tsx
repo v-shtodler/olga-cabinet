@@ -56,7 +56,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         <Kpi label="Віддати до" value={s.deadline ? fmtShort(s.deadline) : "—"} sub={s.delivered_on ? `віддано ${fmtShort(s.delivered_on)}` : dlDays != null ? relDays(dlDays) : "дату не вказано"} subTone={!s.delivered_on && dlDays != null && dlDays < 0 ? "warn" : undefined} className={s.status === "shot" && dlDays != null ? (dlDays < 0 ? "!bg-warn-bg" : "!bg-sun-bg") : ""} />
-        <Kpi label="Вартість" value={money(s.price)} sub={s.deposit_pct > 0 ? `передоплата ${s.deposit_pct}%` : "без передоплати"} />
+        <Kpi label="Вартість" value={money(s.price)} />
         <Kpi label="Отримано" value={money(s.paid)} sub={s.balance > 0 ? `залишок ${money(s.balance)}` : "оплачено повністю ✓"} subTone={s.balance > 0 ? "warn" : "good"} className={s.paid > 0 ? "!bg-good-bg" : ""} />
         <Kpi label="Податок із зйомки" value={money(s.price * (settings.ep_rate + settings.vz_rate) / 100)} sub={`ЄП ${settings.ep_rate}% + ВЗ ${settings.vz_rate}%`} />
       </div>
@@ -68,11 +68,11 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           <section className="card">
             <div className="flex justify-between items-baseline mb-3 gap-2 flex-wrap"><h2 className="text-[17px] font-semibold">Фінанси</h2>{s.status !== "cancelled" && <Link href={`/shoots/${s.id}/invoice`} className="btn btn-sm">Рахунок →</Link>}</div>
             <div className="flex flex-col gap-1.5">
-              {payments.map((p) => <div key={p.id} className="kv items-center"><span>{{ deposit: "Передоплата", balance: "Залишок", extra: "Доплата", refund: "Повернення" }[p.kind]} · {{ invoice: "Рахунок ФОП", card: "Картка", cash: "Готівка", other: "Інше" }[p.method]} · {fmtDate(p.paid_on)}</span><span className="flex items-center gap-3"><b className="num" style={{ color: "var(--good)" }}>+ {money(Number(p.amount))}</b><form action={deletePayment.bind(null, p.id)} data-op="deletePayment" data-args={JSON.stringify([p.id])}><button className="text-muted text-xs" aria-label="Видалити платіж" title="Видалити">×</button></form></span></div>)}
-              {s.balance > 0 && <div className="kv" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><span>Залишок{s.invoice_sent_on ? ` · рахунок виставлено ${relDays(-(s.invoice_age_days ?? 0))}` : s.status === "request" ? ` · очікую передоплату ${money(Math.round(s.price * s.deposit_pct / 100))}` : " · після віддачі"}</span><b className="num">{money(s.balance)}</b></div>}
+              {payments.map((p) => <div key={p.id} className="kv items-center"><span>{{ deposit: "Оплата", balance: "Оплата", extra: "Доплата", refund: "Повернення" }[p.kind]} · {{ invoice: "Рахунок ФОП", card: "Картка", cash: "Готівка", other: "Інше" }[p.method]} · {fmtDate(p.paid_on)}</span><span className="flex items-center gap-3"><b className="num" style={{ color: "var(--good)" }}>+ {money(Number(p.amount))}</b><form action={deletePayment.bind(null, p.id)} data-op="deletePayment" data-args={JSON.stringify([p.id])}><button className="text-muted text-xs" aria-label="Видалити платіж" title="Видалити">×</button></form></span></div>)}
+              {s.balance > 0 && <div className="kv" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><span>Залишок{s.invoice_sent_on ? ` · рахунок виставлено ${relDays(-(s.invoice_age_days ?? 0))}` : s.status === "request" ? " · очікую оплату" : " · після віддачі"}</span><b className="num">{money(s.balance)}</b></div>}
             </div>
             <div className="flex gap-2 flex-wrap mt-3">
-              <PaymentForm shootId={s.id} suggested={s.balance > 0 ? s.balance : 0} hasDeposit={payments.length > 0} />
+              <PaymentForm shootId={s.id} suggested={s.balance > 0 ? s.balance : 0} />
               {!s.invoice_sent_on && s.status === "delivered" && s.balance > 0 && <form action={markInvoiceSent.bind(null, s.id)} data-op="markInvoiceSent" data-args={JSON.stringify([s.id])}><button className="btn btn-sm">Рахунок виставлено сьогодні</button></form>}
             </div>
           </section>
@@ -99,7 +99,7 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           <section className="card">
             <div className="flex justify-between items-center mb-3"><span className="text-[13px] font-medium text-muted">Замовник</span><Link href={`/clients/${c.id}`} className="chip" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>Картка →</Link></div>
             <div className="flex items-center gap-3"><Avatar name={c.name} hue={c.avatar_hue} size={44} /><div><div className="text-[19px] font-bold tracking-[-0.01em]">{c.name}</div><div className="text-[13px] text-muted">{c.kind ?? ""}{c.kind ? " · " : ""}з {fmtShort(c.since)} {c.since.slice(0, 4)}</div></div></div>
-            <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)], ["Платять", c.default_deposit_pct === 100 ? "наперед ✓" : st?.avg_pay_delay_days != null ? `~${Math.round(st.avg_pay_delay_days)} дн` : "—"], ["Середній чек", money(st?.avg_check ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-[10px]" style={{ background: "var(--glass-2)" }}><div className="text-[12px] text-muted">{k}</div><div className="font-semibold num">{v}</div></div>)}</div>
+            <div className="grid grid-cols-2 gap-2.5 mt-3.5">{[["Зйомок", st?.shoots ?? 0], ["Усього", money(st?.total ?? 0)]].map(([k, v]) => <div key={String(k)} className="px-3 py-2.5 rounded-[10px]" style={{ background: "var(--glass-2)" }}><div className="text-[12px] text-muted">{k}</div><div className="font-semibold num">{v}</div></div>)}</div>
             {prefs.length > 0 && <div className="mt-3.5"><div className="text-[13px] font-semibold text-muted mb-1.5">Що важливо для цього клієнта</div><ul className="m-0 pl-[18px] text-[13px] leading-relaxed">{prefs.map((p) => <li key={p.id}>{p.text}</li>)}</ul></div>}
           </section>
           <section className="card"><h2 className="text-[17px] font-semibold mb-3">Історія · {c.name}</h2><div className="flex flex-col gap-1.5">{hist.length ? hist.map((h) => <Link key={h.id} href={`/shoots/${h.id}`} className="kv"><span><b>{fmtDate(h.date)}</b><br /><span className="text-muted text-xs">{h.location ?? "—"}</span></span><b className="num">{money(h.price)}</b></Link>) : <div className="empty">Перша зйомка з цим клієнтом.</div>}</div></section>

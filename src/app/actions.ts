@@ -33,29 +33,28 @@ export async function toggleBlockedDay(day: string) {
 const ShootInput = z.object({
   client_id: z.string().min(1), new_client_name: z.string().max(120).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), start_time: z.string().optional(), location: z.string().max(200).optional(),
-  price: z.coerce.number().min(0), deposit_pct: z.coerce.number().min(0).max(100),
+  price: z.coerce.number().min(0),
   deadline_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
-  note: z.string().max(2000).optional(), deposit_received: z.coerce.boolean().optional(), deposit_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
+  note: z.string().max(2000).optional(), confirmed: z.coerce.boolean().optional(),
 });
 export async function createShoot(formData: FormData) {
   const { supabase } = await db();
-  const raw = Object.fromEntries(formData.entries()); raw.deposit_received = formData.get("deposit_received") === "on" ? "true" : "";
+  const raw = Object.fromEntries(formData.entries()); raw.confirmed = formData.get("confirmed") === "on" ? "true" : "";
   const p = ShootInput.parse(raw);
   let clientId = p.client_id;
   if (clientId === "__new") {
     const name = (p.new_client_name ?? "").trim(); if (!name) throw new Error("Вкажіть назву нового замовника");
-    const { data: c, error: ce } = await supabase.from("clients").insert({ name, default_deposit_pct: p.deposit_pct }).select("id").single();
+    const { data: c, error: ce } = await supabase.from("clients").insert({ name }).select("id").single();
     if (ce || !c) throw new Error(ce?.message ?? "client insert failed");
     clientId = c.id;
   }
-  const status: ShootStatus = p.deposit_received ? "confirmed" : "request";
+  const status: ShootStatus = p.confirmed ? "confirmed" : "request";
   const { data: shoot, error } = await supabase.from("shoots").insert({
     client_id: clientId, status, date: p.date, start_time: p.start_time || null, location: p.location || null,
-    price: p.price, deposit_pct: p.deposit_pct, deadline_on: p.deadline_on || null,
+    price: p.price, deadline_on: p.deadline_on || null,
   }).select("id").single();
   if (error || !shoot) throw new Error(error?.message ?? "insert failed");
   if (p.note) await supabase.from("shoot_notes").insert({ shoot_id: shoot.id, text: p.note });
-  if (status === "confirmed" && p.deposit_pct > 0) await supabase.from("payments").insert({ shoot_id: shoot.id, amount: Math.round(p.price * p.deposit_pct / 100), paid_on: p.deposit_on || todayISO(), kind: "deposit", method: "invoice" });
   all(); redirect(`/shoots/${shoot.id}`);
 }
 /** Full edit of a shoot's terms (the same form as creation; status, payments and notes are untouched). */
@@ -64,7 +63,7 @@ export async function updateShoot(id: string, formData: FormData) {
   const p = ShootInput.parse(Object.fromEntries(formData.entries()));
   const { error } = await supabase.from("shoots").update({
     client_id: p.client_id, date: p.date, start_time: p.start_time || null, location: p.location || null,
-    price: p.price, deposit_pct: p.deposit_pct, deadline_on: p.deadline_on || null,
+    price: p.price, deadline_on: p.deadline_on || null,
   }).eq("id", id);
   if (error) throw new Error(error.message);
   all();
@@ -80,7 +79,6 @@ export async function advanceShoot(id: string) {
   // The date stays editable in the shoot card.
   const today = todayISO();
   const on = (d?: string | null) => (d && d < today ? d : today);
-  if (next === "confirmed" && Number(s.paid) === 0 && s.deposit_pct > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Math.round(Number(s.price) * s.deposit_pct / 100), paid_on: on(s.date), kind: "deposit", method: "invoice" });
   if (next === "delivered") { patch.delivered_on = on(s.deadline ?? s.date); if (Number(s.balance) > 0) patch.invoice_sent_on = on(s.deadline ?? s.date); }
   if (next === "paid" && Number(s.balance) > 0) await supabase.from("payments").insert({ shoot_id: id, amount: Number(s.balance), paid_on: on(s.delivered_on ?? s.date), kind: "balance", method: "invoice" });
   await supabase.from("shoots").update(patch).eq("id", id);
@@ -123,7 +121,7 @@ export async function markInvoiceSent(id: string) {
 }
 
 /* ---------- payments ---------- */
-const PaymentInput = z.object({ shoot_id: z.string().uuid(), amount: z.coerce.number().positive(), paid_on: z.string(), kind: z.enum(["deposit", "balance", "extra", "refund"]), method: z.enum(["invoice", "card", "cash", "other"]) });
+const PaymentInput = z.object({ shoot_id: z.string().uuid(), amount: z.coerce.number().positive(), paid_on: z.string(), kind: z.enum(["balance", "extra", "refund"]), method: z.enum(["invoice", "card", "cash", "other"]) });
 export async function addPayment(formData: FormData) {
   const { supabase } = await db();
   const p = PaymentInput.parse(Object.fromEntries(formData.entries()));
@@ -155,11 +153,11 @@ export async function deleteChecklistItem(id: string) { const { supabase } = awa
 export async function toggleChecklist(id: string, done: boolean) { const { supabase } = await db(); await supabase.from("checklist_items").update({ done }).eq("id", id); all(); }
 
 /* ---------- clients ---------- */
-const ClientInput = z.object({ name: z.string().min(1).max(120), kind: z.string().max(80).optional(), contact_name: z.string().max(120).optional(), contact_email: z.string().max(120).optional(), contact_phone: z.string().max(40).optional(), default_deposit_pct: z.coerce.number().min(0).max(100), pref: z.string().max(300).optional() });
+const ClientInput = z.object({ name: z.string().min(1).max(120), kind: z.string().max(80).optional(), contact_name: z.string().max(120).optional(), contact_email: z.string().max(120).optional(), contact_phone: z.string().max(40).optional(), pref: z.string().max(300).optional() });
 export async function updateClient(id: string, formData: FormData) {
   const { supabase } = await db();
   const p = ClientInput.omit({ pref: true }).parse(Object.fromEntries(formData.entries()));
-  const { error } = await supabase.from("clients").update({ name: p.name, kind: p.kind || null, contact_name: p.contact_name || null, contact_email: p.contact_email || null, contact_phone: p.contact_phone || null, default_deposit_pct: p.default_deposit_pct }).eq("id", id);
+  const { error } = await supabase.from("clients").update({ name: p.name, kind: p.kind || null, contact_name: p.contact_name || null, contact_email: p.contact_email || null, contact_phone: p.contact_phone || null }).eq("id", id);
   if (error) throw new Error(error.message);
   all();
 }
@@ -167,7 +165,7 @@ export async function createClient_(formData: FormData) {
   const { supabase } = await db();
   const p = ClientInput.parse(Object.fromEntries(formData.entries()));
   const { count } = await supabase.from("clients").select("*", { count: "exact", head: true });
-  const { data: c, error } = await supabase.from("clients").insert({ name: p.name, kind: p.kind || null, contact_name: p.contact_name || null, contact_email: p.contact_email || null, contact_phone: p.contact_phone || null, default_deposit_pct: p.default_deposit_pct, avatar_hue: (count ?? 0) % BRAND.length }).select("id").single();
+  const { data: c, error } = await supabase.from("clients").insert({ name: p.name, kind: p.kind || null, contact_name: p.contact_name || null, contact_email: p.contact_email || null, contact_phone: p.contact_phone || null, avatar_hue: (count ?? 0) % BRAND.length }).select("id").single();
   if (error || !c) throw new Error(error?.message ?? "insert failed");
   if (p.pref) await supabase.from("client_prefs").insert({ client_id: c.id, text: p.pref });
   all(); redirect(`/clients/${c.id}`);

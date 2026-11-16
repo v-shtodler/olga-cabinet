@@ -33,7 +33,6 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
             <div className="field flex flex-col gap-1.5"><label htmlFor="c-contact">Контактна особа</label><input id="c-contact" name="contact_name" maxLength={120} /></div>
             <div className="field flex flex-col gap-1.5"><label htmlFor="c-email">Пошта</label><input id="c-email" name="contact_email" type="email" maxLength={120} /></div>
             <div className="field flex flex-col gap-1.5"><label htmlFor="c-phone">Телефон</label><input id="c-phone" name="contact_phone" maxLength={40} /></div>
-            <div className="field flex flex-col gap-1.5"><label htmlFor="c-dep">Передоплата за замовчуванням</label><select id="c-dep" name="default_deposit_pct" defaultValue="50"><option value="50">50%</option><option value="100">100%</option><option value="30">30%</option><option value="0">без передоплати</option></select></div>
             <div className="field flex flex-col gap-1.5"><label htmlFor="c-pref">Що важливо (одна вимога)</label><input id="c-pref" name="pref" maxLength={300} placeholder="Білий фон, 3 ракурси на SKU" /></div>
             <div className="sm:col-span-2 flex justify-end"><button className="btn btn-primary">Створити</button></div>
           </form>
@@ -56,7 +55,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num">{st.shoots}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num font-bold whitespace-nowrap">{money(st.total)}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num whitespace-nowrap">{money(st.avg_check)}</td>
-                <td className="px-2.5 py-2.5 bg-glass-2 whitespace-nowrap"><Chip tone={c.default_deposit_pct === 100 ? "info" : st.avg_pay_delay_days == null ? "neutral" : st.avg_pay_delay_days <= 7 ? "good" : "warn"}>{c.default_deposit_pct === 100 ? "100% наперед" : st.avg_pay_delay_days == null ? "ще нема даних" : st.avg_pay_delay_days <= 7 ? "✓ вчасно" : `⏱ ~${Math.round(st.avg_pay_delay_days)} дн`}</Chip>{st.open_balance > 0 && <> <Chip tone="warn">винні {money(st.open_balance)}</Chip></>}</td>
+                <td className="px-2.5 py-2.5 bg-glass-2 whitespace-nowrap"><Chip tone={st.avg_pay_delay_days == null ? "neutral" : st.avg_pay_delay_days <= 7 ? "good" : "warn"}>{st.avg_pay_delay_days == null ? "ще нема даних" : st.avg_pay_delay_days <= 7 ? "✓ вчасно" : `⏱ ~${Math.round(st.avg_pay_delay_days)} дн`}</Chip>{st.open_balance > 0 && <> <Chip tone="warn">винні {money(st.open_balance)}</Chip></>}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 rounded-r-xl text-muted whitespace-nowrap">{st.last_shoot ? fmtDate(st.last_shoot as string) : "—"}</td>
               </tr>))}</tbody>
           </table></div>

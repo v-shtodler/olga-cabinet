@@ -20,7 +20,7 @@ export default async function EditShootPage({ params }: { params: Promise<{ id: 
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-[999_1_560px] min-w-0"><ShootForm clients={clients} initial={{ source: s }} editId={id} /></section>
         <aside className="flex-[1_1_280px] min-w-0 flex flex-col gap-3.5">
-          <AssistantInline>Статус, платежі, замітки й чек-лист не змінюються — тут лише дата, час, локація, ціна й передоплата.</AssistantInline>
+          <AssistantInline>Статус, платежі, замітки й чек-лист не змінюються — тут лише дата, час, локація й ціна.</AssistantInline>
         </aside>
       </div>
     </>

@@ -4,12 +4,11 @@ import { useTransition } from "react";
 import { markInvoiceSent } from "@/app/actions";
 import { callOrQueue } from "@/lib/outbox";
 
-export function InvoiceActions({ id, mode, invoiceSent, hasBalanceOption, hasDepositOption }: { id: string; mode: string; invoiceSent: boolean; hasBalanceOption: boolean; hasDepositOption: boolean }) {
+export function InvoiceActions({ id, mode, invoiceSent, hasBalanceOption }: { id: string; mode: string; invoiceSent: boolean; hasBalanceOption: boolean }) {
   const [pending, start] = useTransition();
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <div className="seg">
-        {hasDepositOption && <Link href={`/shoots/${id}/invoice?sum=deposit`} className={mode === "deposit" ? "on" : ""}>Передоплата</Link>}
         {hasBalanceOption && <Link href={`/shoots/${id}/invoice?sum=balance`} className={mode === "balance" ? "on" : ""}>Залишок</Link>}
         <Link href={`/shoots/${id}/invoice?sum=full`} className={mode === "full" ? "on" : ""}>Уся сума</Link>
       </div>

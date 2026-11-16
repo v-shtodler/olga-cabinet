@@ -22,7 +22,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
   const allPaid = (await getShoots()).filter((s) => s.status === "paid");
   const avgAll = allPaid.length ? allPaid.reduce((a, s) => a + s.price, 0) / allPaid.length : 0;
   if (st && st.avg_check && avgAll && st.avg_check < avgAll * 0.75 && st.shoots >= 3 && !dismissed.has(`price-${id}`)) insights.push({ key: `price-${id}`, kind: "price", sev: "low", tag: "Ціна нижча за ваш середній чек", text: `Середній чек ${c.name} — ${money(st.avg_check)}, ваш середній по всіх — ${money(avgAll)}. ${st.shoots} ${plural(st.shoots, "зйомка", "зйомки", "зйомок")} — привід переглянути прайс.` });
-  if (st?.avg_pay_delay_days != null && st.avg_pay_delay_days > 7 && !dismissed.has(`paypat-${id}`)) insights.push({ key: `paypat-${id}`, kind: "payment", sev: "low", tag: "Патерн оплати", text: `${c.name} платять у середньому на ${Math.round(st.avg_pay_delay_days)}-й день після рахунку. Варто ставити 100% передоплату або нагадувати на 7-й день.` });
+  if (st?.avg_pay_delay_days != null && st.avg_pay_delay_days > 7 && !dismissed.has(`paypat-${id}`)) insights.push({ key: `paypat-${id}`, kind: "payment", sev: "low", tag: "Патерн оплати", text: `${c.name} платять у середньому на ${Math.round(st.avg_pay_delay_days)}-й день після рахунку. Варто нагадувати на 7-й день після рахунку.` });
 
   return (
     <>
@@ -34,7 +34,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 mb-3.5">
         <Kpi label="Зйомок" value={st?.shoots ?? 0} />
         <Kpi label="Дохід усього" value={money(st?.total ?? 0)} />
-        <Kpi label="Платять" value={c.default_deposit_pct === 100 ? "наперед" : st?.avg_pay_delay_days != null ? `на ${Math.round(st.avg_pay_delay_days)}-й день` : "—"} sub={st?.open_balance ? `відкрито ${money(st.open_balance)}` : "боргів нема ✓"} subTone={st?.open_balance ? "warn" : "good"} />
+        <Kpi label="Платять" value={st?.avg_pay_delay_days != null ? `на ${Math.round(st.avg_pay_delay_days)}-й день` : "—"} sub={st?.open_balance ? `відкрито ${money(st.open_balance)}` : "боргів нема ✓"} subTone={st?.open_balance ? "warn" : "good"} />
       </div>
       <div className="flex flex-wrap gap-3.5">
         <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5">

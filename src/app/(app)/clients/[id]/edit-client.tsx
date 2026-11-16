@@ -16,7 +16,6 @@ export function ContactCard({ c }: { c: Client }) {
           <div className="kv"><span className="text-muted">Контакт</span><b>{c.contact_name ?? "—"}</b></div>
           {c.contact_email && <div className="kv"><span className="text-muted">Пошта</span><a href={`mailto:${c.contact_email}`} className="font-bold text-accent select-all">{c.contact_email}</a></div>}
           {c.contact_phone && <div className="kv"><span className="text-muted">Телефон</span><a href={`tel:${c.contact_phone.replace(/\s+/g, "")}`} className="font-bold text-accent select-all">{c.contact_phone}</a></div>}
-          <div className="kv"><span className="text-muted">Передоплата</span><b>{c.default_deposit_pct}%</b></div>
         </div>
       ) : (
         <form action={action} data-op="updateClient" data-args={JSON.stringify([c.id])} data-label={c.name} onSubmit={() => setEdit(false)} className="grid grid-cols-1 gap-3">
@@ -25,7 +24,6 @@ export function ContactCard({ c }: { c: Client }) {
           <div className="field flex flex-col gap-1.5"><label htmlFor="e-contact">Контактна особа</label><input id="e-contact" name="contact_name" defaultValue={c.contact_name ?? ""} maxLength={120} /></div>
           <div className="field flex flex-col gap-1.5"><label htmlFor="e-email">Пошта</label><input id="e-email" name="contact_email" type="email" defaultValue={c.contact_email ?? ""} maxLength={120} /></div>
           <div className="field flex flex-col gap-1.5"><label htmlFor="e-phone">Телефон</label><input id="e-phone" name="contact_phone" type="tel" defaultValue={c.contact_phone ?? ""} maxLength={40} /></div>
-          <div className="field flex flex-col gap-1.5"><label htmlFor="e-dep">Передоплата за замовчуванням</label><select id="e-dep" name="default_deposit_pct" defaultValue={String(c.default_deposit_pct)}><option value="0">0%</option><option value="30">30%</option><option value="50">50%</option><option value="70">70%</option><option value="100">100%</option></select></div>
           <div className="flex justify-end gap-2"><button type="submit" className="btn btn-primary">Зберегти</button></div>
         </form>
       )}

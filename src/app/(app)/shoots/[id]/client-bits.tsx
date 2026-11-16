@@ -33,7 +33,7 @@ export function ChecklistToggle({ id, text, done: initial }: { id: string; text:
   );
 }
 
-export function PaymentForm({ shootId, suggested, hasDeposit }: { shootId: string; suggested: number; hasDeposit: boolean }) {
+export function PaymentForm({ shootId, suggested }: { shootId: string; suggested: number }) {
   const [open, setOpen] = useState(false); const [pending, start] = useTransition();
   if (!open) return <button type="button" className="btn btn-sm btn-good" onClick={() => setOpen(true)}>+ Платіж{suggested > 0 ? ` (${Math.round(suggested).toLocaleString("uk-UA")} ₴)` : ""}</button>;
   return (
@@ -41,7 +41,7 @@ export function PaymentForm({ shootId, suggested, hasDeposit }: { shootId: strin
       <input type="hidden" name="shoot_id" value={shootId} />
       <div className="field flex flex-col gap-1"><label htmlFor="p-amount">Сума, ₴</label><input id="p-amount" name="amount" type="number" min="1" step="any" defaultValue={Math.round(suggested) || ""} required /></div>
       <div className="field flex flex-col gap-1"><label htmlFor="p-date">Дата отримання</label><input id="p-date" name="paid_on" type="date" defaultValue={todayISO()} required /></div>
-      <div className="field flex flex-col gap-1"><label htmlFor="p-kind">Що це</label><select id="p-kind" name="kind" defaultValue={hasDeposit ? "balance" : "deposit"}><option value="deposit">Передоплата</option><option value="balance">Залишок</option><option value="extra">Доплата</option><option value="refund">Повернення</option></select></div>
+      <div className="field flex flex-col gap-1"><label htmlFor="p-kind">Що це</label><select id="p-kind" name="kind" defaultValue="balance"><option value="balance">Оплата</option><option value="extra">Доплата</option><option value="refund">Повернення</option></select></div>
       <div className="field flex flex-col gap-1"><label htmlFor="p-method">Спосіб</label><select id="p-method" name="method" defaultValue="invoice"><option value="invoice">Рахунок ФОП</option><option value="card">Картка</option><option value="cash">Готівка</option><option value="other">Інше</option></select></div>
       <div className="col-span-2 sm:col-span-4 flex justify-between items-center gap-2 flex-wrap"><span className="text-[13px] text-muted">Дата платежу визначає податковий квартал.</span><span className="flex gap-2"><button type="button" className="btn btn-sm btn-ghost" onClick={() => setOpen(false)}>Скасувати</button><button className="btn btn-sm btn-good" disabled={pending}>{pending ? "…" : "Записати"}</button></span></div>
     </form>

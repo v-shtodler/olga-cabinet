@@ -7,7 +7,7 @@ import * as I from "@/components/icons";
 
 export const metadata = { title: "Рахунок" };
 
-/* Printable invoice (рахунок-фактура ФОП). ?sum=deposit|balance|full picks the amount; print via the browser → PDF. */
+/* Printable invoice (рахунок-фактура ФОП). ?sum=balance|full picks the amount; print via the browser → PDF. */
 export default async function InvoicePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ sum?: string }> }) {
   const [{ id }, { sum }] = await Promise.all([params, searchParams]);
   const [data, st, clients] = await Promise.all([getShoot(id), getSettings(), getClients()]);
@@ -15,12 +15,11 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   const { shoot: s, payments } = data;
   const c = clients.find((x) => x.id === s.client_id); if (!c) notFound();
   const paid = payments.reduce((a, p) => a + Number(p.amount), 0);
-  const deposit = Math.round(s.price * s.deposit_pct / 100);
-  const mode = sum === "deposit" ? "deposit" : sum === "full" ? "full" : paid > 0 && s.price - paid > 0 ? "balance" : s.deposit_pct > 0 && s.deposit_pct < 100 && paid === 0 ? "deposit" : "full";
-  const amount = mode === "deposit" ? deposit : mode === "balance" ? Math.max(0, s.price - paid) : s.price;
-  const label = mode === "deposit" ? `Передоплата ${s.deposit_pct}%` : mode === "balance" ? "Остаточний розрахунок" : "Повна вартість";
+  const mode = sum === "full" ? "full" : paid > 0 && s.price - paid > 0 ? "balance" : "full";
+  const amount = mode === "balance" ? Math.max(0, s.price - paid) : s.price;
+  const label = mode === "balance" ? "Остаточний розрахунок" : "Повна вартість";
   const today = todayISO();
-  const no = `${s.no ?? s.id.slice(0, 6)}${mode === "deposit" ? "-1" : mode === "balance" ? "-2" : ""}`;
+  const no = `${s.no ?? s.id.slice(0, 6)}${mode === "balance" ? "-2" : ""}`;
   const desc = `Фотозйомка ${fmtDate(s.date, true)}${s.location ? `, ${s.location}` : ""}`;
   const missing = !st.fop_name || !st.iban;
 
@@ -28,7 +27,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
     <>
       <div className="print:hidden flex items-center justify-between gap-3 flex-wrap mb-4">
         <Link href={`/shoots/${id}`} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent"><I.Back /> До зйомки</Link>
-        <InvoiceActions id={id} mode={mode} invoiceSent={!!s.invoice_sent_on} hasBalanceOption={paid > 0 && s.price - paid > 0} hasDepositOption={s.deposit_pct > 0 && s.deposit_pct < 100} />
+        <InvoiceActions id={id} mode={mode} invoiceSent={!!s.invoice_sent_on} hasBalanceOption={paid > 0 && s.price - paid > 0} />
       </div>
       {missing && <div className="print:hidden rounded-2xl px-4 py-2.5 mb-4 text-[13px] font-medium" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}>Не заповнені реквізити (назва ФОП, IBAN) — <Link href="/settings" className="underline">додайте в Налаштуваннях</Link>, інакше рахунок буде без них.</div>}
 
