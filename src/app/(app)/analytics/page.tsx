@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { uk } from "date-fns/locale";
-import { getShoots, getIncomeMonthly, getSettings, getTaxQuarters, getTaxPaid } from "@/lib/data";
-import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor, taxTimeline, fmtDate } from "@/lib/domain";
+import { getShoots, getIncomeMonthly, getSavings, getSettings, getTaxQuarters, getTaxPaid } from "@/lib/data";
+import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor, taxTimeline, fmtDate, fx, CURRENCIES } from "@/lib/domain";
 import { Kpi } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { CsvButton } from "./csv-button";
 
 export const metadata = { title: "Аналітика" };
 
-export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
-  const { p = "year" } = await searchParams; const period = ["quarter", "year", "all"].includes(p) ? p : "year";
+export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ p?: string; y?: string }> }) {
+  const { p = "year", y: yParam } = await searchParams; const period = ["quarter", "year", "all"].includes(p) ? p : "year";
   const now = nowKyiv(); const today = todayISO(); const y = now.getFullYear();
-  const [shoots, monthly, settings, quarters, taxPaid] = await Promise.all([getShoots(), getIncomeMonthly(), getSettings(), getTaxQuarters(), getTaxPaid()]);
+  const [shoots, monthly, savings, settings, quarters, taxPaid] = await Promise.all([getShoots(), getIncomeMonthly(), getSavings(), getSettings(), getTaxQuarters(), getTaxPaid()]);
   // the ФОП band: this quarter's own numbers, plus anything unpaid from a closed quarter
   const tl = taxTimeline(quarters, taxPaid, settings);
   const qNo = Math.floor(now.getMonth() / 3) + 1;
@@ -32,7 +32,14 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const income = incomeIn(from, to); const prevIncome = prevFrom ? incomeIn(prevFrom, prevTo) : 0;
   const delta = prevIncome ? Math.round((income / prevIncome - 1) * 100) : null;
   const avg = done.length ? done.reduce((a, s) => a + s.price, 0) / done.length : 0;
-  const m12 = Array.from({ length: 12 }, (_, i) => { const d = startOfMonth(subMonths(now, 11 - i)); return { label: format(d, "LLL", { locale: uk }).replace(".", ""), income: monthly.find((m) => m.month.startsWith(format(d, "yyyy-MM")))?.income ?? 0 }; });
+  // Chart range: the rolling twelve months, or a calendar year picked in the header
+  const years = [...new Set(monthly.map((m) => m.month.slice(0, 4)))].sort().reverse();
+  const chartYear = yParam && years.includes(yParam) ? yParam : null;
+  const m12 = Array.from({ length: 12 }, (_, i) => {
+    const d = chartYear ? new Date(Number(chartYear), i, 1) : startOfMonth(subMonths(now, 11 - i));
+    return { key: format(d, "yyyy-MM"), label: format(d, "LLL", { locale: uk }).replace(".", ""), income: monthly.find((m) => m.month.startsWith(format(d, "yyyy-MM")))?.income ?? 0 };
+  });
+  const chartNow = format(now, "yyyy-MM");
   const max12 = Math.max(...m12.map((m) => m.income), 1);
   const total12 = m12.reduce((a, m) => a + m.income, 0);
   const best12 = m12.reduce((a, m) => (m.income > a.income ? m : a), m12[0]);
@@ -47,6 +54,12 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const topList = byMoney.slice(0, 6); const topMax = Math.max(...byMoney.map((c) => c.paid), 1);
   const paidAll = byMoney.reduce((a, c) => a + c.paid, 0);
   const top3Share = paidAll ? Math.round(byMoney.slice(0, 3).reduce((a, c) => a + c.paid, 0) / paidAll * 100) : 0;
+
+  // Відкладені за період: скільки з доходу лишилось у валюті
+  const savedIn = savings.filter((r) => r.month >= from.slice(0, 7) + "-01" && r.month <= to);
+  const savedUah = savedIn.reduce((a, r) => a + Number(r.uah), 0);
+  const savedShare = income ? Math.round(savedUah / income * 100) : 0;
+  const savedMonths = [...new Set(savedIn.map((r) => r.month))].sort().reverse();
 
   // What is already booked ahead, by month
   const ahead = new Map<string, { count: number; price: number; left: number }>();
@@ -77,22 +90,28 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       {/* the year's shape, with the assistant reading it from the side */}
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-[999_1_560px] min-w-0">
-          <h2 className="text-[17px] font-semibold mb-3">Отримано по місяцях · 12 міс</h2>
+          <div className="flex justify-between items-center gap-3 flex-wrap mb-3">
+            <h2 className="text-[17px] font-semibold">Отримано по місяцях · {chartYear ?? "12 міс"}</h2>
+            <div className="seg">
+              <Link href={`/analytics?p=${period}`} className={chartYear ? "" : "on"}>12 міс</Link>
+              {years.map((yy) => <Link key={yy} href={`/analytics?p=${period}&y=${yy}`} className={chartYear === yy ? "on" : ""}>{yy}</Link>)}
+            </div>
+          </div>
           <div className="flex items-end gap-1.5 sm:gap-2 h-[190px]">
             {m12.map((m, i) => (
               <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5">
                 {m.income > 0 && (
-                  <span className="font-semibold num whitespace-nowrap" style={{ color: i === 11 ? "var(--accent)" : "var(--muted)" }}>
+                  <span className="font-semibold num whitespace-nowrap" style={{ color: m.key === chartNow ? "var(--accent)" : "var(--muted)" }}>
                     <span className="sm:hidden text-[10px]">{moneyK(m.income)}</span>
                     <span className="hidden sm:inline text-[10px] lg:text-[11px]">{money(m.income)}</span>
                   </span>
                 )}
-                <i className="block w-full rounded-t-[6px] rounded-b-[2px]" style={{ height: Math.max(4, Math.round(m.income / max12 * 150)), background: i === 11 ? "linear-gradient(180deg, var(--accent-2), var(--accent))" : "linear-gradient(180deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent))" }} />
+                <i className="block w-full rounded-t-[6px] rounded-b-[2px]" style={{ height: Math.max(4, Math.round(m.income / max12 * 150)), background: m.key === chartNow ? "linear-gradient(180deg, var(--accent-2), var(--accent))" : "linear-gradient(180deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent))" }} />
               </div>
             ))}
           </div>
-          <div className="flex gap-1.5 sm:gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] sm:text-[11px] font-medium min-w-0" style={{ color: i === 11 ? "var(--fg)" : "var(--muted)" }}>{m.label}</span>)}</div>
-          <p className="text-[13px] text-muted mt-3.5">Усього за 12 місяців — <b className="num text-fg">{money(total12)}</b>{best12.income > 0 ? <> · найкращий місяць — <b className="text-fg">{best12.label}</b> (<span className="num">{money(best12.income)}</span>)</> : null}</p>
+          <div className="flex gap-1.5 sm:gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] sm:text-[11px] font-medium min-w-0" style={{ color: m.key === chartNow ? "var(--fg)" : "var(--muted)" }}>{m.label}</span>)}</div>
+          <p className="text-[13px] text-muted mt-3.5">Усього за {chartYear ? `${chartYear} рік` : "12 місяців"} — <b className="num text-fg">{money(total12)}</b>{best12.income > 0 ? <> · найкращий місяць — <b className="text-fg">{best12.label}</b> (<span className="num">{money(best12.income)}</span>)</> : null}</p>
         </section>
         <aside className="flex-[1_1_300px] min-w-0"><Assistant items={[]} title="Помічник бачить у цифрах" empty={summary} /></aside>
       </div>
@@ -116,6 +135,42 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
               <p className="text-[13px] text-muted mt-3">Топ-3 дають <b className="text-fg">{top3Share}%</b> доходу за період{byMoney.length > 6 ? ` · усього замовників: ${byMoney.length}` : ""}.{top3Share >= 70 ? " Варто розширювати базу — залежність висока." : ""}</p>
             </>
           ) : <div className="empty">За цей період оплат ще не було.</div>}
+        </section>
+
+        {/* Відкладені */}
+        <section className="card min-w-0">
+          <div className="flex justify-between items-baseline gap-2 mb-3">
+            <h2 className="text-[17px] font-semibold">Відкладені</h2>
+            <Link href="/savings" className="text-[13px] font-semibold text-accent shrink-0">Усі →</Link>
+          </div>
+          {savedIn.length ? (
+            <>
+              <div className="flex items-baseline gap-2.5 flex-wrap mb-3">
+                <span className="text-[26px] font-bold tracking-[-0.01em] num leading-tight">{money(savedUah)}</span>
+                <span className="text-[13px] font-semibold" style={{ color: savedShare >= 10 ? "var(--good)" : "var(--muted)" }}>{savedShare}% доходу за період</span>
+              </div>
+              <div className="flex gap-2 flex-wrap mb-3">
+                {CURRENCIES.map((c) => {
+                  const v = savedIn.filter((r) => r.currency === c).reduce((a, r) => a + Number(r.amount), 0);
+                  return v > 0 ? <span key={c} className="chip" style={{ background: "var(--good-bg)", color: "var(--good)" }}>{fx(v, c)}</span> : null;
+                })}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {savedMonths.slice(0, 4).map((m) => {
+                  const list = savedIn.filter((r) => r.month === m);
+                  const uah = list.reduce((a, r) => a + Number(r.uah), 0);
+                  const inc = monthly.filter((x) => x.month.startsWith(m.slice(0, 7))).reduce((a, x) => a + x.income, 0);
+                  return (
+                    <div key={m} className="kv items-center">
+                      <span className="capitalize">{format(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1), "LLLL", { locale: uk })}</span>
+                      <span className="text-right shrink-0"><b className="num block">{money(uah)}</b>{inc > 0 && <span className="text-[12px] text-muted">{Math.round(uah / inc * 100)}% місяця</span>}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {savedMonths.length > 4 && <p className="text-[13px] text-muted mt-2">і ще {savedMonths.length - 4} {plural(savedMonths.length - 4, "місяць", "місяці", "місяців")}.</p>}
+            </>
+          ) : <div className="empty">За цей період нічого не відкладено.</div>}
         </section>
 
         {/* Законтрактовано наперед */}

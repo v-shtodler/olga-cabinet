@@ -50,6 +50,13 @@ export function nowKyiv(): Date {
 }
 export const todayISO = () => format(nowKyiv(), "yyyy-MM-dd");
 export const iso = (d: Date) => format(d, "yyyy-MM-dd");
+/* Відкладені: money set aside in euro or dollars, with the hryvnia it cost. */
+export type Currency = "EUR" | "USD";
+export const CURRENCIES: Currency[] = ["EUR", "USD"];
+export interface Saving { id: string; month: string; currency: Currency; amount: number; rate: number; uah: number; note: string | null; created_at: string; }
+export const CUR_SIGN: Record<Currency, string> = { EUR: "€", USD: "$" };
+export const fx = (n: number, c: Currency) => `${Math.round(n).toLocaleString("uk-UA").replace(/,/g, " ")} ${CUR_SIGN[c]}`;
+
 export const money = (n: number) => Math.round(n).toLocaleString("uk-UA").replace(/,/g, " ") + " ₴";
 export const moneyK = (n: number) => Math.round(n / 1000) + "k";
 export const fmtDate = (s: string, withYear = false) => format(parseISO(s), withYear ? "d MMMM yyyy" : "d MMMM", { locale: uk });

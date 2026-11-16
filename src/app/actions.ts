@@ -133,6 +133,28 @@ export async function addPayment(formData: FormData) {
 }
 export async function deletePayment(id: string) { const { supabase } = await db(); await supabase.from("payments").delete().eq("id", id); all(); }
 
+/* ---------- відкладені ---------- */
+const SavingInput = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  currency: z.enum(["EUR", "USD"]),
+  amount: z.coerce.number().positive().max(10_000_000),
+  rate: z.coerce.number().positive().max(1000),
+  note: z.string().max(200).optional(),
+});
+export async function addSaving(formData: FormData) {
+  const { supabase } = await db();
+  const p = SavingInput.parse(Object.fromEntries(formData.entries()));
+  const { error } = await supabase.from("savings").insert({ month: `${p.month}-01`, currency: p.currency, amount: p.amount, rate: p.rate, note: p.note || null });
+  if (error) throw new Error(error.code === "42P01" ? "Спочатку застосуйте міграцію 0014_savings.sql у Supabase → SQL Editor." : error.message);
+  all();
+}
+export async function deleteSaving(id: string) {
+  const { supabase } = await db();
+  const { error } = await supabase.from("savings").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  all();
+}
+
 /* ---------- notes / checklist ---------- */
 export async function addNote(shootId: string, formData: FormData) {
   const text = String(formData.get("text") ?? "").trim(); if (!text) return;
