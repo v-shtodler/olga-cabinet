@@ -24,6 +24,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const active = shoots.filter((s) => s.status !== "cancelled");
   const upcoming = active.filter((s) => s.date >= today && s.status !== "cancelled").slice(0, 5);
   const h = now.getHours(); const greet = h < 12 ? "Доброго ранку" : h < 18 ? "Добрий день" : "Добрий вечір";
+  const sky = h >= 6 && h < 18 ? "☀️" : "🌙"; // sun while it is up, crescent moon after
 
   // The period controls the three numbers at the top.
   const range = period === "month" ? { from: iso(startOfMonth(now)), to: iso(endOfMonth(now)), label: cap(format(now, "LLLL", { locale: uk })) }
@@ -61,7 +62,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="flex justify-between items-end gap-4 flex-wrap mb-5 px-1">
         <div>
           <div className="text-[13px] text-muted font-medium mb-1">{cap(format(now, "EEEE, d MMMM yyyy", { locale: uk }))}</div>
-          <h1 className="text-[34px] md:text-[32px] font-bold leading-[1.1] tracking-[-0.01em]">{greet}, {settings.display_name} <span aria-hidden="true">☀️</span></h1>
+          <h1 className="text-[34px] md:text-[32px] font-bold leading-[1.1] tracking-[-0.01em]">{greet}, {settings.display_name} <span aria-hidden="true">{sky}</span></h1>
           <p className="text-muted mt-1">{upcoming.length ? `Найближча зйомка — ${fmtDate(upcoming[0].date)}, ${upcoming[0].client_name}.` : "Попереду поки нічого не заплановано."}</p>
         </div>
         <div className="seg">{PERIODS.map(([k, l]) => <Link key={k} href={`/?p=${k}`} className={k === period ? "on" : ""}>{l}</Link>)}</div>
