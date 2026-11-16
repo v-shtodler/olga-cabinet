@@ -2,9 +2,9 @@ import Link from "next/link";
 import { addDays, format, isWeekend, subMonths, startOfMonth } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getClients, getClientPrefs, getSettings, getDismissed, getBlockedDays, getTaxQuarters, getTaxPaid, getIncomeMonthly } from "@/lib/data";
-import { nowKyiv, buildInsights, taxTimeline, groupByDay, deadlinesByDay, freeDays, todayISO, iso, money, moneyK, plural, relDays, daysBetween, fmtShort, TYPE_TONE, quarterOf } from "@/lib/domain";
+import { nowKyiv, buildInsights, taxTimeline, groupByDay, deadlinesByDay, freeDays, todayISO, iso, money, moneyK, plural, relDays, daysBetween, fmtShort, quarterOf } from "@/lib/domain";
 import { Assistant } from "@/components/assistant";
-import { Kpi, ShootRow, TONE_BG, TONE_FG } from "@/components/ui";
+import { Kpi, ShootRow } from "@/components/ui";
 
 export default async function HomePage() {
   const today = todayISO(); const now = nowKyiv();
@@ -55,7 +55,7 @@ export default async function HomePage() {
               return (
                 <Link key={k} href={`/calendar?d=${k}`} className="snap-start shrink-0 w-[76px] sm:w-auto rounded-[12px] p-2 min-h-[84px] sm:min-h-[86px] flex flex-col gap-1 border text-left" style={{ background: isFree ? "var(--good-bg)" : blocked.has(k) ? "var(--fill-2)" : "var(--glass-2)", borderColor: i === 0 ? "var(--accent)" : isFree ? "transparent" : "var(--line)", boxShadow: i === 0 ? "0 0 0 2px var(--accent-tint)" : undefined, opacity: we && !ev.length ? 0.8 : 1 }}>
                   <div className="flex justify-between items-baseline"><span className="text-[15px] font-semibold">{d.getDate()}</span><small className="font-medium text-muted text-[11px] uppercase">{format(d, "EEEEEE", { locale: uk })}</small></div>
-                  {ev.map((s) => <span key={s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: TONE_BG[TYPE_TONE[s.type]], color: TONE_FG[TYPE_TONE[s.type]] }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}
+                  {ev.map((s) => <span key={s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}
                   {dl.map((s) => <span key={"dl" + s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}
                   {isFree && <span className="text-[11px] font-medium mt-auto" style={{ color: "var(--good)" }}>вільно</span>}
                 </Link>
@@ -63,7 +63,7 @@ export default async function HomePage() {
             })}
           </div>
           <div className="flex gap-3.5 flex-wrap text-xs text-muted font-medium mt-3">
-            {(["lookbook", "product", "campaign", "portrait"] as const).map((t) => <span key={t} className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: TONE_BG[TYPE_TONE[t]], border: `1px solid ${TONE_FG[TYPE_TONE[t]]}` }} />{{ lookbook: "Lookbook", product: "Предметка", campaign: "Кампанія", portrait: "Портрети" }[t]}</span>)}
+            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--accent)" }} />Зйомка</span>
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн віддачі</span>
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільний день</span>
             <span>? — запит без передоплати</span>
@@ -75,7 +75,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           <Kpi label="Заброньовано · 14 днів" dot="var(--accent)" value={upcoming.filter((s) => daysBetween(today, s.date) < 14).length} sub={`${requests.length} ${plural(requests.length, "запит", "запити", "запитів")} без передоплати`} />
           <Kpi label="Вільних днів · 14 днів" dot="var(--good)" value={free.length} sub={free.length ? `найближчий — ${fmtShort(free[0])}` : "усе зайнято"} />
-          <Kpi label="Дедлайнів у роботі" dot="var(--warn)" value={inWork.length} sub={inWork.length ? `найближчий ${relDays(Math.min(...inWork.map((s) => daysBetween(today, s.deadline))))}` : "нічого не висить"} />
+          <Kpi label="Дедлайнів у роботі" dot="var(--warn)" value={inWork.length} sub={(() => { const ds = inWork.map((s) => s.deadline).filter(Boolean).map((d) => daysBetween(today, d as string)); return ds.length ? `найближчий ${relDays(Math.min(...ds))}` : inWork.length ? "без дати віддачі" : "нічого не висить"; })()} />
           <Kpi label="Очікую оплату" dot="var(--purple)" value={money(owedSum)} sub={`${owed.length} ${plural(owed.length, "рахунок", "рахунки", "рахунків")}`} subTone={owed.length ? "warn" : undefined} />
         </div>
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getClients, getClientPrefs, getClientStats, getShoots, getSettings, getDismissed, getPresets } from "@/lib/data";
+import { getClients, getClientPrefs, getClientStats, getShoots, getSettings, getDismissed } from "@/lib/data";
 import { buildInsights, money, fmtDate, fmtShort, moneyK, plural } from "@/lib/domain";
 import { Avatar, Kpi, ShootRow } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
@@ -11,7 +11,7 @@ import { DangerButton } from "../../shoots/[id]/client-bits";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [clients, prefs, stats, shoots, settings, dismissed, presets] = await Promise.all([getClients(), getClientPrefs(id), getClientStats(), getShoots({ clientId: id }), getSettings(), getDismissed(), getPresets()]);
+  const [clients, prefs, stats, shoots, settings, dismissed] = await Promise.all([getClients(), getClientPrefs(id), getClientStats(), getShoots({ clientId: id }), getSettings(), getDismissed()]);
   const c = clients.find((x) => x.id === id); if (!c) notFound();
   const st = stats.find((x) => x.client_id === id);
   const list = shoots.filter((s) => s.status !== "cancelled").slice().reverse();
@@ -54,7 +54,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
             <form action={addClientPref.bind(null, c.id)} data-op="addClientPref" data-args={JSON.stringify([c.id])} className="flex gap-2 mt-3"><input name="text" placeholder="Напр.: не любить теплий баланс" required maxLength={300} className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-glass-2" aria-label="Нова вимога" /><button className="btn btn-sm">Додати</button></form>
             <p className="text-[13px] text-muted mt-2.5">Ці пункти помічник підказує за день до кожної зйомки з цим клієнтом.</p>
           </section>
-          <ContactCard c={c} presets={presets} labelOf={Object.fromEntries(presets.map((p) => [p.type, p.label]))} />
+          <ContactCard c={c} />
           {shoots.length === 0 && <div className="px-1"><DangerButton label="Видалити замовника" confirm="Так, видалити" op="deleteClient" id={c.id} /></div>}
         </aside>
       </div>

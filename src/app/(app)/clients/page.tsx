@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getClients, getClientStats, getPresets } from "@/lib/data";
+import { getClients, getClientStats } from "@/lib/data";
 import { money, plural, fmtDate } from "@/lib/domain";
 import { PageHead, Avatar, Chip, Kpi } from "@/components/ui";
 import { createClient_ } from "@/app/actions";
@@ -9,7 +9,7 @@ export const metadata = { title: "Замовники" };
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ sort?: string; new?: string }> }) {
   const { sort = "total", new: isNew } = await searchParams;
-  const [clients, stats, presets] = await Promise.all([getClients(), getClientStats(), getPresets()]);
+  const [clients, stats] = await Promise.all([getClients(), getClientStats()]);
   const rows = clients.map((c) => ({ c, st: stats.find((s) => s.client_id === c.id) ?? { shoots: 0, total: 0, avg_check: 0, last_shoot: null, avg_pay_delay_days: null, open_balance: 0 } }));
   if (sort === "total") rows.sort((a, b) => b.st.total - a.st.total);
   if (sort === "last") rows.sort((a, b) => ((b.st.last_shoot as string | null) ?? "") < ((a.st.last_shoot as string | null) ?? "") ? -1 : 1);
@@ -19,7 +19,6 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const repeat = rows.filter((r) => r.st.shoots >= 2).length;
   const delays = rows.map((r) => r.st.avg_pay_delay_days).filter((d): d is number => d != null);
   const avgDelay = delays.length ? Math.round(delays.reduce((a, d) => a + d, 0) / delays.length) : null;
-  const labelOf = (t: string) => presets.find((p) => p.type === t)?.label ?? t;
 
   return (
     <>
@@ -50,11 +49,10 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       <section className="card">
         {rows.length === 0 ? <div className="empty">Поки без замовників — додайте першого.</div> : (
           <div className="overflow-x-auto"><table className="w-full text-[13px]" style={{ borderCollapse: "separate", borderSpacing: "0 6px" }}>
-            <thead><tr className="text-[13px] text-muted">{["Замовник", "Типи", "Зйомок", "Дохід", "Середній чек", "Оплата", "Остання"].map((h, i) => <th key={h} className={`font-semibold px-2.5 py-0.5 text-left ${i >= 2 && i <= 4 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
+            <thead><tr className="text-[13px] text-muted">{["Замовник", "Зйомок", "Дохід", "Середній чек", "Оплата", "Остання"].map((h, i) => <th key={h} className={`font-semibold px-2.5 py-0.5 text-left ${i >= 2 && i <= 4 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
             <tbody>{rows.map(({ c, st }) => (
               <tr key={c.id}>
                 <td className="px-2.5 py-2.5 bg-glass-2 rounded-l-xl"><Link href={`/clients/${c.id}`} className="flex items-center gap-2.5"><Avatar name={c.name} hue={c.avatar_hue} size={34} /><span><b>{c.name}</b><span className="block text-xs text-muted">{c.kind ?? ""}</span></span></Link></td>
-                <td className="px-2.5 py-2.5 bg-glass-2 text-muted whitespace-nowrap">{c.default_types.map(labelOf).join(", ") || "—"}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num">{st.shoots}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num font-bold whitespace-nowrap">{money(st.total)}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num whitespace-nowrap">{money(st.avg_check)}</td>

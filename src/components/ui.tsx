@@ -1,6 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { type Tone, type ShootView, TYPE_TONE, STATUS_TONE, STATUS_UA, money, relDays, daysBetween, todayISO, fmtShort } from "@/lib/domain";
+import { type Tone, type ShootView, STATUS_TONE, STATUS_UA, money, relDays, daysBetween, todayISO, fmtShort } from "@/lib/domain";
 import { parseISO, format } from "date-fns";
 import * as I from "./icons";
 import { uk } from "date-fns/locale";
@@ -30,14 +30,14 @@ export function ShootRow({ s, rel }: { s: ShootView; rel?: boolean }) {
   const today = todayISO(); const d = daysBetween(today, s.date);
   let end: React.ReactNode;
   if (s.status === "delivered" && s.balance > 0) end = <Chip tone="warn">очікую {money(s.balance)}</Chip>;
-  else if (s.status === "shot") { const dl = daysBetween(today, s.deadline); end = <Chip tone={dl < 0 ? "warn" : "sun"}>віддати {relDays(dl)}</Chip>; }
+  else if (s.status === "shot" && s.deadline) { const dl = daysBetween(today, s.deadline); end = <Chip tone={dl < 0 ? "warn" : "sun"}>віддати {relDays(dl)}</Chip>; }
   else end = <Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip>;
   return (
     <Link href={`/shoots/${s.id}`} className="srow">
-      <DateBox date={s.date} tone={TYPE_TONE[s.type]} />
+      <DateBox date={s.date} tone={STATUS_TONE[s.status]} />
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="font-semibold truncate">{s.title} · {s.client_name}</div>
-        <div className="text-[13px] text-muted truncate">{s.location ?? "—"}{s.start_time ? `, ${s.start_time.slice(0, 5)}–${s.end_time?.slice(0, 5) ?? ""}` : ""}{rel && d >= 0 ? ` · ${relDays(d)}` : ""}</div>
+        <div className="text-[13px] text-muted truncate">{s.location ?? "—"}{s.start_time ? `, ${s.start_time.slice(0, 5)}` : ""}{rel && d >= 0 ? ` · ${relDays(d)}` : ""}</div>
       </div>
       <div className="flex flex-col items-end gap-1"><div className="font-semibold num">{money(s.price)}</div>{end}</div>
       <I.Right className="shrink-0" style={{ color: "var(--muted-2)" }} />

@@ -9,21 +9,19 @@ export const STATUSES: ShootStatus[] = ["request", "confirmed", "shot", "deliver
 export const STATUS_UA: Record<ShootStatus, string> = { request: "Запит", confirmed: "Підтверджено", shot: "Відзнято", delivered: "Віддано", paid: "Оплачено", cancelled: "Скасовано" };
 export const STATUS_TONE: Record<ShootStatus, Tone> = { request: "neutral", confirmed: "info", shot: "warn", delivered: "purple", paid: "good", cancelled: "neutral" };
 export const NEXT_STEP: Partial<Record<ShootStatus, string>> = { request: "Підтвердити (передоплата отримана)", confirmed: "Позначити «відзнято»", shot: "Позначити «віддано»", delivered: "Позначити «оплачено»" };
-export const TYPE_TONE: Record<ShootType, Tone> = { lookbook: "good", product: "info", campaign: "warn", portrait: "purple", other: "sun" };
 
 export type Tone = "good" | "warn" | "info" | "purple" | "sun" | "pink" | "neutral" | "dark";
 
 export interface Settings { owner_id: string; display_name: string; ep_rate: number; vz_rate: number; esv_monthly: number; income_limit: number; rates_from: string; remind_days: number; month_capacity: number;
   fop_name?: string | null; ipn?: string | null; iban?: string | null; bank_name?: string | null; legal_address?: string | null; invoice_note?: string | null; ical_token?: string | null; avatar_url?: string | null; }
-export interface Preset { type: ShootType; label: string; price: number; photos: number; extra_photos: number; delivery_days: number; shoot_hours: number; retouch_hours: number; }
 export interface Client { id: string; name: string; kind: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; since: string; default_deposit_pct: number; default_types: ShootType[]; avatar_hue: number; archived: boolean; }
 export interface ClientPref { id: string; client_id: string; text: string; sort: number; }
 export interface Shoot {
   id: string; client_id: string; no: string | null; title: string; type: ShootType; status: ShootStatus; date: string; start_time: string | null; end_time: string | null; location: string | null;
-  price: number; deposit_pct: number; photos: number; extra_photos: number; photos_delivered: number | null; delivery_days: number; delivered_on: string | null; invoice_sent_on: string | null;
+  price: number; deposit_pct: number; photos: number; extra_photos: number; photos_delivered: number | null; delivery_days: number; deadline_on: string | null; delivered_on: string | null; invoice_sent_on: string | null;
   shoot_hours: number; retouch_hours: number; prep_hours: number; rights: string | null; created_at: string;
 }
-export interface ShootView extends Shoot { client_name: string; paid: number; balance: number; deadline: string; total_hours: number; hourly_rate: number | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
+export interface ShootView extends Shoot { client_name: string; paid: number; balance: number; deadline: string | null; total_hours: number; hourly_rate: number | null; delivery_actual_days: number | null; invoice_age_days: number | null; }
 export interface Payment { id: string; shoot_id: string; amount: number; paid_on: string; kind: "deposit" | "balance" | "extra" | "refund"; method: "invoice" | "card" | "cash" | "other"; note: string | null; }
 export interface Note { id: string; shoot_id: string; text: string; created_at: string; }
 export interface ChecklistItem { id: string; shoot_id: string; text: string; done: boolean; sort: number; }
@@ -58,7 +56,7 @@ export function freeDays(shootsByDay: Map<string, ShootView[]>, blocked: Set<str
   return out;
 }
 export function groupByDay(shoots: ShootView[]) { const m = new Map<string, ShootView[]>(); for (const s of shoots) { if (s.status === "cancelled") continue; const a = m.get(s.date) ?? []; a.push(s); m.set(s.date, a); } return m; }
-export function deadlinesByDay(shoots: ShootView[]) { const m = new Map<string, ShootView[]>(); for (const s of shoots) { if (s.status !== "shot" && s.status !== "confirmed") continue; const a = m.get(s.deadline) ?? []; a.push(s); m.set(s.deadline, a); } return m; }
+export function deadlinesByDay(shoots: ShootView[]) { const m = new Map<string, ShootView[]>(); for (const s of shoots) { if ((s.status !== "shot" && s.status !== "confirmed") || !s.deadline) continue; const a = m.get(s.deadline) ?? []; a.push(s); m.set(s.deadline, a); } return m; }
 
 /* ---------- assistant: one voice, rule-based ---------- */
 export type InsightKind = "deadline" | "payment" | "request" | "prep" | "load" | "tax" | "price";
@@ -80,9 +78,9 @@ export function buildInsights(inp: InsightInput): Insight[] {
 
   if (inp.scope.type !== "taxes") for (const s of list) {
     const c = clientOf(s.client_id); const cname = c?.name ?? s.client_name;
-    if (s.status === "shot") {
+    if (s.status === "shot" && s.deadline) {
       const d = daysBetween(today, s.deadline);
-      if (d <= inp.settings.remind_days) push({ key: `dl-${s.id}`, kind: "deadline", sev: d < 0 ? "high" : "mid", tag: d < 0 ? "Дедлайн прострочено" : `Дедлайн · ${relDays(d)}`, text: `${s.title} — ${cname} ще у статусі «відзнято». За умовами — ${s.photos} ретушованих фото до ${fmtDate(s.deadline)}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
+      if (d <= inp.settings.remind_days) push({ key: `dl-${s.id}`, kind: "deadline", sev: d < 0 ? "high" : "mid", tag: d < 0 ? "Дедлайн прострочено" : `Дедлайн · ${relDays(d)}`, text: `${s.title} — ${cname} ще у статусі «відзнято». Віддати до ${fmtDate(s.deadline)}.`, action: { label: "Відкрити зйомку", href: `/shoots/${s.id}` } });
     }
     if (s.status === "delivered" && s.balance > 0) {
       const age = s.invoice_age_days ?? 0; const late = age > Math.max(7, payDelay(c));
@@ -95,7 +93,7 @@ export function buildInsights(inp: InsightInput): Insight[] {
     if (s.status === "confirmed" && inp.scope.type !== "client") {
       const d = daysBetween(today, s.date);
       // the shoot date has passed but the status is still "confirmed": deadlines and payments depend on marking it as shot
-      if (d < 0) push({ key: `past-${s.id}`, kind: "deadline", sev: d <= -3 ? "high" : "mid", tag: `Зйомка минула · ${relDays(d)}`, text: `«${s.title}» для ${cname} була ${fmtShort(s.date)}, але ще не позначена як відзнята — дедлайн віддачі не рахується.`, action: { href: `/shoots/${s.id}`, label: "Позначити відзнятою" } });
+      if (d < 0) push({ key: `past-${s.id}`, kind: "deadline", sev: d <= -3 ? "high" : "mid", tag: `Зйомка минула · ${relDays(d)}`, text: `«${s.title}» для ${cname} була ${fmtShort(s.date)}, але ще не позначена як відзнята.`, action: { href: `/shoots/${s.id}`, label: "Позначити відзнятою" } });
       if (d >= 0 && d <= 1) { const p = prefsOf(s.client_id).slice(0, 2).join("; "); push({ key: `prep-${s.id}`, kind: "prep", sev: "low", tag: `${relDays(d)} · підготовка`, text: `Зйомка «${s.title}» для ${cname}.${p ? ` Що важливо для цього клієнта: ${p}.` : ""}`, action: { label: "Картка зйомки", href: `/shoots/${s.id}` } }); }
     }
   }

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
-type Row = { id: string; title: string; date: string; start_time: string | null; end_time: string | null; location: string | null; status: string; client_name: string; deadline: string; delivered_on: string | null };
+type Row = { id: string; title: string; date: string; start_time: string | null; end_time: string | null; location: string | null; status: string; client_name: string; deadline: string | null; delivered_on: string | null };
 
 const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
 const d8 = (iso: string) => iso.replace(/-/g, "");
@@ -27,8 +27,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     if (r.start_time) { lines.push(`DTSTART;TZID=Europe/Kyiv:${dt(r.date, r.start_time)}`, `DTEND;TZID=Europe/Kyiv:${dt(r.date, r.end_time ?? r.start_time)}`); }
     else { lines.push(`DTSTART;VALUE=DATE:${d8(r.date)}`, `DTEND;VALUE=DATE:${d8(r.date)}`); }
     if (r.location) lines.push(`LOCATION:${esc(r.location)}`);
-    lines.push(`DESCRIPTION:${esc(`Статус: ${STATUS[r.status] ?? r.status}\nВіддати до: ${r.deadline}`)}`, `URL:https://app.olgavoychik.space/shoots/${r.id}`, "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", `DESCRIPTION:${esc(`Завтра зйомка: ${r.title}`)}`, "END:VALARM", "END:VEVENT");
-    if (!r.delivered_on && (r.status === "shot" || r.status === "confirmed")) {
+    lines.push(`DESCRIPTION:${esc(`Статус: ${STATUS[r.status] ?? r.status}${r.deadline ? `\nВіддати до: ${r.deadline}` : ""}`)}`, `URL:https://app.olgavoychik.space/shoots/${r.id}`, "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", `DESCRIPTION:${esc(`Завтра зйомка: ${r.title}`)}`, "END:VALARM", "END:VEVENT");
+    if (r.deadline && !r.delivered_on && (r.status === "shot" || r.status === "confirmed")) {
       lines.push("BEGIN:VEVENT", `UID:deadline-${r.id}@olgavoychik.space`, `DTSTAMP:${stamp}`, `SUMMARY:${esc(`⏱ Віддати: ${r.title} · ${r.client_name}`)}`, `DTSTART;VALUE=DATE:${d8(r.deadline)}`, `DTEND;VALUE=DATE:${d8(r.deadline)}`, `URL:https://app.olgavoychik.space/shoots/${r.id}`, "END:VEVENT");
     }
   }

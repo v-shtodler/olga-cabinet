@@ -1,27 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getShoot, getShoots, getClients, getClientPrefs, getSettings, getDismissed, getClientStats, getPresets } from "@/lib/data";
-import { STATUSES, STATUS_UA, NEXT_STEP, TYPE_TONE, STATUS_TONE, buildInsights, money, fmtDate, fmtShort, fmtWeekday, relDays, daysBetween, todayISO, statusIdx } from "@/lib/domain";
+import { getShoot, getShoots, getClients, getClientPrefs, getSettings, getDismissed, getClientStats } from "@/lib/data";
+import { STATUSES, STATUS_UA, NEXT_STEP, STATUS_TONE, buildInsights, money, fmtDate, fmtShort, fmtWeekday, relDays, daysBetween, todayISO, statusIdx } from "@/lib/domain";
 import { Chip, Avatar, Kpi, Bar } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
 import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment, deleteNote } from "@/app/actions";
-import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle, PhotosDelivered, DangerButton } from "./client-bits";
+import { PaymentForm, InlineTitle, CancelButton, ChecklistToggle, DangerButton } from "./client-bits";
 import * as I from "@/components/icons";
 
 export default async function ShootPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await getShoot(id); if (!data) notFound();
   const { shoot: s, payments, notes, checklist } = data;
-  const [clients, prefs, settings, dismissed, stats, history, presets] = await Promise.all([getClients(), getClientPrefs(s.client_id), getSettings(), getDismissed(), getClientStats(), getShoots({ clientId: s.client_id }), getPresets()]);
+  const [clients, prefs, settings, dismissed, stats, history] = await Promise.all([getClients(), getClientPrefs(s.client_id), getSettings(), getDismissed(), getClientStats(), getShoots({ clientId: s.client_id })]);
   const c = clients.find((x) => x.id === s.client_id)!; const st = stats.find((x) => x.client_id === c.id);
-  const today = todayISO(); const dlDays = daysBetween(today, s.deadline); const idx = statusIdx(s.status);
+  const today = todayISO(); const dlDays = s.deadline ? daysBetween(today, s.deadline) : null; const idx = statusIdx(s.status);
   const insights = buildInsights({ shoots: [s], clients, prefs, settings, dismissed, blocked: new Set(), scope: { type: "shoot", id: s.id } });
-  const typeLabel = presets.find((p) => p.type === s.type)?.label ?? s.type;
   const hist = history.filter((x) => x.id !== s.id && x.status !== "cancelled" && x.date <= today).slice(-4).reverse();
-  const sameType = history.filter((x) => x.type === s.type && x.status === "paid" && x.hourly_rate);
-  const rateAvg = sameType.length ? Math.round(sameType.reduce((a, x) => a + (x.hourly_rate ?? 0), 0) / sameType.length) : null;
   const done = checklist.filter((x) => x.done).length;
-  const terms: [string, string][] = [["Фото", `${s.photos} ретуш${s.extra_photos ? ` + ~${s.extra_photos} кольорокорекція` : ""}`], ["Термін віддачі", `${s.delivery_days} дн. після зйомки`], ["Передоплата", `${s.deposit_pct}%`], ["Права", s.rights ?? "—"], ["Локація", s.location ?? "—"]];
 
   return (
     <>
@@ -29,9 +25,9 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
       <section className="card mb-3.5">
         <div className="flex justify-between items-start gap-4 flex-wrap">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-2"><Chip tone={TYPE_TONE[s.type]}>{typeLabel}</Chip><Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip><span className="text-[13px] text-muted">№ {s.no}</span></div>
+            <div className="flex items-center gap-2 flex-wrap mb-2"><Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip><span className="text-[13px] text-muted">№ {s.no}</span></div>
             <InlineTitle id={s.id} title={s.title} />
-            <p className="text-muted mt-2">📅 {fmtWeekday(s.date)}, {fmtDate(s.date, true)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}–${s.end_time?.slice(0, 5)}` : ""} &nbsp; 📍 {s.location ?? "—"} &nbsp; 👤 <Link href={`/clients/${c.id}`} className="text-accent font-semibold">{c.name}</Link>{c.contact_name ? ` · ${c.contact_name}` : ""}</p>
+            <p className="text-muted mt-2">📅 {fmtWeekday(s.date)}, {fmtDate(s.date, true)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ""} &nbsp; 📍 {s.location ?? "—"} &nbsp; 👤 <Link href={`/clients/${c.id}`} className="text-accent font-semibold">{c.name}</Link>{c.contact_name ? ` · ${c.contact_name}` : ""}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)} data-op="advanceShoot" data-args={JSON.stringify([s.id])} data-label={NEXT_STEP[s.status] ?? ""}><button className={`btn ${s.status === "delivered" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
@@ -59,8 +55,8 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
       </section>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <Kpi label="Дедлайн віддачі" value={fmtShort(s.deadline)} sub={s.delivered_on ? `віддано ${fmtShort(s.delivered_on)}` : relDays(dlDays)} subTone={!s.delivered_on && dlDays < 0 ? "warn" : undefined} className={s.status === "shot" ? (dlDays < 0 ? "!bg-warn-bg" : "!bg-sun-bg") : ""} />
-        <Kpi label="Вартість" value={money(s.price)} sub={`${s.hourly_rate ?? 0} ₴/год${rateAvg ? ` · середня ${rateAvg}` : ""}`} subTone={rateAvg && (s.hourly_rate ?? 0) < rateAvg ? "warn" : undefined} />
+        <Kpi label="Віддати до" value={s.deadline ? fmtShort(s.deadline) : "—"} sub={s.delivered_on ? `віддано ${fmtShort(s.delivered_on)}` : dlDays != null ? relDays(dlDays) : "дату не вказано"} subTone={!s.delivered_on && dlDays != null && dlDays < 0 ? "warn" : undefined} className={s.status === "shot" && dlDays != null ? (dlDays < 0 ? "!bg-warn-bg" : "!bg-sun-bg") : ""} />
+        <Kpi label="Вартість" value={money(s.price)} sub={s.deposit_pct > 0 ? `передоплата ${s.deposit_pct}%` : "без передоплати"} />
         <Kpi label="Отримано" value={money(s.paid)} sub={s.balance > 0 ? `залишок ${money(s.balance)}` : "оплачено повністю ✓"} subTone={s.balance > 0 ? "warn" : "good"} className={s.paid > 0 ? "!bg-good-bg" : ""} />
         <Kpi label="Податок із зйомки" value={money(s.price * (settings.ep_rate + settings.vz_rate) / 100)} sub={`ЄП ${settings.ep_rate}% + ВЗ ${settings.vz_rate}%`} />
       </div>
@@ -81,17 +77,6 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-          <section className="card"><h2 className="text-[17px] font-semibold mb-3">Умови замовника</h2><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{terms.map(([k, v]) => <div key={k} className="kv"><span className="text-muted">{k}</span><b>{v}</b></div>)}<div className="kv items-center"><span className="text-muted">Віддано фото</span><PhotosDelivered id={s.id} value={s.photos_delivered} planned={s.photos} /></div></div></section>
-
-          <section className="card">
-            <h2 className="text-[17px] font-semibold mb-3">Таймінг · ≈ {s.total_hours} год</h2>
-            <div className="flex h-9 gap-1">
-              <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.prep_hours} 1 0`, background: "var(--sun-bg)", color: "var(--sun)" }}>Підготовка · {s.prep_hours}</div>
-              <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.shoot_hours} 1 0`, background: "var(--accent)", color: "#fff" }}>Зйомка · {s.shoot_hours} год</div>
-              <div className="rounded-[10px] flex items-center px-2.5 text-[11px] font-bold whitespace-nowrap overflow-hidden" style={{ flex: `${s.retouch_hours} 1 0`, background: "var(--purple)", color: "#fff" }}>Відбір і ретуш · ~{s.retouch_hours} год</div>
-            </div>
-            <p className="text-[13px] text-muted mt-2.5">Ефективна ставка <b style={{ color: rateAvg && (s.hourly_rate ?? 0) < rateAvg ? "var(--warn)" : "var(--good)" }}>{s.hourly_rate ?? 0} ₴/год</b>{rateAvg ? <>; середня по «{typeLabel}» — {rateAvg} ₴/год.</> : "."}</p>
-          </section>
 
           <section className="card">
             <h2 className="text-[17px] font-semibold mb-3">Замітки</h2>

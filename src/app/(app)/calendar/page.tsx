@@ -2,8 +2,8 @@ import Link from "next/link";
 import { addDays, addMonths, addYears, format, startOfMonth, endOfMonth, parseISO, isWeekend, isValid } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getBlockedDays, getSettings } from "@/lib/data";
-import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, TYPE_TONE, type ShootView } from "@/lib/domain";
-import { ShootRow, Chip, Bar, TONE_BG, TONE_FG } from "@/components/ui";
+import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, type ShootView } from "@/lib/domain";
+import { ShootRow, Chip, Bar } from "@/components/ui";
 import { AssistantInline } from "@/components/assistant";
 import { toggleBlockedDay } from "@/app/actions";
 import * as I from "@/components/icons";
@@ -91,8 +91,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                 return (
                   <Link key={k} href={dayLink(d)} className="min-h-[56px] sm:min-h-[92px] p-1.5 sm:p-2 rounded-[12px] border flex flex-col gap-1 text-left" style={{ background: blocked.has(k) ? "var(--fill-2)" : isFree ? "var(--good-bg)" : "var(--glass-2)", borderColor: isSel ? "var(--accent)" : "var(--line)", boxShadow: isSel ? "0 0 0 2px var(--accent-tint)" : undefined, opacity: out ? 0.45 : 1 }}>
                     <span className="w-[26px] h-[26px] rounded-full inline-flex items-center justify-center text-[13px] font-semibold" style={isToday ? { background: "var(--accent)", color: "#fff" } : undefined}>{d.getDate()}</span>
-                    <span className="hidden sm:flex flex-col gap-1">{ev.slice(0, 3).map((s) => <span key={s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: TONE_BG[TYPE_TONE[s.type]], color: TONE_FG[TYPE_TONE[s.type]] }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}{dl.slice(0, 1).map((s) => <span key={"d" + s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}{ev.length > 3 && <span className="text-[10px] text-muted">+{ev.length - 3}</span>}</span>
-                    <span className="flex sm:hidden gap-[3px]">{ev.map((s) => <i key={s.id} className="w-[5px] h-[5px] rounded-full" style={{ background: TONE_FG[TYPE_TONE[s.type]] }} />)}{dl.map((s) => <i key={"d" + s.id} className="w-[5px] h-[5px] rounded-full" style={{ background: "var(--sun)" }} />)}</span>
+                    <span className="hidden sm:flex flex-col gap-1">{ev.slice(0, 3).map((s) => <span key={s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>{s.status === "request" ? "? " : ""}{s.client_name}</span>)}{dl.slice(0, 1).map((s) => <span key={"d" + s.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[6px] truncate" style={{ background: "var(--sun-bg)", color: "var(--sun)" }}>⏱ {s.client_name}</span>)}{ev.length > 3 && <span className="text-[10px] text-muted">+{ev.length - 3}</span>}</span>
+                    <span className="flex sm:hidden gap-[3px]">{ev.map((s) => <i key={s.id} className="w-[5px] h-[5px] rounded-full" style={{ background: "var(--accent)" }} />)}{dl.map((s) => <i key={"d" + s.id} className="w-[5px] h-[5px] rounded-full" style={{ background: "var(--sun)" }} />)}</span>
                   </Link>
                 );
               })}
@@ -113,8 +113,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                       {ev.map((s) => (
-                        <span key={s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] leading-tight" style={{ background: TONE_BG[TYPE_TONE[s.type]], color: TONE_FG[TYPE_TONE[s.type]] }}>
-                          {s.start_time && <b className="block num">{s.start_time.slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ""}</b>}
+                        <span key={s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] leading-tight" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>
+                          {s.start_time && <b className="block num">{s.start_time.slice(0, 5)}</b>}
                           <span className="block font-semibold truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
                           <span className="block truncate opacity-80">{s.title}</span>
                         </span>
@@ -147,8 +147,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                       {mDays.map((d) => {
                         const k = iso(d); const out = d.getMonth() !== m; const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
                         const isToday = k === today;
-                        const bg = out ? "transparent" : ev.length ? TONE_BG[TYPE_TONE[ev[0].type]] : dl.length ? "var(--sun-bg)" : blocked.has(k) ? "var(--fill-2)" : "transparent";
-                        const fg = out ? "var(--muted-2)" : ev.length ? TONE_FG[TYPE_TONE[ev[0].type]] : dl.length ? "var(--sun)" : "var(--fg)";
+                        const bg = out ? "transparent" : ev.length ? "var(--accent-tint)" : dl.length ? "var(--sun-bg)" : blocked.has(k) ? "var(--fill-2)" : "transparent";
+                        const fg = out ? "var(--muted-2)" : ev.length ? "var(--accent)" : dl.length ? "var(--sun)" : "var(--fg)";
                         return (
                           <Link key={k} href={dayLink(d)} aria-label={k} className="aspect-square rounded-[5px] flex items-center justify-center text-[10px] font-medium" style={isToday ? { background: "var(--accent)", color: "#fff", fontWeight: 600 } : { background: bg, color: fg, opacity: out ? 0.4 : 1 }}>{d.getDate()}</Link>
                         );
@@ -161,7 +161,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           )}
 
           <div className="flex gap-3.5 flex-wrap text-[13px] text-muted font-medium mt-3">
-            {(["lookbook", "product", "campaign", "portrait"] as const).map((t) => <span key={t} className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: TONE_BG[TYPE_TONE[t]], border: `1px solid ${TONE_FG[TYPE_TONE[t]]}` }} />{{ lookbook: "Lookbook", product: "Предметка", campaign: "Кампанія", portrait: "Портрети" }[t]}</span>)}
+            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--accent)" }} />Зйомка</span>
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Закрито</span>
           </div>
         </section>

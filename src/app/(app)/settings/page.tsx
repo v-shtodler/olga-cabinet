@@ -1,8 +1,7 @@
-import { getSettings, getPresets, getSession } from "@/lib/data";
-import { PageHead, Chip, Group } from "@/components/ui";
+import { getSettings, getSession } from "@/lib/data";
+import { PageHead, Group } from "@/components/ui";
 import { AssistantInline } from "@/components/assistant";
-import { saveSettings, savePreset } from "@/app/actions";
-import { TYPE_TONE } from "@/lib/domain";
+import { saveSettings } from "@/app/actions";
 import { cookies } from "next/headers";
 import { ThemeToggle } from "./theme-toggle";
 import { IcalCard } from "./ical-card";
@@ -16,7 +15,7 @@ function F({ id, label, name, type = "text", value, step, min, max }: { id: stri
 }
 
 export default async function SettingsPage() {
-  const [s, presets, { user }, jar] = await Promise.all([getSettings(), getPresets(), getSession(), cookies()]);
+  const [s, { user }, jar] = await Promise.all([getSettings(), getSession(), cookies()]);
   const raw = jar.get("theme")?.value; const theme: Theme = THEMES.includes(raw as Theme) ? (raw as Theme) : "light";
   return (
     <>
@@ -49,22 +48,6 @@ export default async function SettingsPage() {
               <div className="sm:col-span-2"><F id="invoice_note" label="Примітка внизу рахунку" name="invoice_note" value={s.invoice_note ?? "Без ПДВ. Платник єдиного податку 3 групи."} /></div>
               <div className="sm:col-span-2 flex justify-end"><button className="btn btn-primary">Зберегти реквізити</button></div>
             </form>
-          </Group>
-          <Group title="Пресети типів зйомок" note="що підставляється в нову зйомку">
-            <div className="flex flex-col gap-2">
-              {presets.map((p) => (
-                <form key={p.type} action={savePreset} data-op="savePreset" data-label={p.label} className="grid grid-cols-3 sm:grid-cols-7 gap-2 items-end p-3 rounded-2xl bg-glass-2">
-                  <input type="hidden" name="type" value={p.type} />
-                  <div className="col-span-3 sm:col-span-1 flex items-center"><Chip tone={TYPE_TONE[p.type]}>{p.label}</Chip></div>
-                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-price`} className="text-[11px]">Ціна</label><input id={`${p.type}-price`} name="price" type="number" step="any" defaultValue={p.price} className="!min-h-9 !py-1.5" /></div>
-                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-photos`} className="text-[11px]">Фото</label><input id={`${p.type}-photos`} name="photos" type="number" defaultValue={p.photos} className="!min-h-9 !py-1.5" /></div>
-                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-extra`} className="text-[11px]">+ кольорокор.</label><input id={`${p.type}-extra`} name="extra_photos" type="number" defaultValue={p.extra_photos} className="!min-h-9 !py-1.5" /></div>
-                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-dd`} className="text-[11px]">Віддача, дн</label><input id={`${p.type}-dd`} name="delivery_days" type="number" defaultValue={p.delivery_days} className="!min-h-9 !py-1.5" /></div>
-                  <div className="field flex flex-col gap-1"><label htmlFor={`${p.type}-sh`} className="text-[11px]">Зйомка, год</label><input id={`${p.type}-sh`} name="shoot_hours" type="number" step="0.1" defaultValue={p.shoot_hours} className="!min-h-9 !py-1.5" /></div>
-                  <div className="flex gap-1 items-end"><div className="field flex flex-col gap-1 flex-1"><label htmlFor={`${p.type}-rh`} className="text-[11px]">Ретуш, год</label><input id={`${p.type}-rh`} name="retouch_hours" type="number" step="0.1" defaultValue={p.retouch_hours} className="!min-h-9 !py-1.5" /></div><button className="btn btn-sm" aria-label={`Зберегти пресет ${p.label}`}>✓</button></div>
-                </form>
-              ))}
-            </div>
           </Group>
         </div>
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">

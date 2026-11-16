@@ -13,18 +13,6 @@ export function InlineTitle({ id, title }: { id: string; title: string }) {
   );
 }
 
-/** "Віддано фото" — editable number in the terms grid (how many files were actually delivered). */
-export function PhotosDelivered({ id, value, planned }: { id: string; value: number | null; planned: number }) {
-  const [v, setV] = useState(value == null ? "" : String(value));
-  const [pending, start] = useTransition();
-  function save() { const n = v.trim() === "" ? null : Math.max(0, Math.round(Number(v))); if (n === value || (n == null && value == null)) return; start(async () => { await callOrQueue("updateShootField", [id, "photos_delivered", n == null ? "" : String(n)], undefined, `Віддано фото: ${n ?? "—"}`, () => updateShootField(id, "photos_delivered", n == null ? "" : String(n))); }); }
-  return (
-    <span className="flex items-center gap-1.5">
-      <input type="number" min={0} inputMode="numeric" value={v} onChange={(e) => setV(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur(); }} placeholder="—" aria-label="Віддано фото" className="w-16 text-right font-bold bg-transparent rounded-md px-1 outline-none focus:ring-2 focus:ring-accent/40" style={{ opacity: pending ? 0.6 : 1 }} />
-      <span className="text-muted text-xs">/ {planned}</span>
-    </span>
-  );
-}
 export function CancelButton({ id }: { id: string }) {
   const [sure, setSure] = useState(false); const [pending, start] = useTransition();
   if (!sure) return <button type="button" className="btn btn-ghost" onClick={() => setSure(true)}>Скасувати</button>;
