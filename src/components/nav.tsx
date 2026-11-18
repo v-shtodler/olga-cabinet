@@ -13,7 +13,7 @@ const ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: "/shoots", label: "Зйомки", icon: <I.Camera size={20} /> },
   { href: "/clients", label: "Замовники", icon: <I.Users size={20} /> },
   { href: "/analytics", label: "Аналітика", icon: <I.Chart size={20} /> },
-  { href: "/savings", label: "Відкладені", icon: <I.Safe size={20} /> },
+  { href: "/savings", label: "Відкладення", icon: <I.Safe size={20} /> },
   { href: "/taxes", label: "Податки", icon: <I.Tax size={20} /> },
 ];
 const active = (path: string, href: string) => (href === "/" ? path === "/" : path.startsWith(href));

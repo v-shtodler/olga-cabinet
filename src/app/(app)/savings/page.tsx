@@ -8,7 +8,7 @@ import { AssistantInline } from "@/components/assistant";
 import { deleteSaving } from "@/app/actions";
 import { SavingForm } from "./saving-form";
 
-export const metadata = { title: "Відкладені" };
+export const metadata = { title: "Відкладення" };
 
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 const monthName = (m: string) => cap(format(parseISO(m), "LLLL yyyy", { locale: uk }));
@@ -33,7 +33,7 @@ export default async function SavingsPage({ searchParams }: { searchParams: Prom
     <>
       <PageHead
         eyebrow={`${months.length} ${months.length === 1 ? "місяць" : months.length < 5 ? "місяці" : "місяців"} із відкладеннями`}
-        title="Відкладені 🏦"
+        title="Відкладення 🏦"
         actions={years.length > 0 ? (
           <div className="seg">
             {years.map((yy) => <Link key={yy} href={`/savings?y=${yy}`} className={year === yy ? "on" : ""}>{yy}</Link>)}

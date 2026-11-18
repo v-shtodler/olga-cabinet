@@ -49,7 +49,7 @@ export function nowKyiv(): Date {
 }
 export const todayISO = () => format(nowKyiv(), "yyyy-MM-dd");
 export const iso = (d: Date) => format(d, "yyyy-MM-dd");
-/* Відкладені: money set aside in euro or dollars, with the hryvnia it cost. */
+/* Відкладення: money set aside in euro or dollars, with the hryvnia it cost. */
 export type Currency = "EUR" | "USD";
 export const CURRENCIES: Currency[] = ["EUR", "USD"];
 export interface Saving { id: string; month: string; currency: Currency; amount: number; rate: number; uah: number; note: string | null; created_at: string; }

@@ -62,7 +62,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const paidAll = byMoney.reduce((a, c) => a + c.paid, 0);
   const top3Share = paidAll ? Math.round(byMoney.slice(0, 3).reduce((a, c) => a + c.paid, 0) / paidAll * 100) : 0;
 
-  // Відкладені за період: скільки з доходу лишилось у валюті
+  // Відкладення за період: скільки з доходу лишилось у валюті
   const savedIn = savings.filter((r) => r.month >= from.slice(0, 7) + "-01" && r.month <= to);
   const savedUah = savedIn.reduce((a, r) => a + Number(r.uah), 0);
   const savedShare = income ? Math.round(savedUah / income * 100) : 0;
@@ -137,10 +137,10 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           ) : <div className="empty">За цей період оплат ще не було.</div>}
         </section>
 
-        {/* Відкладені */}
+        {/* Відкладення */}
         <section className="card min-w-0">
           <div className="flex justify-between items-baseline gap-2 mb-3">
-            <h2 className="text-[17px] font-semibold">Відкладені</h2>
+            <h2 className="text-[17px] font-semibold">Відкладення</h2>
             <Link href="/savings" className="text-[13px] font-semibold text-accent shrink-0">Усі →</Link>
           </div>
           {savedIn.length ? (
@@ -173,9 +173,9 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           ) : <div className="empty">За цей період нічого не відкладено.</div>}
         </section>
 
-        {/* Законтрактовано наперед */}
+        {/* Законтрактовані зйомки */}
         <section className="card min-w-0">
-          <h2 className="text-[17px] font-semibold mb-1">Законтрактовано наперед</h2>
+          <h2 className="text-[17px] font-semibold mb-1">Законтрактовані зйомки</h2>
           <div className="text-[26px] font-bold tracking-[-0.01em] num leading-tight mb-3">{money(aheadTotal)}</div>
           {aheadRows.length ? (
             <>
