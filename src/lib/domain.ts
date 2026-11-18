@@ -58,6 +58,16 @@ export const CUR_SIGN: Record<Currency, string> = { EUR: "€", USD: "$" };
 export const CUR_COLOR: Record<Currency, string> = { EUR: "#345c90", USD: "#249c53" };
 export const fx = (n: number, c: Currency) => `${Math.round(n).toLocaleString("uk-UA").replace(/,/g, " ")} ${CUR_SIGN[c]}`;
 
+/* Витрати: великі покупки й регулярні витрати, з категорією та датою. */
+export interface Expense { id: string; spent_on: string; amount: number; category: string; note: string | null; created_at: string; }
+export const EXPENSE_CATS = ["Техніка", "Студія", "Підряд", "Реквізит", "Софт", "Реклама", "Транспорт", "Інше"] as const;
+export type ExpenseCat = (typeof EXPENSE_CATS)[number];
+export const EXPENSE_COLOR: Record<string, string> = {
+  "Техніка": "#8ab6f0", "Студія": "#c6a8ec", "Підряд": "#87d1a4", "Реквізит": "#f7a76c",
+  "Софт": "#8ed6e4", "Реклама": "#f79bb0", "Транспорт": "#f6d47a", "Інше": "#aab4d2",
+};
+export const expenseColor = (c: string) => EXPENSE_COLOR[c] ?? EXPENSE_COLOR["Інше"];
+
 export const money = (n: number) => Math.round(n).toLocaleString("uk-UA").replace(/,/g, " ") + " ₴";
 export const moneyK = (n: number) => Math.round(n / 1000) + "k";
 export const fmtDate = (s: string, withYear = false) => format(parseISO(s), withYear ? "d MMMM yyyy" : "d MMMM", { locale: uk });

@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { nowKyiv, STATUSES, BRAND, type ShootStatus, todayISO } from "@/lib/domain";
+import { nowKyiv, STATUSES, BRAND, EXPENSE_CATS, type ShootStatus, todayISO } from "@/lib/domain";
 import { addDays, format } from "date-fns";
 
 async function db() { const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser(); if (!user) redirect("/login"); return { supabase, uid: user.id }; }
@@ -161,6 +161,27 @@ export async function addSaving(formData: FormData) {
 export async function deleteSaving(id: string) {
   const { supabase } = await db();
   const { error } = await supabase.from("savings").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  all();
+}
+
+/* ---------- витрати ---------- */
+const ExpenseInput = z.object({
+  spent_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  amount: z.coerce.number().positive().max(100_000_000),
+  category: z.enum(EXPENSE_CATS),
+  note: z.string().max(200).optional(),
+});
+export async function addExpense(formData: FormData) {
+  const { supabase } = await db();
+  const p = ExpenseInput.parse(Object.fromEntries(formData.entries()));
+  const { error } = await supabase.from("expenses").insert({ spent_on: p.spent_on, amount: p.amount, category: p.category, note: p.note || null });
+  if (error) throw new Error(error.message);
+  all();
+}
+export async function deleteExpense(id: string) {
+  const { supabase } = await db();
+  const { error } = await supabase.from("expenses").delete().eq("id", id);
   if (error) throw new Error(error.message);
   all();
 }

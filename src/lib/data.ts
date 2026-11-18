@@ -1,7 +1,7 @@
 /* Server-side data access. Every function runs with the user's session; RLS does the filtering. */
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { Client, ClientPref, Settings, ShootView, TaxQuarter, Payment, Note, Saving } from "./domain";
+import type { Client, ClientPref, Settings, ShootView, TaxQuarter, Payment, Note, Saving, Expense } from "./domain";
 
 /* One Supabase client per request (React cache). Auth is verified once in the proxy (middleware);
    RLS enforces ownership on every query, so data functions don't need their own getUser() round-trip. */
@@ -78,6 +78,11 @@ export async function getSavings(): Promise<Saving[]> {
   const supabase = await db();
   const { data } = await supabase.from("savings").select("*").order("month", { ascending: false }).order("created_at", { ascending: false });
   return (data ?? []) as Saving[];
+}
+export async function getExpenses(): Promise<Expense[]> {
+  const supabase = await db();
+  const { data } = await supabase.from("expenses").select("*").order("spent_on", { ascending: false }).order("created_at", { ascending: false });
+  return (data ?? []) as Expense[];
 }
 export async function getClientStats() {
   const supabase = await db();
