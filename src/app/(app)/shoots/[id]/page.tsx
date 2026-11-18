@@ -58,8 +58,8 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
         <Kpi label="Податок із зйомки" value={money(s.price * (settings.ep_rate + settings.vz_rate) / 100)} sub={`ЄП ${settings.ep_rate}% + ВЗ ${settings.vz_rate}%`} />
       </div>
 
-      <div className="flex flex-wrap gap-3.5 mt-3.5">
-        <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5">
+      <div className="flex flex-wrap gap-3.5 mt-3.5 max-lg:flex-col">
+        <div className="flex-[999_1_560px] min-w-0 flex flex-col gap-3.5 max-lg:contents">
           {insights.length > 0 && <Assistant items={insights} title="Помічник про цю зйомку" />}
 
           <section className="card">
@@ -74,15 +74,19 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-          <section className="card">
-            <h2 className="text-[17px] font-semibold mb-3">Замітки</h2>
-            <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 text-[13px] leading-relaxed"><div className="flex justify-between items-center mb-1"><span className="text-[11px] text-muted font-semibold">{fmtDate(n.created_at.slice(0, 10))}</span><form action={deleteNote.bind(null, n.id)} data-op="deleteNote" data-args={JSON.stringify([n.id])}><button className="text-muted text-xs" aria-label="Видалити замітку" title="Видалити">×</button></form></div><div className="whitespace-pre-wrap">{n.text}</div></div>) : <div className="empty">Поки без заміток.</div>}</div>
+          {/* collapsed by default: notes are written rarely and read rarely */}
+          <details className="card group max-lg:order-4">
+            <summary className="flex items-center justify-between gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <h2 className="text-[17px] font-semibold">Замітки{notes.length > 0 && <span className="text-muted font-medium"> · {notes.length}</span>}</h2>
+              <span className="text-[13px] font-semibold text-accent">{notes.length ? "Показати" : "Додати"} <span className="inline-block transition-transform group-open:rotate-90">›</span></span>
+            </summary>
+            <div className="flex flex-col gap-2 mt-3">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 text-[13px] leading-relaxed"><div className="flex justify-between items-center mb-1"><span className="text-[11px] text-muted font-semibold">{fmtDate(n.created_at.slice(0, 10))}</span><form action={deleteNote.bind(null, n.id)} data-op="deleteNote" data-args={JSON.stringify([n.id])}><button className="text-muted text-xs" aria-label="Видалити замітку" title="Видалити">×</button></form></div><div className="whitespace-pre-wrap">{n.text}</div></div>) : <div className="empty">Поки без заміток.</div>}</div>
             <form action={addNote.bind(null, s.id)} data-op="addNote" data-args={JSON.stringify([s.id])} className="field flex flex-col gap-1.5 mt-3"><label htmlFor="note">Додати замітку</label><textarea id="note" name="text" placeholder="Що важливо не забути…" maxLength={2000} required /><div><button className="btn btn-sm btn-primary mt-2">Зберегти</button></div></form>
-          </section>
+          </details>
 
         </div>
 
-        <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
+        <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5 max-lg:order-3">
           <section className="card">
             <div className="flex justify-between items-center mb-3"><span className="text-[13px] font-medium text-muted">Замовник</span><Link href={`/clients/${c.id}`} className="chip" style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>Картка →</Link></div>
             <div className="flex items-center gap-3"><Avatar name={c.name} hue={c.avatar_hue} size={44} /><div><div className="text-[19px] font-bold tracking-[-0.01em]">{c.name}</div><div className="text-[13px] text-muted">{c.kind ?? ""}{c.kind ? " · " : ""}з {fmtShort(c.since)} {c.since.slice(0, 4)}</div></div></div>
