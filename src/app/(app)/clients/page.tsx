@@ -2,14 +2,17 @@ import Link from "next/link";
 import { getClients, getClientStats } from "@/lib/data";
 import { money, plural, fmtDate } from "@/lib/domain";
 import { PageHead, Avatar, Chip, Kpi } from "@/components/ui";
-import { createClient_ } from "@/app/actions";
+import { createClient_, setClientArchived } from "@/app/actions";
 import * as I from "@/components/icons";
 
 export const metadata = { title: "Замовники" };
 
-export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ sort?: string; new?: string }> }) {
-  const { sort = "total", new: isNew } = await searchParams;
-  const [clients, stats] = await Promise.all([getClients(), getClientStats()]);
+export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ sort?: string; new?: string; a?: string }> }) {
+  const { sort = "total", new: isNew, a } = await searchParams;
+  const archive = a === "1";
+  const [all_, stats] = await Promise.all([getClients({ archived: "all" }), getClientStats()]);
+  const archivedCount = all_.filter((c) => c.archived).length;
+  const clients = all_.filter((c) => !!c.archived === archive);
   const rows = clients.map((c) => ({ c, st: stats.find((s) => s.client_id === c.id) ?? { shoots: 0, total: 0, avg_check: 0, last_shoot: null, avg_pay_delay_days: null, open_balance: 0 } }));
   if (sort === "total") rows.sort((a, b) => b.st.total - a.st.total);
   if (sort === "last") rows.sort((a, b) => ((b.st.last_shoot as string | null) ?? "") < ((a.st.last_shoot as string | null) ?? "") ? -1 : 1);
@@ -20,7 +23,13 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHead eyebrow={`${clients.length} ${plural(clients.length, "активний", "активні", "активних")}`} title="Замовники" actions={<><div className="seg">{[["total", "За доходом"], ["last", "За датою"], ["late", "Затримують"]].map(([k, l]) => <Link key={k} href={`/clients?sort=${k}`} className={sort === k ? "on" : ""}>{l}</Link>)}</div><Link href="/clients?new=1" className="btn btn-primary">+ Замовник</Link></>} />
+      <PageHead eyebrow={archive ? `${clients.length} ${plural(clients.length, "в архіві", "в архіві", "в архіві")}` : `${clients.length} ${plural(clients.length, "активний", "активні", "активних")}`} title={archive ? "Архів замовників" : "Замовники"} actions={<>
+        <div className="seg">
+          {[["total", "За доходом"], ["last", "За датою"], ["late", "Затримують"]].map(([k, l]) => <Link key={k} href={`/clients?sort=${k}`} className={!archive && sort === k ? "on" : ""}>{l}</Link>)}
+          {(archivedCount > 0 || archive) && <Link href={archive ? "/clients" : "/clients?a=1"} className={archive ? "on" : ""}>Архів{archivedCount > 0 ? ` · ${archivedCount}` : ""}</Link>}
+        </div>
+        <Link href="/clients?new=1" className="btn btn-primary">+ Замовник</Link>
+      </>} />
 
       {isNew && (
         <section className="card mb-3.5">
@@ -37,15 +46,15 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
         </section>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5">
+      {!archive && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5">
         <Kpi label="Концентрація" value={`${all ? Math.round(top3 / all * 100) : 0}% доходу`} sub={`дають топ-3 клієнти${all && top3 / all > 0.5 ? " — варто розширювати базу" : ""}`} subTone={all && top3 / all > 0.5 ? "warn" : undefined} className="!bg-warn-bg" />
         <Kpi label="Повторні" value={`${clients.length ? Math.round(repeat / clients.length * 100) : 0}%`} sub={`${repeat} із ${clients.length} знімались 2+ рази`} className="!bg-good-bg" />
-      </div>
+      </div>}
 
       <section className="card">
-        {rows.length === 0 ? <div className="empty">Поки без замовників — додайте першого.</div> : (
+        {rows.length === 0 ? <div className="empty">{archive ? "Архів порожній." : "Поки без замовників — додайте першого."}</div> : (
           <div className="overflow-x-auto"><table className="w-full text-[13px]" style={{ borderCollapse: "separate", borderSpacing: "0 6px" }}>
-            <thead><tr className="text-[13px] text-muted">{["Замовник", "Зйомок", "Дохід", "Середній чек", "Оплата", "Остання"].map((h, i) => <th key={h} className={`font-semibold px-2.5 py-0.5 text-left ${i >= 2 && i <= 4 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
+            <thead><tr className="text-[13px] text-muted">{["Замовник", "Зйомок", "Дохід", "Середній чек", "Оплата", archive ? "" : "Остання"].map((h, i) => <th key={h} className={`font-semibold px-2.5 py-0.5 text-left ${i >= 2 && i <= 4 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
             <tbody>{rows.map(({ c, st }) => (
               <tr key={c.id}>
                 <td className="px-2.5 py-2.5 bg-glass-2 rounded-l-xl"><Link href={`/clients/${c.id}`} className="flex items-center gap-2.5"><Avatar name={c.name} hue={c.avatar_hue} src={c.avatar_url} size={34} /><span><b>{c.name}</b><span className="block text-xs text-muted">{c.kind ?? ""}</span></span></Link></td>
@@ -53,7 +62,11 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num font-bold whitespace-nowrap">{money(st.total)}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 text-right num whitespace-nowrap">{money(st.avg_check)}</td>
                 <td className="px-2.5 py-2.5 bg-glass-2 whitespace-nowrap"><Chip tone={st.avg_pay_delay_days == null ? "neutral" : st.avg_pay_delay_days <= 7 ? "good" : "warn"}>{st.avg_pay_delay_days == null ? "ще нема даних" : st.avg_pay_delay_days <= 7 ? "✓ вчасно" : `⏱ ~${Math.round(st.avg_pay_delay_days)} дн`}</Chip>{st.open_balance > 0 && <> <Chip tone="warn">винні {money(st.open_balance)}</Chip></>}</td>
-                <td className="px-2.5 py-2.5 bg-glass-2 rounded-r-xl text-muted whitespace-nowrap">{st.last_shoot ? fmtDate(st.last_shoot as string) : "—"}</td>
+                <td className="px-2.5 py-2.5 bg-glass-2 rounded-r-xl text-muted whitespace-nowrap text-right">
+                  {archive
+                    ? <form action={setClientArchived.bind(null, c.id, false)} data-op="setClientArchived" data-args={JSON.stringify([c.id, false])} data-label={c.name}><button className="btn btn-sm">Повернути</button></form>
+                    : st.last_shoot ? fmtDate(st.last_shoot as string) : "—"}
+                </td>
               </tr>))}</tbody>
           </table></div>
         )}

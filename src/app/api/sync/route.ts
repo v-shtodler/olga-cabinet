@@ -10,7 +10,7 @@ const OPS: Record<string, Op> = {
   dismissInsight: A.dismissInsight, markTaxPaid: A.markTaxPaid, toggleBlockedDay: A.toggleBlockedDay, createShoot: A.createShoot, updateShoot: A.updateShoot,
   advanceShoot: A.advanceShoot, cancelShoot: A.cancelShoot, deleteShoot: A.deleteShoot, deleteClient: A.deleteClient, markInvoiceSent: A.markInvoiceSent, addPayment: A.addPayment, deletePayment: A.deletePayment,
   addNote: A.addNote, deleteNote: A.deleteNote,
-  createClient_: A.createClient_, updateClient: A.updateClient, saveClientLook: A.saveClientLook, addClientPref: A.addClientPref, deleteClientPref: A.deleteClientPref, addSaving: A.addSaving, addExpense: A.addExpense, deleteExpense: A.deleteExpense, deleteSaving: A.deleteSaving, saveSettings: A.saveSettings, rotateIcalToken: A.rotateIcalToken, saveAvatar: A.saveAvatar,
+  createClient_: A.createClient_, updateClient: A.updateClient, saveClientLook: A.saveClientLook, setClientArchived: A.setClientArchived, addClientPref: A.addClientPref, deleteClientPref: A.deleteClientPref, addSaving: A.addSaving, addExpense: A.addExpense, deleteExpense: A.deleteExpense, deleteSaving: A.deleteSaving, saveSettings: A.saveSettings, rotateIcalToken: A.rotateIcalToken, saveAvatar: A.saveAvatar,
 };
 
 function isRedirect(e: unknown) { return typeof e === "object" && e !== null && String((e as { digest?: string }).digest ?? "").startsWith("NEXT_REDIRECT"); }

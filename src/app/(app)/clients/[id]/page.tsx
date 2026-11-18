@@ -4,7 +4,7 @@ import { getClients, getClientPrefs, getClientStats, getShoots, getSettings, get
 import { buildInsights, money, fmtDate, plural } from "@/lib/domain";
 import { Avatar, Kpi, ShootRow } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
-import { addClientPref, deleteClientPref } from "@/app/actions";
+import { addClientPref, deleteClientPref, setClientArchived } from "@/app/actions";
 import * as I from "@/components/icons";
 import { ContactCard } from "./edit-client";
 import { DeleteClient } from "./delete-client";
@@ -12,7 +12,7 @@ import { ClientLook } from "./client-look";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [clients, prefs, stats, shoots, settings, dismissed] = await Promise.all([getClients(), getClientPrefs(id), getClientStats(), getShoots({ clientId: id }), getSettings(), getDismissed()]);
+  const [clients, prefs, stats, shoots, settings, dismissed] = await Promise.all([getClients({ archived: "all" }), getClientPrefs(id), getClientStats(), getShoots({ clientId: id }), getSettings(), getDismissed()]);
   const c = clients.find((x) => x.id === id); if (!c) notFound();
   const st = stats.find((x) => x.client_id === id);
   const list = shoots.filter((s) => s.status !== "cancelled").slice().reverse();
@@ -50,6 +50,15 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
           </section>
           <ContactCard c={c} />
           <ClientLook id={c.id} name={c.name} hue={c.avatar_hue} src={c.avatar_url} />
+          <section className="card">
+            <h2 className="text-[17px] font-semibold mb-1">{c.archived ? "В архіві" : "Архів"}</h2>
+            <p className="text-[13px] text-muted mb-3">{c.archived
+              ? "Замовник в архіві: його немає у списках і у виборі для нової зйомки. Зйомки, платежі й статистика збережені."
+              : "Сховати замовника зі списків і з вибору для нової зйомки. Усі дані лишаються, повернути можна будь-коли."}</p>
+            <form action={setClientArchived.bind(null, c.id, !c.archived)} data-op="setClientArchived" data-args={JSON.stringify([c.id, !c.archived])} data-label={c.name}>
+              <button className={`btn btn-sm ${c.archived ? "btn-primary" : ""}`}>{c.archived ? "Повернути з архіву" : "В архів"}</button>
+            </form>
+          </section>
           <DeleteClient id={c.id} name={c.name} shoots={shoots.length} payments={payCount} paid={money(paidSum)} />
         </aside>
       </div>

@@ -211,6 +211,14 @@ export async function createClient_(formData: FormData) {
   if (p.pref) await supabase.from("client_prefs").insert({ client_id: c.id, text: p.pref });
   all(); redirect(`/clients/${c.id}`);
 }
+/** Archive a client: they keep their shoots and money, but leave the lists and the new-shoot picker. */
+export async function setClientArchived(id: string, archived: boolean) {
+  const { supabase } = await db();
+  const { error } = await supabase.from("clients").update({ archived }).eq("id", id);
+  if (error) throw new Error(error.message);
+  all();
+}
+
 /** Brand look of a client: the colour its events get in the calendar, and an optional 1:1 photo. */
 export async function saveClientLook(id: string, patch: { avatar_hue?: number; avatar_url?: string | null }) {
   const { supabase } = await db();

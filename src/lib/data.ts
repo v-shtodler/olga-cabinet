@@ -18,9 +18,12 @@ export async function getSettings(): Promise<Settings> {
   const { data } = await supabase.from("settings").select("*").single();
   return data as Settings;
 }
-export async function getClients(): Promise<Client[]> {
+/** Active clients by default; pass archived:"all" where an archived one must still resolve. */
+export async function getClients(opts: { archived?: boolean | "all" } = {}): Promise<Client[]> {
   const supabase = await db();
-  const { data } = await supabase.from("clients").select("*").eq("archived", false).order("name");
+  let q = supabase.from("clients").select("*").order("name");
+  if (opts.archived !== "all") q = q.eq("archived", opts.archived ?? false);
+  const { data } = await q;
   return (data ?? []) as Client[];
 }
 export async function getClientPrefs(clientId?: string): Promise<ClientPref[]> {

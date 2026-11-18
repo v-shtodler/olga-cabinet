@@ -10,7 +10,7 @@ export const metadata = { title: "Редагувати зйомку" };
 
 export default async function EditShootPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [clients, data] = await Promise.all([getClients(), getShoot(id)]);
+  const [clients, data] = await Promise.all([getClients({ archived: "all" }), getShoot(id)]);
   if (!data) notFound();
   const s = data.shoot;
   return (
