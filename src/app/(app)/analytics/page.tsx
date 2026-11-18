@@ -9,7 +9,7 @@ import { CsvButton } from "./csv-button";
 export const metadata = { title: "Аналітика" };
 
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ p?: string; y?: string }> }) {
-  const { p = "year", y: yParam } = await searchParams;
+  const { p = "year" } = await searchParams;
   const now = nowKyiv(); const today = todayISO(); const y = now.getFullYear();
   const [shoots, monthly, savings, settings, quarters, taxPaid] = await Promise.all([getShoots(), getIncomeMonthly(), getSavings(), getSettings(), getTaxQuarters(), getTaxPaid()]);
   // Period: this quarter, one calendar year, or everything. "year" (the old link) means the current year.
@@ -41,7 +41,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const delta = prevIncome ? Math.round((income / prevIncome - 1) * 100) : null;
   const avg = done.length ? done.reduce((a, s) => a + s.price, 0) / done.length : 0;
   // Chart range: the rolling twelve months, or a calendar year picked in the header
-  const chartYear = yParam === "12" ? null : yParam && years.includes(yParam) ? yParam : periodYear && periodYear !== String(y) ? periodYear : null;
+  const chartYear = periodYear; // "Квартал" and "Увесь час" fall back to the rolling twelve months
   const m12 = Array.from({ length: 12 }, (_, i) => {
     const d = chartYear ? new Date(Number(chartYear), i, 1) : startOfMonth(subMonths(now, 11 - i));
     return { key: format(d, "yyyy-MM"), label: format(d, "LLL", { locale: uk }).replace(".", ""), income: monthly.find((m) => m.month.startsWith(format(d, "yyyy-MM")))?.income ?? 0 };
@@ -97,13 +97,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       {/* the year's shape */}
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-1 min-w-0">
-          <div className="flex justify-between items-center gap-3 flex-wrap mb-3">
-            <h2 className="text-[17px] font-semibold">Отримано по місяцях · {chartYear ?? "12 міс"}</h2>
-            <div className="seg">
-              <Link href={`/analytics?p=${period}&y=12`} className={chartYear ? "" : "on"}>12 міс</Link>
-              {years.slice(0, 4).map((yy) => <Link key={yy} href={`/analytics?p=${period}&y=${yy}`} className={chartYear === yy ? "on" : ""}>{yy}</Link>)}
-            </div>
-          </div>
+          <h2 className="text-[17px] font-semibold mb-3">Отримано по місяцях · {chartYear ?? "12 міс"}</h2>
           <div className="flex items-end gap-1.5 sm:gap-2 h-[190px]">
             {m12.map((m, i) => (
               <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5">
