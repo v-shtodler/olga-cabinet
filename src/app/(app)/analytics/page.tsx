@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { format, startOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
+import { format, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getIncomeMonthly, getSavings, getSettings, getTaxQuarters, getTaxPaid } from "@/lib/data";
 import { nowKyiv, iso, todayISO, money, moneyK, plural, brandColor, brandText, taxTimeline, fmtDate, fx, CURRENCIES, CUR_COLOR } from "@/lib/domain";
@@ -40,13 +40,19 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const income = incomeIn(from, to); const prevIncome = prevFrom ? incomeIn(prevFrom, prevTo) : 0;
   const delta = prevIncome ? Math.round((income / prevIncome - 1) * 100) : null;
   const avg = done.length ? done.reduce((a, s) => a + s.price, 0) / done.length : 0;
-  // Chart range: the rolling twelve months, or a calendar year picked in the header
-  const chartYear = periodYear; // "Квартал" and "Увесь час" fall back to the rolling twelve months
-  const m12 = Array.from({ length: 12 }, (_, i) => {
-    const d = chartYear ? new Date(Number(chartYear), i, 1) : startOfMonth(subMonths(now, 11 - i));
-    return { key: format(d, "yyyy-MM"), label: format(d, "LLL", { locale: uk }).replace(".", ""), income: monthly.find((m) => m.month.startsWith(format(d, "yyyy-MM")))?.income ?? 0 };
+  // The chart covers exactly the chosen period: this quarter's three months, a whole
+  // calendar year, or every month that has data at all.
+  const firstMonth = monthly.map((m) => m.month).sort()[0] ?? format(now, "yyyy-MM-01");
+  const chartFrom = period === "quarter" ? startOfQuarter(now) : periodYear ? new Date(Number(periodYear), 0, 1) : new Date(Number(firstMonth.slice(0, 4)), Number(firstMonth.slice(5, 7)) - 1, 1);
+  const chartTo = period === "quarter" ? endOfQuarter(now) : periodYear ? new Date(Number(periodYear), 11, 1) : now;
+  const chartLen = Math.max(1, (chartTo.getFullYear() - chartFrom.getFullYear()) * 12 + (chartTo.getMonth() - chartFrom.getMonth()) + 1);
+  const m12 = Array.from({ length: chartLen }, (_, i) => {
+    const d = new Date(chartFrom.getFullYear(), chartFrom.getMonth() + i, 1);
+    return { key: format(d, "yyyy-MM"), label: format(d, "LLL", { locale: uk }).replace(".", ""), year: format(d, "yy"), income: monthly.find((m) => m.month.startsWith(format(d, "yyyy-MM")))?.income ?? 0 };
   });
+  const dense = m12.length > 12; // too many bars for full sums under each one
   const chartNow = format(now, "yyyy-MM");
+  const chartLabel = period === "quarter" ? `${Math.floor(now.getMonth() / 3) + 1} квартал` : periodYear ? periodYear : "увесь час";
   const max12 = Math.max(...m12.map((m) => m.income), 1);
   const total12 = m12.reduce((a, m) => a + m.income, 0);
   const best12 = m12.reduce((a, m) => (m.income > a.income ? m : a), m12[0]);
@@ -97,22 +103,24 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       {/* the year's shape */}
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-1 min-w-0">
-          <h2 className="text-[17px] font-semibold mb-3">Отримано по місяцях · {chartYear ?? "12 міс"}</h2>
-          <div className="flex items-end gap-1.5 sm:gap-2 h-[190px]">
+          <h2 className="text-[17px] font-semibold mb-3">Отримано по місяцях · {chartLabel}</h2>
+          <div className={`flex items-end h-[190px] ${dense ? "gap-[3px]" : "gap-1.5 sm:gap-2"}`}>
             {m12.map((m, i) => (
               <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5">
                 {m.income > 0 && (
                   <span className="font-semibold num whitespace-nowrap" style={{ color: m.key === chartNow ? "var(--accent)" : "var(--muted)" }}>
-                    <span className="sm:hidden text-[10px]">{moneyK(m.income)}</span>
-                    <span className="hidden sm:inline text-[10px] lg:text-[11px]">{money(m.income)}</span>
+                    {dense ? <span className="text-[9px]">{moneyK(m.income)}</span> : <>
+                      <span className="sm:hidden text-[10px]">{moneyK(m.income)}</span>
+                      <span className="hidden sm:inline text-[10px] lg:text-[11px]">{money(m.income)}</span>
+                    </>}
                   </span>
                 )}
                 <i className="block w-full rounded-t-[6px] rounded-b-[2px]" style={{ height: Math.max(4, Math.round(m.income / max12 * 150)), background: m.key === chartNow ? "linear-gradient(180deg, var(--accent-2), var(--accent))" : "linear-gradient(180deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent))" }} />
               </div>
             ))}
           </div>
-          <div className="flex gap-1.5 sm:gap-2 mt-1.5">{m12.map((m, i) => <span key={i} className="flex-1 text-center text-[10px] sm:text-[11px] font-medium min-w-0" style={{ color: m.key === chartNow ? "var(--fg)" : "var(--muted)" }}>{m.label}</span>)}</div>
-          <p className="text-[13px] text-muted mt-3.5">Усього за {chartYear ? `${chartYear} рік` : "12 місяців"} — <b className="num text-fg">{money(total12)}</b>{best12.income > 0 ? <> · найкращий місяць — <b className="text-fg">{best12.label}</b> (<span className="num">{money(best12.income)}</span>)</> : null}</p>
+          <div className={`flex mt-1.5 ${dense ? "gap-[3px]" : "gap-1.5 sm:gap-2"}`}>{m12.map((m, i) => <span key={i} className={`flex-1 text-center font-medium min-w-0 leading-tight ${dense ? "text-[9px]" : "text-[10px] sm:text-[11px]"}`} style={{ color: m.key === chartNow ? "var(--fg)" : "var(--muted)" }}>{m.label}{dense && m.key.endsWith("-01") ? <span className="block opacity-70">{m.year}</span> : null}</span>)}</div>
+          <p className="text-[13px] text-muted mt-3.5">Усього за {chartLabel} — <b className="num text-fg">{money(total12)}</b>{best12.income > 0 ? <> · найкращий місяць — <b className="text-fg">{best12.label}</b> (<span className="num">{money(best12.income)}</span>)</> : null}</p>
         </section>
       </div>
       <div className="grid gap-3.5 mt-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
