@@ -5,7 +5,6 @@ import { getShoots, getBlockedDays, getSettings } from "@/lib/data";
 import { groupByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, brandText, type ShootView } from "@/lib/domain";
 import { ShootRow, Chip, Bar } from "@/components/ui";
 import { MonthGrid } from "@/components/month-grid";
-import { AssistantInline } from "@/components/assistant";
 import { toggleBlockedDay } from "@/app/actions";
 import * as I from "@/components/icons";
 
@@ -184,7 +183,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               <div className="mt-3.5"><div className="flex justify-between text-[13px] font-semibold"><span className="text-muted">Завантаженість</span><span style={{ color: pct >= 90 ? "var(--warn)" : "var(--fg)" }}>{pct}%</span></div><div className="mt-1.5"><Bar pct={pct} color={pct >= 90 ? "var(--warn)" : undefined} /></div><p className="text-[13px] text-muted mt-2">100% ≈ {settings.month_capacity} зйомок на місяць (налаштовується). Вище 90% — ретуш починає зʼїдати особистий час.</p></div>
             </section>
           )}
-          <AssistantInline>{view === "year" ? "Рік показує, де густо, а де вільно: кольорові дні — зйомки." : "Клацніть день, щоб побачити, що там, або додати зйомку. «Закрити день» ховає його з вільних вікон."}</AssistantInline>
         </aside>
       </div>
     </>
