@@ -56,17 +56,6 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const max12 = Math.max(...m12.map((m) => m.income), 1);
   const total12 = m12.reduce((a, m) => a + m.income, 0);
   const best12 = m12.reduce((a, m) => (m.income > a.income ? m : a), m12[0]);
-  // Середній чек по кварталах — восьмиквартальний тренд, незалежний від обраного періоду
-  const qs = Array.from({ length: 8 }, (_, i) => {
-    const d = subQuarters(now, 7 - i); const a = iso(startOfQuarter(d)), b = iso(endOfQuarter(d));
-    const l = shoots.filter((x) => x.status !== "cancelled" && x.status !== "request" && x.date >= a && x.date <= b && x.date <= today);
-    return { label: `${Math.floor(d.getMonth() / 3) + 1}кв ${String(d.getFullYear()).slice(2)}`, avg: l.length ? l.reduce((x, sh) => x + sh.price, 0) / l.length : null };
-  });
-  const qv = qs.filter((q) => q.avg != null) as { label: string; avg: number }[];
-  const qmax = Math.max(...qv.map((q) => q.avg), 1), qmin = Math.min(...qv.map((q) => q.avg), qmax);
-  const pts = qs.map((q, i) => q.avg != null ? [20 + i * (520 / 7), 160 - (q.avg - qmin) / Math.max(1, qmax - qmin) * 120] as [number, number] : null).filter((x): x is [number, number] => !!x);
-  const poly = pts.map((pt) => pt.join(",")).join(" ");
-
   // Who the money comes from, in the chosen period (by money actually received)
   const inPeriod = shoots.filter((s) => s.status !== "cancelled" && s.date >= from && s.date <= to);
   const perClient = new Map<string, { id: string; name: string; hue: number; paid: number; shoots: number }>();
@@ -135,23 +124,6 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         </section>
       </div>
       <div className="grid gap-3.5 mt-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
-        {/* Середній чек по кварталах */}
-        <section className="card min-w-0">
-          <h2 className="text-[17px] font-semibold mb-3">Середній чек по кварталах</h2>
-          {pts.length > 1 ? (
-            <>
-              <svg role="img" aria-label="Середній чек по кварталах" viewBox="0 0 560 190" className="w-full h-[150px] block">
-                <defs><linearGradient id="gf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity=".35" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0" /></linearGradient></defs>
-                <polygon fill="url(#gf)" points={`${poly} ${pts[pts.length - 1][0]},175 ${pts[0][0]},175`} />
-                <polyline fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" points={poly} />
-                {pts.map((pt, i) => <circle key={i} cx={pt[0]} cy={pt[1]} r={i === pts.length - 1 ? 6 : 3} fill={i === pts.length - 1 ? "#fff" : "var(--accent)"} stroke="var(--accent)" strokeWidth="3" />)}
-              </svg>
-              <div className="flex gap-2">{qs.map((q, i) => <span key={i} className="flex-1 text-center text-[10px] font-semibold text-muted min-w-0">{q.label}</span>)}</div>
-              <p className="text-[13px] text-muted mt-3">{money(qv[0].avg)} → <b className="text-fg num">{money(qv[qv.length - 1].avg)}</b> за {qv.length} {plural(qv.length, "квартал", "квартали", "кварталів")}.</p>
-            </>
-          ) : <div className="empty">Потрібно хоча б два квартали зі зйомками.</div>}
-        </section>
-
         {/* Хто приносить дохід — кольори ті самі, що в календарі */}
         <section className="card min-w-0">
           <h2 className="text-[17px] font-semibold mb-3">Хто приносить дохід</h2>
