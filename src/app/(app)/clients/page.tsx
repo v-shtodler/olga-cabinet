@@ -17,8 +17,6 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const all = rows.reduce((a, r) => a + r.st.total, 0);
   const top3 = rows.slice().sort((a, b) => b.st.total - a.st.total).slice(0, 3).reduce((a, r) => a + r.st.total, 0);
   const repeat = rows.filter((r) => r.st.shoots >= 2).length;
-  const delays = rows.map((r) => r.st.avg_pay_delay_days).filter((d): d is number => d != null);
-  const avgDelay = delays.length ? Math.round(delays.reduce((a, d) => a + d, 0) / delays.length) : null;
 
   return (
     <>
@@ -39,10 +37,9 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
         </section>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5">
         <Kpi label="Концентрація" value={`${all ? Math.round(top3 / all * 100) : 0}% доходу`} sub={`дають топ-3 клієнти${all && top3 / all > 0.5 ? " — варто розширювати базу" : ""}`} subTone={all && top3 / all > 0.5 ? "warn" : undefined} className="!bg-warn-bg" />
         <Kpi label="Повторні" value={`${clients.length ? Math.round(repeat / clients.length * 100) : 0}%`} sub={`${repeat} із ${clients.length} знімались 2+ рази`} className="!bg-good-bg" />
-        <Kpi label="Середній строк оплати" value={avgDelay != null ? `${avgDelay} дн.` : "—"} sub={`${delays.filter((d) => d > 7).length} ${plural(delays.filter((d) => d > 7).length, "клієнт", "клієнти", "клієнтів")} стабільно платять пізніше 7 днів`} className="!bg-info-bg" />
       </div>
 
       <section className="card">
