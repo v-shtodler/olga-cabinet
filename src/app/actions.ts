@@ -34,7 +34,6 @@ const ShootInput = z.object({
   client_id: z.string().min(1), new_client_name: z.string().max(120).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), start_time: z.string().optional(), location: z.string().max(200).optional(),
   price: z.coerce.number().min(0),
-  deadline_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
   note: z.string().max(2000).optional(), confirmed: z.coerce.boolean().optional(),
 });
 export async function createShoot(formData: FormData) {
@@ -51,7 +50,7 @@ export async function createShoot(formData: FormData) {
   const status: ShootStatus = p.confirmed ? "confirmed" : "request";
   const { data: shoot, error } = await supabase.from("shoots").insert({
     client_id: clientId, status, date: p.date, start_time: p.start_time || null, location: p.location || null,
-    price: p.price, deadline_on: p.deadline_on || null,
+    price: p.price,
   }).select("id").single();
   if (error || !shoot) throw new Error(error?.message ?? "insert failed");
   if (p.note) await supabase.from("shoot_notes").insert({ shoot_id: shoot.id, text: p.note });
@@ -63,7 +62,7 @@ export async function updateShoot(id: string, formData: FormData) {
   const p = ShootInput.parse(Object.fromEntries(formData.entries()));
   const { error } = await supabase.from("shoots").update({
     client_id: p.client_id, date: p.date, start_time: p.start_time || null, location: p.location || null,
-    price: p.price, deadline_on: p.deadline_on || null,
+    price: p.price,
   }).eq("id", id);
   if (error) throw new Error(error.message);
   all();
@@ -83,7 +82,7 @@ export async function advanceShoot(id: string) {
   await supabase.from("shoots").update(patch).eq("id", id);
   all();
 }
-/** Permanent delete — only for cancelled shoots (payments, notes, checklist go with it by cascade). */
+/** Permanent delete — only for cancelled shoots (payments and notes go with it by cascade). */
 export async function deleteShoot(id: string) {
   const { supabase } = await db();
   const { data: s } = await supabase.from("shoots").select("status").eq("id", id).single();
@@ -95,7 +94,7 @@ export async function deleteShoot(id: string) {
 }
 /** Delete a client that has no shoots (the database refuses otherwise). */
 /** Delete a client. With shoots, the caller must pass withShoots — the shoots (and their payments,
-    notes and checklists, by cascade) go too, which also changes the income and tax figures. */
+    notes, by cascade) go too, which also changes the income and tax figures. */
 export async function deleteClient(id: string, withShoots = false) {
   const { supabase } = await db();
   const { count } = await supabase.from("shoots").select("*", { count: "exact", head: true }).eq("client_id", id);
@@ -166,24 +165,12 @@ export async function deleteSaving(id: string) {
   all();
 }
 
-/* ---------- notes / checklist ---------- */
+/* ---------- notes ---------- */
 export async function addNote(shootId: string, formData: FormData) {
   const text = String(formData.get("text") ?? "").trim(); if (!text) return;
   const { supabase } = await db(); await supabase.from("shoot_notes").insert({ shoot_id: shootId, text }); all();
 }
-export async function addChecklistItem(shootId: string, formData: FormData) {
-  const text = String(formData.get("text") ?? "").trim(); if (!text) return;
-  const { supabase } = await db(); const { count } = await supabase.from("checklist_items").select("*", { count: "exact", head: true }).eq("shoot_id", shootId);
-  await supabase.from("checklist_items").insert({ shoot_id: shootId, text, sort: (count ?? 0) + 1 }); all();
-}
-export async function addDefaultChecklist(shootId: string) {
-  const { supabase } = await db();
-  const items = ["Передоплата отримана", "Референси й мудборд узгоджено", "RAW скопійовано на 2 диски", "Відбір надіслано на затвердження", "Ретуш віддано", "Фінальний рахунок виставлено"];
-  await supabase.from("checklist_items").insert(items.map((text, sort) => ({ shoot_id: shootId, text, sort }))); all();
-}
 export async function deleteNote(id: string) { const { supabase } = await db(); await supabase.from("shoot_notes").delete().eq("id", id); all(); }
-export async function deleteChecklistItem(id: string) { const { supabase } = await db(); await supabase.from("checklist_items").delete().eq("id", id); all(); }
-export async function toggleChecklist(id: string, done: boolean) { const { supabase } = await db(); await supabase.from("checklist_items").update({ done }).eq("id", id); all(); }
 
 /* ---------- clients ---------- */
 const ClientInput = z.object({ name: z.string().min(1).max(120), kind: z.string().max(80).optional(), contact_name: z.string().max(120).optional(), contact_email: z.string().max(120).optional(), contact_phone: z.string().max(40).optional(), pref: z.string().max(300).optional() });

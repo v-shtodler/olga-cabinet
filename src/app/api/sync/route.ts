@@ -9,7 +9,7 @@ type Op = (...a: any[]) => Promise<unknown>;
 const OPS: Record<string, Op> = {
   dismissInsight: A.dismissInsight, markTaxPaid: A.markTaxPaid, toggleBlockedDay: A.toggleBlockedDay, createShoot: A.createShoot, updateShoot: A.updateShoot,
   advanceShoot: A.advanceShoot, cancelShoot: A.cancelShoot, deleteShoot: A.deleteShoot, deleteClient: A.deleteClient, markInvoiceSent: A.markInvoiceSent, addPayment: A.addPayment, deletePayment: A.deletePayment,
-  addNote: A.addNote, deleteNote: A.deleteNote, deleteChecklistItem: A.deleteChecklistItem, addChecklistItem: A.addChecklistItem, addDefaultChecklist: A.addDefaultChecklist, toggleChecklist: A.toggleChecklist,
+  addNote: A.addNote, deleteNote: A.deleteNote,
   createClient_: A.createClient_, updateClient: A.updateClient, saveClientLook: A.saveClientLook, addClientPref: A.addClientPref, deleteClientPref: A.deleteClientPref, addSaving: A.addSaving, deleteSaving: A.deleteSaving, saveSettings: A.saveSettings, rotateIcalToken: A.rotateIcalToken, saveAvatar: A.saveAvatar,
 };
 

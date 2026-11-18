@@ -7,9 +7,9 @@ const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
 /* iOS Calendar month grid: hairline cells, today in a filled circle, every shoot a
    brand-coloured label. On a phone the labels shrink but keep the brand's name —
    two per day plus "ще N" — so a glance tells you whose day it is. */
-export function MonthGrid({ cells, month, byDay, dlByDay, blocked, sel, today, dayLink }: {
+export function MonthGrid({ cells, month, byDay, blocked, sel, today, dayLink }: {
   cells: Date[]; month: number;
-  byDay: Map<string, ShootView[]>; dlByDay: Map<string, ShootView[]>;
+  byDay: Map<string, ShootView[]>;
   blocked: Set<string>; sel: string; today: string;
   dayLink: (d: Date) => string;
 }) {
@@ -17,7 +17,7 @@ export function MonthGrid({ cells, month, byDay, dlByDay, blocked, sel, today, d
     <div className="grid grid-cols-7 gap-px rounded-[12px] overflow-hidden" style={{ background: "var(--hair)" }}>
       {WEEKDAYS.map((w) => <div key={w} className="text-[11px] sm:text-[12px] font-medium text-muted text-center py-1.5" style={{ background: "var(--glass)" }}>{w}</div>)}
       {cells.map((d) => {
-        const k = iso(d); const out = d.getMonth() !== month; const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
+        const k = iso(d); const out = d.getMonth() !== month; const ev = byDay.get(k) ?? [];
         const isSel = k === sel; const isToday = k === today; const isFree = !out && ev.length === 0 && !blocked.has(k) && k >= today;
         return (
           // a cell always paints its own surface, or the grid's hairline colour shows through;
@@ -37,7 +37,6 @@ export function MonthGrid({ cells, month, byDay, dlByDay, blocked, sel, today, d
                   </span>
                 );
               })}
-              {dl.slice(0, 1).map((s) => <span key={"d" + s.id} className={clsx("px-[3px] sm:px-1.5 py-[1px] sm:py-[2px] rounded-[4px] sm:rounded-[5px] text-[10px] sm:text-[11px] font-semibold sm:font-medium truncate", ev.length > 1 && "hidden sm:block")} style={{ background: "var(--sun)", color: "#1c1c1e" }}>⏱ {s.client_name}</span>)}
               {ev.length > 2 && <span className="text-[10px] text-muted px-[3px] sm:hidden">ще {ev.length - 2}</span>}
               {ev.length > 3 && <span className="text-[11px] text-muted px-1.5 hidden sm:block">ще {ev.length - 3}</span>}
             </span>

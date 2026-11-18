@@ -35,7 +35,6 @@ export function ShootRow({ s, rel }: { s: ShootView; rel?: boolean }) {
   const today = todayISO(); const d = daysBetween(today, s.date);
   let end: React.ReactNode;
   if (s.status === "confirmed" && s.balance > 0 && s.date < today) end = <Chip tone="warn">очікую {money(s.balance)}</Chip>;
-  else if (s.status === "confirmed" && s.deadline && s.date <= today) { const dl = daysBetween(today, s.deadline); end = <Chip tone={dl < 0 ? "warn" : "sun"}>віддати {relDays(dl)}</Chip>; }
   else end = <Chip tone={STATUS_TONE[s.status]}>{STATUS_UA[s.status]}</Chip>;
   return (
     <Link href={`/shoots/${s.id}`} className="srow">

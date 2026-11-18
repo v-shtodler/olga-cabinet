@@ -4,7 +4,7 @@ import { plural } from "@/lib/domain";
 import * as I from "./icons";
 import { dismissInsight, markTaxPaid } from "@/app/actions";
 
-const ICON: Record<InsightKind, React.ReactNode> = { deadline: <I.Clock />, payment: <I.Card />, request: <I.Flag />, prep: <I.Tag />, load: <I.Leaf />, tax: <I.Tax />, price: <I.Tag /> };
+const ICON: Record<InsightKind, React.ReactNode> = { payment: <I.Card />, request: <I.Flag />, prep: <I.Tag />, load: <I.Leaf />, tax: <I.Tax />, price: <I.Tag /> };
 
 /** The assistant: one consistent voice everywhere — indigo gradient block, spark mark, tag + text + actions. */
 export function Assistant({ items, title = "Помічник", empty = "Усе під контролем: дедлайни й оплати в нормі, нічого термінового.", max = 6 }: { items: Insight[]; title?: string; empty?: string; max?: number }) {

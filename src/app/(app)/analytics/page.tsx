@@ -77,7 +77,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const aheadRows = [...ahead.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(0, 4);
   const aheadTotal = [...ahead.values()].reduce((a, e) => a + e.price, 0);
 
-  const csv = [["№", "Дата", "Клієнт", "Локація", "Статус", "Ціна", "Отримано", "Віддати до"], ...shoots.map((s) => [s.no ?? "", s.date, s.client_name, s.location ?? "", s.status, s.price, s.paid, s.deadline ?? ""])].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+  const csv = [["№", "Дата", "Клієнт", "Локація", "Статус", "Ціна", "Отримано"], ...shoots.map((s) => [s.no ?? "", s.date, s.client_name, s.location ?? "", s.status, s.price, s.paid])].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
 
   return (
     <>

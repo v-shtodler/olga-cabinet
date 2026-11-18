@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { addPayment, cancelShoot, toggleChecklist, deleteShoot, deleteChecklistItem } from "@/app/actions";
+import { addPayment, cancelShoot, deleteShoot } from "@/app/actions";
 import { callOrQueue } from "@/lib/outbox";
 import { todayISO } from "@/lib/domain";
 
@@ -23,16 +23,6 @@ export function DangerButton({ label, confirm, op, id }: { label: string; confir
     </span>
   );
 }
-export function ChecklistToggle({ id, text, done: initial }: { id: string; text: string; done: boolean }) {
-  const [pending, start] = useTransition(); const [done, setDone] = useState(initial);
-  return (
-    <label className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer font-medium ${done ? "line-through border-transparent" : "bg-glass-2 border-line"}`} style={done ? { background: "var(--good-bg)", color: "var(--good)" } : undefined}>
-      <input type="checkbox" checked={done} disabled={pending} onChange={(e) => { const v = e.target.checked; setDone(v); start(async () => { await callOrQueue("toggleChecklist", [id, v], undefined, `${v ? "✓" : "☐"} ${text}`, () => toggleChecklist(id, v)); }); }} className="w-[18px] h-[18px]" style={{ accentColor: "var(--good)" }} /> <span className="flex-1 min-w-0">{text}</span>
-      {!done && <button type="button" className="text-muted text-xs px-1" aria-label="Видалити пункт" title="Видалити" onClick={(e) => { e.preventDefault(); start(async () => { await callOrQueue("deleteChecklistItem", [id], undefined, `Видалити: ${text}`, () => deleteChecklistItem(id)); }); }}>×</button>}
-    </label>
-  );
-}
-
 export function PaymentForm({ shootId, suggested }: { shootId: string; suggested: number }) {
   const [open, setOpen] = useState(false); const [pending, start] = useTransition();
   if (!open) return <button type="button" className="btn btn-sm btn-good" onClick={() => setOpen(true)}>+ Платіж{suggested > 0 ? ` (${Math.round(suggested).toLocaleString("uk-UA")} ₴)` : ""}</button>;

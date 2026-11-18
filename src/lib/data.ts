@@ -1,7 +1,7 @@
 /* Server-side data access. Every function runs with the user's session; RLS does the filtering. */
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { Client, ClientPref, Settings, ShootView, TaxQuarter, Payment, Note, ChecklistItem, Saving } from "./domain";
+import type { Client, ClientPref, Settings, ShootView, TaxQuarter, Payment, Note, Saving } from "./domain";
 
 /* One Supabase client per request (React cache). Auth is verified once in the proxy (middleware);
    RLS enforces ownership on every query, so data functions don't need their own getUser() round-trip. */
@@ -41,14 +41,13 @@ export async function getShoots(opts: { from?: string; to?: string; clientId?: s
 }
 export async function getShoot(id: string) {
   const supabase = await db();
-  const [{ data: shoot }, { data: payments }, { data: notes }, { data: checklist }] = await Promise.all([
+  const [{ data: shoot }, { data: payments }, { data: notes }] = await Promise.all([
     supabase.from("v_shoots").select("*").eq("id", id).single(),
     supabase.from("payments").select("*").eq("shoot_id", id).order("paid_on"),
     supabase.from("shoot_notes").select("*").eq("shoot_id", id).order("created_at", { ascending: false }),
-    supabase.from("checklist_items").select("*").eq("shoot_id", id).order("sort"),
   ]);
   if (!shoot) return null;
-  return { shoot: num(shoot) as ShootView, payments: (payments ?? []) as Payment[], notes: (notes ?? []) as Note[], checklist: (checklist ?? []) as ChecklistItem[] };
+  return { shoot: num(shoot) as ShootView, payments: (payments ?? []) as Payment[], notes: (notes ?? []) as Note[] };
 }
 export async function getBlockedDays(): Promise<Set<string>> {
   const supabase = await db();

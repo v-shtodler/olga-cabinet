@@ -2,7 +2,7 @@ import Link from "next/link";
 import { addDays, addMonths, addYears, format, startOfMonth, endOfMonth, parseISO, isValid } from "date-fns";
 import { uk } from "date-fns/locale";
 import { getShoots, getBlockedDays, getSettings } from "@/lib/data";
-import { groupByDay, deadlinesByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, brandText, type ShootView } from "@/lib/domain";
+import { groupByDay, freeDays, iso, todayISO, money, plural, fmtDate, brandColor, brandText, type ShootView } from "@/lib/domain";
 import { ShootRow, Chip, Bar } from "@/components/ui";
 import { MonthGrid } from "@/components/month-grid";
 import { AssistantInline } from "@/components/assistant";
@@ -37,7 +37,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       : { from: iso(addDays(addDays(monthStart, -((monthStart.getDay() + 6) % 7)), -40)), to: iso(addDays(monthStart, 60)) };
   const [shoots, blocked, settings] = await Promise.all([getShoots(span), getBlockedDays(), getSettings()]);
   const active = shoots.filter((s) => s.status !== "cancelled");
-  const byDay = groupByDay(active); const dlByDay = deadlinesByDay(active);
+  const byDay = groupByDay(active);
 
   // Header: title and arrows step by the chosen view
   const href = (o: { v?: View; m?: string; d?: string }) => `/calendar?v=${o.v ?? view}&m=${o.m ?? mKey}&d=${o.d ?? sel}`;
@@ -58,7 +58,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const pct = Math.min(100, Math.round(inMonth.length / settings.month_capacity * 100));
   const freeFrom = new Date(Math.max(monthStart.getTime(), parseISO(today).getTime()));
   const freeM = freeFrom <= mEnd ? freeDays(byDay, blocked, freeFrom, Math.round((mEnd.getTime() - freeFrom.getTime()) / 86400000) + 1) : [];
-  const selShoots = byDay.get(sel) ?? []; const selDl = dlByDay.get(sel) ?? [];
+  const selShoots = byDay.get(sel) ?? [];
   const selBlocked = blocked.has(sel);
   // Six weeks, but the last one only when the month actually reaches into it — and always
   // whole rows, so no half-empty row of bare grid shows at the bottom.
@@ -91,14 +91,14 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           <section className="card">
           {/* ---------- MONTH: iOS Calendar — a clean grid, each event a brand-coloured pill ---------- */}
           {view === "month" && (
-            <MonthGrid cells={cells} month={monthStart.getMonth()} byDay={byDay} dlByDay={dlByDay} blocked={blocked} sel={sel} today={today} dayLink={dayLink} />
+            <MonthGrid cells={cells} month={monthStart.getMonth()} byDay={byDay} blocked={blocked} sel={sel} today={today} dayLink={dayLink} />
           )}
 
           {/* ---------- WEEK: a column per day, shoots with times ---------- */}
           {view === "week" && (
             <div className="grid grid-cols-1 sm:grid-cols-7 gap-1.5">
               {Array.from({ length: 7 }, (_, i) => addDays(wStart, i)).map((d) => {
-                const k = iso(d); const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
+                const k = iso(d); const ev = byDay.get(k) ?? [];
                 const isSel = k === sel; const isToday = k === today; const isFree = ev.length === 0 && !blocked.has(k) && k >= today;
                 return (
                   <Link key={k} href={href({ d: k })} className="rounded-[12px] border p-2 flex sm:flex-col gap-2 sm:min-h-[260px] text-left" style={{ background: blocked.has(k) ? "var(--fill-2)" : isFree ? "var(--good-bg)" : "var(--glass-2)", borderColor: isSel ? "var(--accent)" : "var(--line)", boxShadow: isSel ? "0 0 0 2px var(--accent-tint)" : undefined }}>
@@ -113,8 +113,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                           <span className="block font-semibold truncate">{s.status === "request" ? "? " : ""}{s.client_name}</span>
                         </span>
                       ))}
-                      {dl.map((s) => <span key={"d" + s.id} className="block px-2 py-1.5 rounded-[8px] text-[11px] font-semibold truncate" style={{ background: "var(--sun)", color: "#1c1c1e" }}>⏱ Віддати · {s.client_name}</span>)}
-                      {!ev.length && !dl.length && <span className="text-[11px] text-muted">{blocked.has(k) ? "закрито" : isFree ? "вільно" : "—"}</span>}
+                      {!ev.length && <span className="text-[11px] text-muted">{blocked.has(k) ? "закрито" : isFree ? "вільно" : "—"}</span>}
                     </div>
                   </Link>
                 );
@@ -139,10 +138,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                     <div className="grid grid-cols-7 gap-[2px]">
                       {WEEKDAYS.map((w) => <span key={w} className="text-[9px] text-center" style={{ color: "var(--muted-2)" }}>{w[0]}</span>)}
                       {mDays.map((d) => {
-                        const k = iso(d); const out = d.getMonth() !== m; const ev = byDay.get(k) ?? []; const dl = dlByDay.get(k) ?? [];
+                        const k = iso(d); const out = d.getMonth() !== m; const ev = byDay.get(k) ?? [];
                         const isToday = k === today;
-                        const bg = out ? "transparent" : ev.length ? brandColor(ev[0].client_hue) : dl.length ? "var(--sun)" : blocked.has(k) ? "var(--fill-2)" : "transparent";
-                        const fg = out ? "var(--muted-2)" : ev.length ? brandText(brandColor(ev[0].client_hue)) : dl.length ? "#1c1c1e" : "var(--fg)";
+                        const bg = out ? "transparent" : ev.length ? brandColor(ev[0].client_hue) : blocked.has(k) ? "var(--fill-2)" : "transparent";
+                        const fg = out ? "var(--muted-2)" : ev.length ? brandText(brandColor(ev[0].client_hue)) : "var(--fg)";
                         return (
                           <Link key={k} href={dayLink(d)} aria-label={k} className="aspect-square rounded-[5px] flex items-center justify-center text-[10px] font-medium" style={isToday ? { background: "var(--accent)", color: "#fff", fontWeight: 600 } : { background: bg, color: fg, opacity: out ? 0.4 : 1 }}>{d.getDate()}</Link>
                         );
@@ -156,7 +155,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
           <div className="flex gap-x-3.5 gap-y-1.5 flex-wrap text-[12px] sm:text-[13px] text-muted font-medium mt-3">
             <span>Колір — бренд замовника</span>
-            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--sun)" }} />Дедлайн</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Особистий день</span>
+            <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--good-bg)" }} />Вільно</span><span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px] inline-block" style={{ background: "var(--fill-2)" }} />Особистий день</span>
           </div>
           </section>
           {view !== "year" && (
@@ -164,8 +163,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             <div className="flex justify-between items-baseline mb-3 gap-2"><h2 className="text-[17px] font-semibold">{fmtDate(sel)}</h2><Chip tone={selBlocked ? "neutral" : selShoots.length ? "info" : "good"}>{selBlocked ? "особистий блок" : selShoots.length ? `${selShoots.length} ${plural(selShoots.length, "зйомка", "зйомки", "зйомок")}` : "вільно"}</Chip></div>
             <div className="flex flex-col gap-2">
               {selShoots.map((s: ShootView) => <ShootRow key={s.id} s={s} />)}
-              {selDl.map((s: ShootView) => <Link key={"dl" + s.id} href={`/shoots/${s.id}`} className="srow" style={{ background: "var(--sun-bg)" }}><div className="w-12 h-12 shrink-0 rounded-[12px] flex items-center justify-center" style={{ background: "var(--glass)" }}><I.Clock /></div><div className="flex-1 min-w-0"><div className="font-semibold truncate">Віддати · {s.client_name}</div><div className="text-[13px] text-muted truncate">{s.client_name}</div></div></Link>)}
-              {!selShoots.length && !selDl.length && <div className="empty">{selBlocked ? "День закритий для зйомок." : "Нічого не заплановано."}</div>}
+              {!selShoots.length && <div className="empty">{selBlocked ? "День закритий для зйомок." : "Нічого не заплановано."}</div>}
             </div>
             {sel >= today && <form action={toggleBlockedDay.bind(null, sel)} data-op="toggleBlockedDay" data-args={JSON.stringify([sel])} data-label={sel} className="mt-3"><button className="btn btn-sm">{selBlocked ? "Відкрити день" : "Закрити день (особисте)"}</button></form>}
           </section>
@@ -186,7 +184,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               <div className="mt-3.5"><div className="flex justify-between text-[13px] font-semibold"><span className="text-muted">Завантаженість</span><span style={{ color: pct >= 90 ? "var(--warn)" : "var(--fg)" }}>{pct}%</span></div><div className="mt-1.5"><Bar pct={pct} color={pct >= 90 ? "var(--warn)" : undefined} /></div><p className="text-[13px] text-muted mt-2">100% ≈ {settings.month_capacity} зйомок на місяць (налаштовується). Вище 90% — ретуш починає зʼїдати особистий час.</p></div>
             </section>
           )}
-          <AssistantInline>{view === "year" ? "Рік показує, де густо, а де вільно: кольорові дні — зйомки, жовті — дедлайни віддачі." : "Клацніть день, щоб побачити, що там, або додати зйомку. «Закрити день» ховає його з вільних вікон."}</AssistantInline>
+          <AssistantInline>{view === "year" ? "Рік показує, де густо, а де вільно: кольорові дні — зйомки." : "Клацніть день, щоб побачити, що там, або додати зйомку. «Закрити день» ховає його з вільних вікон."}</AssistantInline>
         </aside>
       </div>
     </>

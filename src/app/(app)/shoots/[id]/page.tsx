@@ -1,23 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getShoot, getShoots, getClients, getClientPrefs, getSettings, getDismissed, getClientStats } from "@/lib/data";
-import { STATUSES, STATUS_UA, NEXT_STEP, STATUS_TONE, buildInsights, money, fmtDate, fmtShort, fmtWeekday, relDays, daysBetween, todayISO, statusIdx } from "@/lib/domain";
-import { Chip, Avatar, Kpi, Bar } from "@/components/ui";
+import { STATUSES, STATUS_UA, NEXT_STEP, STATUS_TONE, buildInsights, money, fmtDate, fmtShort, fmtWeekday, relDays, todayISO, statusIdx } from "@/lib/domain";
+import { Chip, Avatar, Kpi } from "@/components/ui";
 import { Assistant } from "@/components/assistant";
-import { advanceShoot, markInvoiceSent, addNote, addChecklistItem, addDefaultChecklist, deletePayment, deleteNote } from "@/app/actions";
-import { PaymentForm, CancelButton, ChecklistToggle, DangerButton } from "./client-bits";
+import { advanceShoot, markInvoiceSent, addNote, deletePayment, deleteNote } from "@/app/actions";
+import { PaymentForm, CancelButton, DangerButton } from "./client-bits";
 import * as I from "@/components/icons";
 
 export default async function ShootPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await getShoot(id); if (!data) notFound();
-  const { shoot: s, payments, notes, checklist } = data;
+  const { shoot: s, payments, notes } = data;
   const [clients, prefs, settings, dismissed, stats, history] = await Promise.all([getClients(), getClientPrefs(s.client_id), getSettings(), getDismissed(), getClientStats(), getShoots({ clientId: s.client_id })]);
   const c = clients.find((x) => x.id === s.client_id)!; const st = stats.find((x) => x.client_id === c.id);
-  const today = todayISO(); const dlDays = s.deadline ? daysBetween(today, s.deadline) : null; const idx = statusIdx(s.status);
+  const today = todayISO(); const idx = statusIdx(s.status);
   const insights = buildInsights({ shoots: [s], clients, prefs, settings, dismissed, blocked: new Set(), scope: { type: "shoot", id: s.id } });
   const hist = history.filter((x) => x.id !== s.id && x.status !== "cancelled" && x.date <= today).slice(-4).reverse();
-  const done = checklist.filter((x) => x.done).length;
 
   return (
     <>
@@ -32,7 +31,6 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
           <div className="flex gap-2 flex-wrap">
             {NEXT_STEP[s.status] && <form action={advanceShoot.bind(null, s.id)} data-op="advanceShoot" data-args={JSON.stringify([s.id])} data-label={NEXT_STEP[s.status] ?? ""}><button className={`btn ${s.status === "confirmed" ? "btn-good" : "btn-primary"}`}>{NEXT_STEP[s.status]}</button></form>}
             {s.status !== "cancelled" && <Link href={`/shoots/${s.id}/edit`} className="btn">Редагувати</Link>}
-            <Link href={`/shoots/new?dup=${s.id}`} className="btn">Дублювати</Link>
             {s.status !== "paid" && s.status !== "cancelled" && <CancelButton id={s.id} />}
             {s.status === "cancelled" && <DangerButton label="Видалити назавжди" confirm="Так, видалити" op="deleteShoot" id={s.id} />}
           </div>
@@ -55,7 +53,6 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
       </section>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <Kpi label="Віддати до" value={s.deadline ? fmtShort(s.deadline) : "—"} sub={dlDays != null ? relDays(dlDays) : "дату не вказано"} subTone={dlDays != null && dlDays < 0 && s.status !== "paid" ? "warn" : undefined} className={s.status === "confirmed" && s.date <= today && dlDays != null ? (dlDays < 0 ? "!bg-warn-bg" : "!bg-sun-bg") : ""} />
         <Kpi label="Вартість" value={money(s.price)} />
         <Kpi label="Отримано" value={money(s.paid)} sub={s.balance > 0 ? `залишок ${money(s.balance)}` : "оплачено повністю ✓"} subTone={s.balance > 0 ? "warn" : "good"} className={s.paid > 0 ? "!bg-good-bg" : ""} />
         <Kpi label="Податок із зйомки" value={money(s.price * (settings.ep_rate + settings.vz_rate) / 100)} sub={`ЄП ${settings.ep_rate}% + ВЗ ${settings.vz_rate}%`} />
@@ -77,22 +74,12 @@ export default async function ShootPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-
           <section className="card">
             <h2 className="text-[17px] font-semibold mb-3">Замітки</h2>
             <div className="flex flex-col gap-2">{notes.length ? notes.map((n) => <div key={n.id} className="px-3.5 py-3 rounded-[14px] bg-glass-2 text-[13px] leading-relaxed"><div className="flex justify-between items-center mb-1"><span className="text-[11px] text-muted font-semibold">{fmtDate(n.created_at.slice(0, 10))}</span><form action={deleteNote.bind(null, n.id)} data-op="deleteNote" data-args={JSON.stringify([n.id])}><button className="text-muted text-xs" aria-label="Видалити замітку" title="Видалити">×</button></form></div><div className="whitespace-pre-wrap">{n.text}</div></div>) : <div className="empty">Поки без заміток.</div>}</div>
             <form action={addNote.bind(null, s.id)} data-op="addNote" data-args={JSON.stringify([s.id])} className="field flex flex-col gap-1.5 mt-3"><label htmlFor="note">Додати замітку</label><textarea id="note" name="text" placeholder="Що важливо не забути…" maxLength={2000} required /><div><button className="btn btn-sm btn-primary mt-2">Зберегти</button></div></form>
           </section>
 
-          <section className="card">
-            <div className="flex justify-between items-center mb-3"><h2 className="text-[17px] font-semibold">Чек-лист</h2><span className="text-xs font-bold" style={{ color: "var(--good)" }}>{done} з {checklist.length}</span></div>
-            {checklist.length > 0 && <div className="mb-3"><Bar pct={done / checklist.length * 100} color="var(--good)" /></div>}
-            <div className="flex flex-col gap-1.5">{checklist.map((ci) => <ChecklistToggle key={ci.id} id={ci.id} text={ci.text} done={ci.done} />)}</div>
-            <div className="flex gap-2 flex-wrap mt-3">
-              <form action={addChecklistItem.bind(null, s.id)} data-op="addChecklistItem" data-args={JSON.stringify([s.id])} className="flex gap-2 flex-1 min-w-[220px]"><input name="text" placeholder="Новий пункт" required maxLength={200} className="flex-1 px-3 py-2 rounded-xl bg-glass-2" aria-label="Новий пункт" /><button className="btn btn-sm">Додати</button></form>
-              {checklist.length === 0 && <form action={addDefaultChecklist.bind(null, s.id)} data-op="addDefaultChecklist" data-args={JSON.stringify([s.id])}><button className="btn btn-sm btn-ghost">Стандартний чек-лист</button></form>}
-            </div>
-          </section>
         </div>
 
         <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-3.5">
