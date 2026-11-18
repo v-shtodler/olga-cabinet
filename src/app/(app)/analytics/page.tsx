@@ -104,9 +104,9 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       <div className="flex flex-wrap gap-3.5">
         <section className="card flex-1 min-w-0">
           <h2 className="text-[17px] font-semibold mb-3">Отримано по місяцях · {chartLabel}</h2>
-          <div className={`flex items-end h-[190px] ${dense ? "gap-[3px]" : "gap-1.5 sm:gap-2"}`}>
+          <div className={`flex items-end h-[190px] ${dense ? "gap-[3px]" : "gap-1.5 sm:gap-2"} ${m12.length < 6 ? "justify-center" : ""}`}>
             {m12.map((m, i) => (
-              <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5">
+              <div key={i} className={`flex-1 min-w-0 flex flex-col items-center justify-end h-full gap-1.5 ${m12.length < 6 ? "max-w-[150px]" : ""}`}>
                 {m.income > 0 && (
                   <span className="font-semibold num whitespace-nowrap" style={{ color: m.key === chartNow ? "var(--accent)" : "var(--muted)" }}>
                     {dense ? <span className="text-[9px]">{moneyK(m.income)}</span> : <>
@@ -119,7 +119,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
               </div>
             ))}
           </div>
-          <div className={`flex mt-1.5 ${dense ? "gap-[3px]" : "gap-1.5 sm:gap-2"}`}>{m12.map((m, i) => <span key={i} className={`flex-1 text-center font-medium min-w-0 leading-tight ${dense ? "text-[9px]" : "text-[10px] sm:text-[11px]"}`} style={{ color: m.key === chartNow ? "var(--fg)" : "var(--muted)" }}>{m.label}{dense && m.key.endsWith("-01") ? <span className="block opacity-70">{m.year}</span> : null}</span>)}</div>
+          <div className={`flex mt-1.5 ${dense ? "gap-[3px]" : "gap-1.5 sm:gap-2"} ${m12.length < 6 ? "justify-center" : ""}`}>{m12.map((m, i) => <span key={i} className={`flex-1 text-center font-medium min-w-0 leading-tight ${dense ? "text-[9px]" : "text-[10px] sm:text-[11px]"} ${m12.length < 6 ? "max-w-[150px]" : ""}`} style={{ color: m.key === chartNow ? "var(--fg)" : "var(--muted)" }}>{m.label}{dense && m.key.endsWith("-01") ? <span className="block opacity-70">{m.year}</span> : null}</span>)}</div>
           <p className="text-[13px] text-muted mt-3.5">Усього за {chartLabel} — <b className="num text-fg">{money(total12)}</b>{best12.income > 0 ? <> · найкращий місяць — <b className="text-fg">{best12.label}</b> (<span className="num">{money(best12.income)}</span>)</> : null}</p>
         </section>
       </div>
